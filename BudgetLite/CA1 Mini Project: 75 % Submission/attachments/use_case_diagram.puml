@@ -1,0 +1,70 @@
+@startuml
+left to right direction
+skinparam style strictuml
+skinparam monochrome true
+skinparam defaultFontName "Times New Roman"
+skinparam defaultFontSize 16
+skinparam packageFontSize 16
+skinparam usecaseFontSize 15
+skinparam actorFontSize 16
+skinparam backgroundColor white
+skinparam ArrowColor black
+skinparam UsecaseBorderColor black
+skinparam UsecaseBackgroundColor #F8F9FA
+skinparam ActorBorderColor black
+skinparam ActorBackgroundColor #F8F9FA
+
+title BudgetLite - Use Case Diagram (75% Milestone)
+
+actor "Mobile User" as User
+
+package "1. Ledger & Reimbursements" {
+  usecase "Log Expense / Income" as UC_Log
+  usecase "Track Pending Reimbursements" as UC_Reimb
+  usecase "Split Transaction Across Categories" as UC_Split
+  usecase "Check Duplicate Entry" as UC_Dup
+}
+
+package "2. On-Demand SMS Ingestion" {
+  usecase "Manual 'Scan SMS Inbox'" as UC_SmsScan
+  usecase "Review Detected Bank SMS" as UC_SmsReview
+  usecase "Track Read-Only Payee Badges" as UC_Payee
+}
+
+package "3. Budgets & Goals" {
+  usecase "Manage Envelope Budgets" as UC_Budget
+  usecase "Receive Threshold Alerts (80%/100%)" as UC_Alert
+  usecase "Simulate 'What-If' Spending Cuts" as UC_Sim
+}
+
+package "4. Insights & PDF Export" {
+  usecase "View Activity Heatmap & Calendar" as UC_Calendar
+  usecase "Generate & Print PDF Report" as UC_Pdf
+}
+
+package "5. Security & Data Management" {
+  usecase "Biometric Authentication Guard" as UC_Bio
+  usecase "JSON Backup & Quote-Safe CSV Import" as UC_Backup
+  usecase "Theme Customization (Light/Dark/System)" as UC_Theme
+}
+
+User --> UC_Log
+User --> UC_Reimb
+User --> UC_Split
+User --> UC_SmsScan
+User --> UC_SmsReview
+User --> UC_Budget
+User --> UC_Sim
+User --> UC_Calendar
+User --> UC_Pdf
+User --> UC_Bio
+User --> UC_Backup
+User --> UC_Theme
+
+UC_Log ..> UC_Dup : <<include>>
+UC_Reimb ..> UC_Log : <<extend>>
+UC_SmsScan ..> UC_SmsReview : <<include>>
+UC_SmsReview ..> UC_Payee : <<include>>
+UC_Budget ..> UC_Alert : <<extend>>
+
+@enduml

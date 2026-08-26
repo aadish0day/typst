@@ -1,0 +1,53 @@
+@startuml
+skinparam style strictuml
+skinparam monochrome true
+skinparam defaultFontName "Times New Roman"
+skinparam defaultFontSize 14
+skinparam sequenceParticipantFontSize 14
+skinparam sequenceMessageFontSize 13
+skinparam sequenceGroupFontSize 13
+skinparam backgroundColor white
+skinparam ArrowColor black
+skinparam SequenceLifeLineBorderColor black
+skinparam SequenceGroupBorderColor black
+skinparam ParticipantBorderColor black
+skinparam ParticipantBackgroundColor #F8F9FA
+
+title BudgetLite - Schema v5 & On-Demand SMS Ingestion
+
+actor "User" as User
+participant "Settings / SMS UI" as UI
+participant "SmsService" as Service
+participant "SmsParser" as Parser
+participant "Notifier" as Notifier
+database "Drift DB" as DB
+
+== Schema v5 Migration ==
+DB -> DB : Apply v5 migration\n(addColumn: payee)
+
+== On-Demand Manual SMS Scan ==
+User -> UI : Tap "Scan SMS Inbox"
+activate UI
+
+UI -> Service : scanInbox()
+activate Service
+
+Service -> Service : Check READ_SMS permission
+Service -> Service : Query unread telephony SMS
+
+loop Each Transaction SMS
+  Service -> Parser : parseMessage(body)
+  activate Parser
+  Parser -> Parser : Extract amount, merchant & payee
+  Parser --> Service : ParsedSmsTxn
+  deactivate Parser
+  
+  Service -> Notifier : enqueue(parsedTxn)
+end
+
+deactivate Service
+Notifier --> UI : Update queue count
+UI --> User : Display SMS Review Queue
+deactivate UI
+
+@enduml

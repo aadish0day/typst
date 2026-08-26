@@ -1,0 +1,58 @@
+@startuml
+skinparam style strictuml
+skinparam monochrome true
+skinparam defaultFontName "Times New Roman"
+skinparam defaultFontSize 14
+skinparam sequenceParticipantFontSize 14
+skinparam sequenceMessageFontSize 13
+skinparam sequenceGroupFontSize 13
+skinparam backgroundColor white
+skinparam ArrowColor black
+skinparam SequenceLifeLineBorderColor black
+skinparam SequenceGroupBorderColor black
+skinparam ParticipantBorderColor black
+skinparam ParticipantBackgroundColor #F8F9FA
+
+title BudgetLite - Financial Insights & PDF Export Flow
+
+actor "User" as User
+participant "Insights UI" as UI
+participant "InsightsProvider" as Provider
+database "Drift DB" as DB
+participant "PdfReportGen" as PdfGen
+participant "Printing Plugin" as Print
+
+User -> UI : Select Custom Date Range
+activate UI
+
+UI -> Provider : customReportProvider(range)
+activate Provider
+
+Provider -> DB : Query transactions in range
+activate DB
+DB --> Provider : List<Transaction>
+deactivate DB
+
+Provider -> Provider : Aggregate totals, net & categories
+Provider --> UI : CustomReportData
+deactivate Provider
+
+UI --> User : Render Charts & Calendar View
+
+opt Export PDF Report
+  User -> UI : Tap "Download / Share PDF"
+  UI -> PdfGen : generateReportPdf(reportData)
+  activate PdfGen
+  PdfGen -> PdfGen : Build MultiPage document\n(Summary, Categories, Ledger)
+  PdfGen --> UI : Uint8List bytes
+  deactivate PdfGen
+  
+  UI -> Print : sharePdf(bytes, filename)
+  activate Print
+  Print -> User : Open Android Share / Print Sheet
+  deactivate Print
+end
+
+deactivate UI
+
+@enduml

@@ -1,0 +1,45 @@
+@startuml
+skinparam style strictuml
+skinparam monochrome true
+skinparam defaultFontName "Times New Roman"
+skinparam defaultFontSize 14
+skinparam sequenceParticipantFontSize 14
+skinparam sequenceMessageFontSize 13
+skinparam sequenceGroupFontSize 13
+skinparam backgroundColor white
+skinparam ArrowColor black
+skinparam SequenceLifeLineBorderColor black
+skinparam SequenceGroupBorderColor black
+skinparam ParticipantBorderColor black
+skinparam ParticipantBackgroundColor #F8F9FA
+
+title BudgetLite - End-to-End System Flow (100% Release)
+
+actor "User" as User
+participant "App UI" as UI
+participant "BiometricGuard" as Bio
+participant "TxnNotifier" as Txn
+database "Drift DB" as DB
+participant "PdfGen" as PDF
+participant "Printing" as Print
+
+== 1. App Launch & Biometric Unlock ==
+User -> UI : Open BudgetLite
+UI -> Bio : Verify Hardware Sensor
+Bio --> UI : Authenticated -> Show Dashboard
+
+== 2. Live Ledger & Stream Ingestion ==
+User -> UI : Log Split Txn / Scan SMS
+UI -> Txn : splitTxn() / scanSms()
+Txn -> DB : Atomic SQLite Insert / Migration
+DB --> UI : Push reactive Stream update
+
+== 3. Financial Statements & Export ==
+User -> UI : Select Date Range & "Export PDF"
+UI -> PDF : generateReportPdf(data)
+PDF -> PDF : Compile A4 MultiPage Document
+PDF --> UI : Uint8List PDF bytes
+UI -> Print : sharePdf(bytes, filename)
+Print -> User : Open Android Share / Print Sheet
+
+@enduml

@@ -1,0 +1,50 @@
+@startuml
+skinparam style strictuml
+skinparam monochrome true
+skinparam defaultFontName "Times New Roman"
+skinparam defaultFontSize 14
+skinparam sequenceParticipantFontSize 14
+skinparam sequenceMessageFontSize 13
+skinparam sequenceGroupFontSize 13
+skinparam backgroundColor white
+skinparam ArrowColor black
+skinparam SequenceLifeLineBorderColor black
+skinparam SequenceGroupBorderColor black
+skinparam ParticipantBorderColor black
+skinparam ParticipantBackgroundColor #F8F9FA
+
+title BudgetLite - Release Build & Performance Optimization Pipeline
+
+actor "Dev / CI" as Dev
+participant "Flutter CLI" as Flutter
+participant "Gradle / R8" as Gradle
+participant "ProGuard" as ProGuard
+participant "Riverpod autoDispose" as Riverpod
+
+Dev -> Flutter : flutter build apk --release
+activate Flutter
+
+Flutter -> Flutter : Compile Dart AOT Native ARM64
+
+Flutter -> Gradle : Assemble release package
+activate Gradle
+
+Gradle -> ProGuard : Load proguard-rules.pro
+activate ProGuard
+ProGuard --> Gradle : Preserve Drift & JNI bindings
+deactivate ProGuard
+
+Gradle -> Gradle : Run R8 code/resource shrinking
+Gradle --> Flutter : Output optimized app-release.apk
+deactivate Gradle
+Flutter --> Dev : Build Complete
+deactivate Flutter
+
+== Runtime Memory Management ==
+Dev -> Riverpod : Screen navigation event
+activate Riverpod
+Riverpod -> Riverpod : Screen Pop -> autoDispose()
+Riverpod --> Dev : Close DB cursor & free heap RAM
+deactivate Riverpod
+
+@enduml

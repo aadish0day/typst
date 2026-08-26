@@ -1,0 +1,53 @@
+@startuml
+skinparam style strictuml
+skinparam monochrome true
+skinparam defaultFontName "Times New Roman"
+skinparam defaultFontSize 14
+skinparam sequenceParticipantFontSize 14
+skinparam sequenceMessageFontSize 13
+skinparam sequenceGroupFontSize 13
+skinparam backgroundColor white
+skinparam ArrowColor black
+skinparam SequenceLifeLineBorderColor black
+skinparam SequenceGroupBorderColor black
+skinparam ParticipantBorderColor black
+skinparam ParticipantBackgroundColor #F8F9FA
+
+title BudgetLite - Reimbursement & IOUs Tracking Sequence
+
+actor "User" as User
+participant "Home Dashboard" as Home
+participant "ReimbursementSheet" as Sheet
+participant "TransactionNotifier" as Notifier
+database "Drift SQLite DB" as DB
+
+User -> Home : Open Reimbursement Tracker
+activate Home
+
+Home -> Sheet : Show pending IOUs
+activate Sheet
+Sheet -> DB : Stream unsettled reimbursement transactions
+activate DB
+DB --> Sheet : List<Transaction> (where isReimbursed = false)
+deactivate DB
+
+Sheet --> User : Display pending receivables & debtors
+
+alt Settle Single Reimbursement
+  User -> Sheet : Tap "Mark as Settled" (e.g. ₹500 from Friend)
+  Sheet -> Notifier : settleReimbursement(transactionId)
+  activate Notifier
+  Notifier -> DB : Update record (isReimbursed: true) & adjust balance
+  activate DB
+  DB --> Notifier : Success
+  deactivate DB
+  Notifier -> Notifier : Push stream update to StreamProvider
+  Notifier --> Sheet : Refresh list
+  deactivate Notifier
+  Sheet --> User : Animate item into "Settled" tab
+end
+
+deactivate Sheet
+deactivate Home
+
+@enduml

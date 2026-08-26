@@ -1,0 +1,63 @@
+@startuml
+skinparam style strictuml
+skinparam monochrome true
+skinparam defaultFontName "Times New Roman"
+skinparam defaultFontSize 14
+skinparam sequenceParticipantFontSize 14
+skinparam sequenceMessageFontSize 13
+skinparam sequenceGroupFontSize 13
+skinparam backgroundColor white
+skinparam ArrowColor black
+skinparam SequenceLifeLineBorderColor black
+skinparam SequenceGroupBorderColor black
+skinparam ParticipantBorderColor black
+skinparam ParticipantBackgroundColor #F8F9FA
+
+title BudgetLite - Biometric Security & Auto-Lock Sequence
+
+actor "User" as User
+participant "App Lifecycle" as Life
+participant "BiometricGuard" as Guard
+participant "LocalAuth" as Auth
+participant "KeyStore / Sensor" as Sensor
+
+User -> Life : App opened / resumed from background
+activate Life
+
+Life -> Guard : onResume()
+activate Guard
+
+Guard -> Guard : Check elapsed time >= lockDuration
+
+alt Auto-Lock Triggered
+  Guard -> Guard : Display Privacy Blur Overlay
+  Guard -> Auth : authenticate()
+  activate Auth
+  
+  Auth -> Sensor : Request biometric scan
+  activate Sensor
+  Sensor -> User : Prompt Fingerprint / PIN
+  
+  alt Success
+    User -> Sensor : Scan valid credential
+    Sensor --> Auth : Verified
+    deactivate Sensor
+    Auth --> Guard : true
+    deactivate Auth
+    Guard -> Guard : Clear blur overlay
+    Guard --> User : Reveal Ledger & Dashboard
+  else Failed / Cancelled
+    User -> Sensor : Cancel / Mismatch
+    Sensor --> Auth : Failed
+    Auth --> Guard : false
+    Guard --> User : Retain Blur & Show "Unlock"
+  end
+
+else Within Grace Period
+  Guard --> User : Seamless resume (no lock)
+  deactivate Guard
+end
+
+deactivate Life
+
+@enduml

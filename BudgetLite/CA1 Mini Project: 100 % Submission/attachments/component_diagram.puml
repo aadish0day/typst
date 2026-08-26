@@ -1,0 +1,42 @@
+@startuml
+skinparam style strictuml
+skinparam monochrome true
+skinparam defaultFontName "Times New Roman"
+skinparam defaultFontSize 16
+skinparam packageFontSize 16
+skinparam cardFontSize 15
+skinparam backgroundColor white
+skinparam ArrowColor black
+skinparam PackageBorderColor black
+skinparam PackageBackgroundColor #F8F9FA
+skinparam CardBorderColor black
+skinparam CardBackgroundColor #FFFFFF
+
+title BudgetLite - Production 5-Tier Layered Architecture (100% Milestone)
+
+package "1. Presentation Layer (Flutter UI)" as L1 {
+  card "• App Shell & Material 3 Navigation (app.dart)\n• Home Dashboard & Reimbursement Tracker Sheet\n• Transactions Ledger & Multi-Category Split\n• Monthly Budgets with 80%/100% Alert Meters\n• Savings Goals with 'What-If' Simulation Sheet\n• Visual Insights (Heatmaps, Calendar & PDF Preview)\n• Settings & Backup/Restore Panel" as C1
+}
+
+package "2. State Management Layer (Riverpod 2.x autoDispose)" as L2 {
+  card "• TransactionNotifier (CRUD, splits, autoDispose)\n• BudgetNotifier (limits, alerts & highlight focus)\n• GoalNotifier (savings goals & simulator state)\n• Reactive StreamProviders (autoDispose query streams)\n• SettingsNotifier (biometrics, themes, backup/restore)" as C2
+}
+
+package "3. Core Business Logic & Feature Engines" as L3 {
+  card "• Reimbursement Engine (Receivables & settled status)\n• Insights Analytics Engine (Velocity & quartile heatmaps)\n• PDF Report Builder (On-device vector PDF compiler)\n• Biometric Security Guard (local_auth auto-lock)\n• On-Demand SMS Ingestion & Payee Parser\n• Notification Service (80% & 100% threshold alerts)" as C3
+}
+
+package "4. Data Access Layer (Drift ORM & DAOs)" as L4 {
+  card "• AppDatabase & Generated DAOs (database.dart)\n• Schema v5 (payee column & automated migrations)\n• JSON Backup Exporter/Importer & Quote-Safe CSV Parser\n• Stream Query Observers & Auto-Closing Cursors" as C4
+}
+
+database "5. Local Storage & Hardware Hardening" as L5 {
+  card "• Local SQLite Database File (app.db)\n• Android Hardware KeyStore (Biometric Sensor Lock)\n• R8 Minification & ProGuard Obfuscated Binary" as C5
+}
+
+L1 -down-> L2 : "Watches autoDispose Providers"
+L2 -down-> L3 : "Executes Business Logic & Analytics"
+L3 -down-> L4 : "Delegates SQLite CRUD & Watch Streams"
+L4 -down-> L5 : "Executes Hardened Native SQLite Operations"
+
+@enduml

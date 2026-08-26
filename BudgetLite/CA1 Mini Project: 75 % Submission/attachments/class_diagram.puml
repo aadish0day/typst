@@ -1,0 +1,107 @@
+@startuml
+skinparam style strictuml
+skinparam monochrome true
+skinparam defaultFontName "Times New Roman"
+skinparam defaultFontSize 15
+skinparam classFontSize 15
+skinparam classAttributeFontSize 14
+skinparam backgroundColor white
+skinparam ArrowColor black
+skinparam ClassBorderColor black
+skinparam ClassBackgroundColor #F8F9FA
+
+title BudgetLite - Domain Class Diagram (75% Milestone)
+
+class Account {
+  +id: String
+  +name: String
+  +balance: double
+  +currency: String
+}
+
+class Transaction {
+  +id: String
+  +amount: double
+  +categoryId: String
+  +accountId: String
+  +note: String?
+  +payee: String?
+  +date: DateTime
+  +isRecurring: bool
+}
+
+class Budget {
+  +id: String
+  +categoryId: String
+  +month: String
+  +allocatedAmount: double
+}
+
+class Goal {
+  +id: String
+  +name: String
+  +targetAmount: double
+  +currentAmount: double
+  +targetDate: DateTime?
+}
+
+class ReimbursementItem {
+  +transactionId: String
+  +personName: String
+  +amount: double
+  +isSettled: bool
+}
+
+class CustomReportData {
+  +startDate: DateTime
+  +endDate: DateTime
+  +totalIncome: double
+  +totalExpense: double
+  +topCategories: List
+}
+
+class PdfReportGenerator {
+  +{static} generateReportPdf(report): Future<Uint8List>
+}
+
+class TransactionNotifier {
+  -db: AppDatabase
+  +addTransaction(txn): Future<void>
+  +splitTransaction(splits): Future<void>
+  +scanSmsInbox(): Future<int>
+}
+
+class BudgetNotifier {
+  -db: AppDatabase
+  +setBudget(catId, month, amt): Future<void>
+  +checkBudgetThresholds(ctx, catId): Future<void>
+}
+
+class GoalNotifier {
+  -db: AppDatabase
+  +addGoal(goal): Future<void>
+}
+
+' Column 1 stacking
+Account -[hidden]down-> Transaction
+Transaction -[hidden]down-> Budget
+Budget -[hidden]down-> Goal
+Goal -[hidden]down-> ReimbursementItem
+
+' Column 2 stacking
+CustomReportData -[hidden]down-> PdfReportGenerator
+PdfReportGenerator -[hidden]down-> TransactionNotifier
+TransactionNotifier -[hidden]down-> BudgetNotifier
+BudgetNotifier -[hidden]down-> GoalNotifier
+
+' Side-by-side alignment
+Account -[hidden]right-> CustomReportData
+
+' Relationships
+Account "1" *-- "many" Transaction : holds
+TransactionNotifier ..> Transaction : manages
+BudgetNotifier ..> Budget : manages
+GoalNotifier ..> Goal : manages
+PdfReportGenerator ..> CustomReportData : renders
+
+@enduml

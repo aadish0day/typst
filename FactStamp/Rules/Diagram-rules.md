@@ -103,9 +103,9 @@ Keep `.puml`/`.dot` sources + their compiled `.svg` inside the submission's `att
 
 ---
 
-## Styling — grayscale academic look, both tools
+## Rule 6 — Modern Professional Engineering Typography & High Legibility
 
-Same principle as before: plain black/white/gray UML-standard styling, matching the reference blackbook — no FactStamp product-brand colors here either way.
+**All diagrams use modern, clean, engineering-grade sans-serif typography (`Liberation Sans` / `Helvetica-Bold` / `Arial`) with high-contrast borders and large font sizing to match production software architecture specifications.**
 
 ### PlantUML skinparam block (prepend to every `.puml` file)
 
@@ -113,43 +113,81 @@ Same principle as before: plain black/white/gray UML-standard styling, matching 
 @startuml
 skinparam style strictuml
 skinparam monochrome true
-skinparam defaultFontName "Times New Roman"
-skinparam defaultFontSize 14
+skinparam defaultFontName "Liberation Sans"
+skinparam defaultFontSize 20
+skinparam defaultFontStyle bold
+skinparam titleFontSize 26
+skinparam titleFontStyle bold
+
 skinparam backgroundColor white
-skinparam classFontSize 14
-skinparam classAttributeFontSize 12
 skinparam ArrowColor black
+skinparam ArrowThickness 2.5
+skinparam ArrowFontSize 17
+skinparam ArrowFontStyle bold
+
+skinparam EntityBorderColor black
+skinparam EntityBorderThickness 2.5
+skinparam EntityBackgroundColor #F8F9FA
+skinparam EntityFontSize 22
+skinparam EntityFontStyle bold
+
 skinparam ClassBorderColor black
+skinparam ClassBorderThickness 2.5
 skinparam ClassBackgroundColor #F8F9FA
+skinparam ClassFontSize 22
+skinparam ClassFontStyle bold
+skinparam ClassAttributeFontSize 18
+
+skinparam UsecaseBorderColor black
+skinparam UsecaseBorderThickness 2.5
+skinparam UsecaseBackgroundColor #F8F9FA
+skinparam UsecaseFontSize 19
+skinparam UsecaseFontStyle bold
+
+skinparam ActorBorderColor black
+skinparam ActorBorderThickness 2.5
+skinparam ActorBackgroundColor #FFFFFF
+skinparam ActorFontSize 20
+skinparam ActorFontStyle bold
+
+skinparam RectangleBorderColor black
+skinparam RectangleBorderThickness 2.5
+skinparam RectangleBackgroundColor transparent
+skinparam RectangleFontSize 20
+skinparam RectangleFontStyle bold
+
 title FactStamp - <Diagram Name>
 ```
 
-PlantUML's own layout engine scales far more gracefully than Graphviz did — you likely won't need the `fontsize=44` legibility hacks `rule.md` used to require for dot output. Still: compile, embed at `width: 90%`, and actually check the printed/PDF result before trusting it — don't assume it's fine just because PlantUML is generally better at this. Check orientation per Rule 5 while you're at it.
+- **Bold Labels**: In entity attribute lists, mark critical field names and types with markdown bold `**fieldName** : type` for maximum clarity.
+- **Heavy Borders**: Use `skinparam ArrowThickness 2.5` and border thickness `2.5` so lines are crisp, solid, and high-contrast.
 
-### Graphviz block (DFD only — unchanged from before, now explicit about rankdir)
+### Graphviz block (DFD only — Professional Sans-Serif Typography)
 
 ```dot
 digraph DFD {
   bgcolor="white"
-  fontname="Times New Roman"
+  fontname="Liberation Sans Bold"
   label="FactStamp - <Diagram Name>"
   labelloc=t
-  fontsize=44
+  fontsize=32
   rankdir=TB
-  nodesep=0.9
-  ranksep=1.2
+  nodesep=0.5
+  ranksep=0.8
+  margin=0.05
 
-  node [fontname="Times New Roman", fontsize=30, style=filled, fillcolor="#F8F9FA", color="#000000", penwidth=3.5]
-  edge [fontname="Times New Roman", fontsize=24, color="#000000", penwidth=3.0]
+  node [fontname="Liberation Sans Bold", fontsize=24, style="filled,bold", fillcolor="#F8F9FA", color="#000000", penwidth=3.0]
+  edge [fontname="Liberation Sans Bold", fontsize=18, color="#000000", penwidth=2.5]
 
   node [shape=circle]  // processes
   node [shape=box]     // external entities — override per-node
-  User [shape=box]
-  User -> "1.0 Submit Claim" [label="forward text/image"]
+  User [shape=box, fontname="Liberation Sans Bold", fontsize=24, margin="0.2,0.15"]
+  User -> "1.0 Submit Claim" [label=" 1. Forward Text/Screenshot ", fontname="Liberation Sans Bold", fontsize=18]
 }
 ```
 
-DFD keeps the large-font hack because Graphviz's own scaling is still the weaker of the two engines — this is now the *only* diagram type still needing it.
+- **Bold Graphviz Fonts**: Use `fontname="Liberation Sans Bold"` (or `fontname="Helvetica-Bold"`) for all node labels, edge labels, and titles.
+- **Heavy Penwidth**: `penwidth=3.0` for nodes and `penwidth=2.5` for edges ensures crisp rendering at all scale factors.
 
 ## Per-diagram-type templates
 
@@ -158,7 +196,15 @@ DFD keeps the large-font hack because Graphviz's own scaling is still the weaker
 @startuml
 skinparam style strictuml
 skinparam monochrome true
-skinparam defaultFontName "Times New Roman"
+skinparam defaultFontName "Liberation Sans"
+skinparam defaultFontSize 20
+skinparam defaultFontStyle bold
+skinparam titleFontSize 26
+skinparam titleFontStyle bold
+skinparam EntityFontSize 22
+skinparam EntityFontStyle bold
+skinparam ClassAttributeFontSize 18
+skinparam ArrowThickness 2.5
 title FactStamp - ER Diagram
 
 entity Claim {
@@ -191,7 +237,15 @@ Claim ||--o{ Verdict : "has many"
 @startuml
 skinparam style strictuml
 skinparam monochrome true
-skinparam defaultFontName "Times New Roman"
+skinparam defaultFontName "Liberation Sans"
+skinparam defaultFontSize 20
+skinparam defaultFontStyle bold
+skinparam titleFontSize 26
+skinparam titleFontStyle bold
+skinparam ClassFontSize 22
+skinparam ClassFontStyle bold
+skinparam ClassAttributeFontSize 18
+skinparam ArrowThickness 2.5
 title FactStamp - Class Diagram
 
 abstract class BaseVerifier {
@@ -228,7 +282,12 @@ Claim "1" *-- "many" Verification : has
 @startuml
 skinparam style strictuml
 skinparam monochrome true
-skinparam defaultFontName "Times New Roman"
+skinparam defaultFontName "Liberation Sans"
+skinparam defaultFontSize 20
+skinparam defaultFontStyle bold
+skinparam titleFontSize 26
+skinparam titleFontStyle bold
+skinparam ArrowThickness 2.5
 title FactStamp - Object Diagram
 
 object "verifier_042 : CommunityVerifier" as v1 {
@@ -249,7 +308,12 @@ v1 --> c1 : verified
 @startuml
 skinparam style strictuml
 skinparam monochrome true
-skinparam defaultFontName "Times New Roman"
+skinparam defaultFontName "Liberation Sans"
+skinparam defaultFontSize 20
+skinparam defaultFontStyle bold
+skinparam titleFontSize 26
+skinparam titleFontStyle bold
+skinparam ArrowThickness 2.5
 title FactStamp - Component Diagram
 
 component Frontend
@@ -268,7 +332,12 @@ API --> GeminiVision : OCR
 @startuml
 skinparam style strictuml
 skinparam monochrome true
-skinparam defaultFontName "Times New Roman"
+skinparam defaultFontName "Liberation Sans"
+skinparam defaultFontSize 20
+skinparam defaultFontStyle bold
+skinparam titleFontSize 26
+skinparam titleFontStyle bold
+skinparam ArrowThickness 2.5
 title FactStamp - Package Diagram
 
 package "Auth Module" {
@@ -290,7 +359,12 @@ package "Verification Module" {
 @startuml
 skinparam style strictuml
 skinparam monochrome true
-skinparam defaultFontName "Times New Roman"
+skinparam defaultFontName "Liberation Sans"
+skinparam defaultFontSize 20
+skinparam defaultFontStyle bold
+skinparam titleFontSize 26
+skinparam titleFontStyle bold
+skinparam ArrowThickness 2.5
 title FactStamp - Deployment Diagram
 
 node "Client Device" {
@@ -318,7 +392,12 @@ node "Google Cloud" {
 @startuml
 skinparam style strictuml
 skinparam monochrome true
-skinparam defaultFontName "Times New Roman"
+skinparam defaultFontName "Liberation Sans"
+skinparam defaultFontSize 20
+skinparam defaultFontStyle bold
+skinparam titleFontSize 26
+skinparam titleFontStyle bold
+skinparam ArrowThickness 2.5
 title FactStamp - State Diagram
 
 [*] --> Pending
@@ -330,43 +409,71 @@ Contested --> [*]
 @enduml
 ```
 
-### Use Case Diagram (PlantUML)
+### Use Case Diagram (PlantUML — Left-to-Right 2-Column Standard)
 ```plantuml
 @startuml
 skinparam style strictuml
 skinparam monochrome true
-skinparam defaultFontName "Times New Roman"
+skinparam defaultFontName "Liberation Sans"
+skinparam defaultFontSize 18
+skinparam defaultFontStyle bold
+skinparam titleFontSize 24
+skinparam titleFontStyle bold
+skinparam ArrowThickness 2.5
+skinparam ArrowFontSize 15
+skinparam ArrowFontStyle bold
+skinparam UsecaseFontSize 18
+skinparam UsecaseFontStyle bold
+skinparam ActorFontSize 19
+skinparam ActorFontStyle bold
+
 title FactStamp - Use Case Diagram
-top to bottom direction
+left to right direction
 
-actor Verifier
+actor "Public Submitter" as User
+actor "Community Verifier" as Verifier
+actor "System Engine" as Engine
 
-usecase "Submit Verdict" as UC1
-usecase "View Reputation" as UC2
-usecase "Trigger Consensus" as UC3
+rectangle "FactStamp System Boundary" {
+  usecase "Submit Claim" as UC1
+  usecase "Check Duplicate" as UC2
+  usecase "View Confidence" as UC3
+  usecase "Export Fact Card" as UC4
+  usecase "Review Queue" as UC5
+  usecase "Submit Verdict" as UC6
+  usecase "Compute Consensus" as UC7
+}
 
-Verifier --> UC1
-Verifier --> UC2
-UC1 ..> UC3 : <<include>>
+User --> UC1
+User --> UC3
+User --> UC4
+UC1 ..> UC2 : <<include>>
+Verifier --> UC5
+Verifier --> UC6
+UC6 ..> UC7 : <<trigger>>
+Engine --> UC2
+Engine --> UC7
 @enduml
 ```
-Per Rule 5: `top to bottom direction` replaces the old `left to right direction` — Use Case diagrams default to horizontal actor-on-the-left layout otherwise, which doesn't fit a portrait page.
 
-### DFD (Graphviz — the one type still on dot)
+### DFD (Graphviz — the one type on dot)
 ```dot
 digraph DFD {
   bgcolor="white"
-  fontname="Times New Roman"
+  fontname="Liberation Sans Bold"
   label="FactStamp - Data Flow Diagram Level 0"
   labelloc=t
-  fontsize=44
+  fontsize=32
   rankdir=TB
-  node [fontname="Times New Roman", fontsize=30, style=filled, fillcolor="#F8F9FA", color="#000000", penwidth=3.5]
-  edge [fontname="Times New Roman", fontsize=24, color="#000000", penwidth=3.0]
+  nodesep=0.5
+  ranksep=0.8
+  margin=0.05
+  node [fontname="Liberation Sans Bold", fontsize=24, style="filled,bold", fillcolor="#F8F9FA", color="#000000", penwidth=3.0]
+  edge [fontname="Liberation Sans Bold", fontsize=18, color="#000000", penwidth=2.5]
   node [shape=circle]
   node [shape=box]
-  User [shape=box]
-  User -> "1.0 Submit Claim" [label="forward text/image"]
+  User [shape=box, margin="0.2,0.15"]
+  User -> "1.0 Submit Claim" [label=" 1. Forward Text/Screenshot "]
 }
 ```
 
@@ -405,7 +512,7 @@ Submission of 3.6 Conceptual Models - Data Flow Diagram/
 Rules:
 - One source file + one `.svg` per diagram, even if two diagrams are related — don't combine ER + Class into one `.puml`.
 - Filenames are `<diagram_type>_<qualifier>.puml` or `.dot` — lowercase, underscores, no spaces.
-- Reference from Typst as `#image("attachments/er_diagram.svg", width: 90%)` — identical regardless of source tool.
+- Reference from Typst as `#image("attachments/er_diagram.svg", width: 100%)` — identical regardless of source tool.
 - Commit the `.svg` files too — don't `.gitignore` `attachments/`.
 - Multi-level DFDs all live in the same `attachments/` folder — filename qualifier is enough, no per-level subfolders.
 
@@ -417,12 +524,22 @@ Rules:
 @startuml
 skinparam style strictuml
 skinparam monochrome true
-skinparam defaultFontName "Times New Roman"
-skinparam defaultFontSize 14
+skinparam defaultFontName "Liberation Sans"
+skinparam defaultFontSize 20
+skinparam defaultFontStyle bold
+skinparam titleFontSize 26
+skinparam titleFontStyle bold
 skinparam backgroundColor white
 skinparam ArrowColor black
+skinparam ArrowThickness 2.5
+skinparam ArrowFontSize 17
+skinparam ArrowFontStyle bold
 skinparam ClassBorderColor black
+skinparam ClassBorderThickness 2.5
 skinparam ClassBackgroundColor #F8F9FA
+skinparam ClassFontSize 22
+skinparam ClassFontStyle bold
+skinparam ClassAttributeFontSize 18
 title FactStamp - Class Diagram
 
 abstract class BaseVerifier {
@@ -458,4 +575,5 @@ plantuml -tsvg attachments/class_diagram_core.puml
 typst compile class_diagram_er.typ class_diagram_er.pdf
 ```
 
-Every other UML diagram type follows this same skeleton — skinparam block stays identical, only the diagram body changes per the templates above. DFDs are the one exception and keep using the Graphviz worked example from the old rules (dot → svg, large-font block).
+Every other UML diagram type follows this same skeleton — skinparam block stays identical, only the diagram body changes per the templates above. DFDs are the one exception and keep using the Graphviz worked example (dot → svg, large-font block).
+

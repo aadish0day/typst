@@ -1,0 +1,56 @@
+@startuml
+skinparam style strictuml
+skinparam monochrome true
+skinparam defaultFontName "Times New Roman"
+skinparam defaultFontSize 16
+skinparam sequenceParticipantFontSize 16
+skinparam sequenceMessageFontSize 15
+skinparam sequenceGroupFontSize 15
+skinparam backgroundColor white
+skinparam ArrowColor black
+skinparam SequenceLifeLineBorderColor black
+skinparam SequenceGroupBorderColor black
+skinparam ParticipantBorderColor black
+skinparam ParticipantBackgroundColor #F8F9FA
+
+title BudgetLite - SMS Transaction Ingestion & Review Flow
+
+actor "User" as User
+participant "SmsParser" as Parser
+participant "DuplicateDetector" as DupEngine
+participant "SmsReviewQueue" as Queue
+participant "TransactionNotifier" as Notifier
+database "Drift DB" as DB
+
+[-> Parser : Ingest raw SMS string
+activate Parser
+
+Parser -> Parser : Filter keywords (debit/spent/paid)
+Parser -> Parser : Extract amount & merchant regex
+Parser -> Parser : Map category from keyword rules
+
+Parser -> DupEngine : findDuplicates(amount, date, note)
+activate DupEngine
+DupEngine --> Parser : DuplicateCheckResult (bool)
+deactivate DupEngine
+
+Parser -> Queue : Enqueue ParsedSmsTxn
+deactivate Parser
+
+Queue -> User : Present review card in UI
+alt User confirms
+  User -> Queue : Click "Confirm"
+  Queue -> Notifier : addTransaction(parsedTxn)
+  activate Notifier
+  Notifier -> DB : db.transaction(insert & update balance)
+  activate DB
+  DB --> Notifier : Success
+  deactivate DB
+  Notifier --> User : Update ledger & refresh balance
+  deactivate Notifier
+else User discards
+  User -> Queue : Click "Discard"
+  Queue -> Queue : Remove item
+end
+
+@enduml

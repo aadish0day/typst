@@ -1,0 +1,42 @@
+@startuml
+skinparam style strictuml
+skinparam monochrome true
+skinparam defaultFontName "Times New Roman"
+skinparam defaultFontSize 16
+skinparam packageFontSize 16
+skinparam cardFontSize 15
+skinparam backgroundColor white
+skinparam ArrowColor black
+skinparam PackageBorderColor black
+skinparam PackageBackgroundColor #F8F9FA
+skinparam CardBorderColor black
+skinparam CardBackgroundColor #FFFFFF
+
+title BudgetLite - 5-Tier Layered Architecture (50% Milestone)
+
+package "1. Presentation Layer (Flutter UI)" as L1 {
+  card "• App Shell & Navigation (app.dart)\n• Home Dashboard & Live Balance (home_screen.dart)\n• Transactions Ledger & Split Modal\n• Envelope Budgets & Category Highlighting\n• Savings Goals & What-If Simulator Sheet\n• Spend Calendar, Contribution Graph & PDF Preview\n• SMS Review Queue & Settings/Theme Customizer" as C1
+}
+
+package "2. State Management Layer (Riverpod 2.x)" as L2 {
+  card "• TransactionNotifier (CRUD, split entries, balances)\n• BudgetNotifier (monthly limits & threshold alerts)\n• GoalNotifier (savings goals & simulator logic)\n• InsightsProvider (cashflow, velocity, categories, report)\n• SettingsNotifier (biometrics, auto-lock, themes, backups)" as C2
+}
+
+package "3. Core Engines & Business Logic" as L3 {
+  card "• Insights Analytics Engine (daily stats, trends, quartiles)\n• PDF Report Generator (printing/pdf document builder)\n• Biometric Security Guard (local_auth auto-lock policy)\n• What-If Spending Reduction Simulator\n• Notification Service (80% & 100% threshold alerts)\n• SMS Heuristic Parser & Keyword Auto-Categorization" as C3
+}
+
+package "4. Data Access Layer (Drift ORM & DAOs)" as L4 {
+  card "• AppDatabase & Generated DAOs (database.dart)\n• Relational Tables Schema v2 (7 Core Tables)\n• JSON Backup Exporter/Importer & CSV Importer\n• Default Category & Account Seeder" as C4
+}
+
+database "5. Local Storage & Security" as L5 {
+  card "• Local SQLite Database File (app.db)\n• Hardware KeyStore (Biometric Fingerprint / PIN Guard)" as C5
+}
+
+L1 -down-> L2 : "Dispatches UI Events & Watches State"
+L2 -down-> L3 : "Executes Analytics, PDF & Security Logic"
+L3 -down-> L4 : "Delegates Persistence & Query Streaming"
+L4 -down-> L5 : "Performs ACID SQL Execution"
+
+@enduml

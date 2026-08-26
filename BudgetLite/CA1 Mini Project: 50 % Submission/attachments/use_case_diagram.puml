@@ -1,0 +1,71 @@
+@startuml
+left to right direction
+skinparam style strictuml
+skinparam monochrome true
+skinparam defaultFontName "Times New Roman"
+skinparam defaultFontSize 16
+skinparam packageFontSize 16
+skinparam usecaseFontSize 15
+skinparam actorFontSize 16
+skinparam backgroundColor white
+skinparam ArrowColor black
+skinparam UsecaseBorderColor black
+skinparam UsecaseBackgroundColor #F8F9FA
+skinparam ActorBorderColor black
+skinparam ActorBackgroundColor #F8F9FA
+
+title BudgetLite - Use Case Diagram (50% Milestone)
+
+actor "Mobile User" as User
+
+package "1. Ledger & Transactions" {
+  usecase "Log Manual Expense / Income" as UC_Log
+  usecase "Split Transaction Across Categories" as UC_Split
+  usecase "Check Duplicate Entry" as UC_Dup
+}
+
+package "2. SMS Automation Engine" {
+  usecase "Review Detected Bank SMS" as UC_SmsReview
+  usecase "Parse SMS Regex Heuristics" as UC_SmsParse
+}
+
+package "3. Budgets & Savings Goals" {
+  usecase "Manage Envelope Budgets" as UC_Budget
+  usecase "Receive Threshold Alerts (80%/100%)" as UC_Alert
+  usecase "Track Savings Goals" as UC_Goal
+  usecase "Simulate 'What-If' Spending Cuts" as UC_Sim
+}
+
+package "4. Insights & PDF Reporting" {
+  usecase "View Spend Calendar & Heatmap" as UC_Calendar
+  usecase "Analyze Cash Flow & Velocity" as UC_Insights
+  usecase "Generate & Export PDF Report" as UC_Pdf
+}
+
+package "5. Security & System Settings" {
+  usecase "Biometric Fingerprint/PIN Lock" as UC_Bio
+  usecase "Export / Import JSON & CSV Backup" as UC_Backup
+  usecase "Configure Theme (Light/Dark/System)" as UC_Theme
+}
+
+User --> UC_Log
+User --> UC_Split
+User --> UC_SmsReview
+User --> UC_Budget
+User --> UC_Goal
+User --> UC_Sim
+User --> UC_Calendar
+User --> UC_Insights
+User --> UC_Pdf
+User --> UC_Bio
+User --> UC_Backup
+User --> UC_Theme
+
+UC_Log ..> UC_Dup : <<include>>
+UC_Split ..> UC_Log : <<extend>>
+UC_SmsReview ..> UC_SmsParse : <<include>>
+UC_SmsReview ..> UC_Dup : <<include>>
+UC_Budget ..> UC_Alert : <<extend>>
+UC_Pdf ..> UC_Insights : <<include>>
+
+@enduml

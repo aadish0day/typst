@@ -1,0 +1,86 @@
+@startuml
+skinparam style strictuml
+skinparam monochrome true
+skinparam defaultFontName "Times New Roman"
+skinparam defaultFontSize 16
+skinparam entityFontSize 16
+skinparam entityAttributeFontSize 15
+skinparam backgroundColor white
+skinparam ArrowColor black
+skinparam EntityBorderColor black
+skinparam EntityBackgroundColor #F8F9FA
+
+title BudgetLite - Entity Relationship (ER) Diagram (Schema v2)
+
+entity Accounts {
+  * id : TEXT <<PK>>
+  --
+  * name : TEXT
+  * balance : REAL = 0.0
+  * currency : TEXT = 'INR'
+}
+
+entity Categories {
+  * id : TEXT <<PK>>
+  --
+  * name : TEXT
+  * icon : TEXT = 'category'
+  * color : INTEGER = 0xFF0D7377
+  * type : TEXT = 'expense'
+}
+
+entity Transactions {
+  * id : TEXT <<PK>>
+  --
+  * amount : REAL
+  * categoryId : TEXT <<FK>>
+  * accountId : TEXT <<FK>>
+  note : TEXT
+  * date : DATETIME
+  * paymentMethod : TEXT = 'cash'
+  * isRecurring : BOOLEAN = false
+  * isRecurringInstance : BOOLEAN = false
+  recurringInterval : TEXT
+  receiptImagePath : TEXT
+  * createdAt : DATETIME
+}
+
+entity Budgets {
+  * id : TEXT <<PK>>
+  --
+  * categoryId : TEXT <<FK>>
+  * month : TEXT (YYYY-MM)
+  * allocatedAmount : REAL
+  * rollover : BOOLEAN = false
+}
+
+entity Goals {
+  * id : TEXT <<PK>>
+  --
+  * name : TEXT
+  * targetAmount : REAL
+  * currentAmount : REAL = 0.0
+  targetDate : DATETIME
+  * color : INTEGER = 0xFF0D7377
+  * icon : TEXT = 'target'
+}
+
+entity MonthlyIncome {
+  * id : TEXT <<PK>>
+  --
+  * month : TEXT (YYYY-MM)
+  * amount : REAL
+}
+
+entity AppSettings {
+  * key : TEXT <<PK>>
+  --
+  * value : TEXT (JSON config)
+}
+
+' Relational associations
+Accounts ||--o{ Transactions : "holds (1:N)"
+Categories ||--o{ Transactions : "categorizes (1:N)"
+Categories ||--o{ Budgets : "allocates (1:N)"
+
+@enduml

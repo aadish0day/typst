@@ -1,0 +1,58 @@
+@startuml
+left to right direction
+skinparam style strictuml
+skinparam monochrome true
+skinparam defaultFontName "Times New Roman"
+skinparam defaultFontSize 16
+skinparam packageFontSize 16
+skinparam usecaseFontSize 15
+skinparam actorFontSize 16
+skinparam backgroundColor white
+skinparam ArrowColor black
+skinparam UsecaseBorderColor black
+skinparam UsecaseBackgroundColor #F8F9FA
+skinparam ActorBorderColor black
+skinparam ActorBackgroundColor #F8F9FA
+
+title BudgetLite - Use Case Diagram
+
+actor "Mobile User" as User
+
+package "Core Ledger & Accounts" {
+  usecase "Log Expense / Income" as UC1
+  usecase "Transfer Between Accounts" as UC2
+  usecase "Check Duplicate Entry" as UC_Dup
+}
+
+package "SMS Automation" {
+  usecase "Review Detected SMS" as UC3
+  usecase "Parse SMS Heuristics" as UC3_Parse
+}
+
+package "Budgets & Recurring" {
+  usecase "Set Monthly Budgets" as UC4
+  usecase "Receive Limit Alerts (80%/100%)" as UC4_Alert
+  usecase "Configure Recurring Templates" as UC5
+  usecase "Auto-Post Due on Launch" as UC5_Auto
+}
+
+package "Analytics" {
+  usecase "Edit Auto-Category Rules" as UC6
+  usecase "View Financial Insights" as UC7
+}
+
+User --> UC1
+User --> UC2
+User --> UC3
+User --> UC4
+User --> UC5
+User --> UC6
+User --> UC7
+
+UC1 ..> UC_Dup : <<include>>
+UC3 ..> UC3_Parse : <<include>>
+UC3 ..> UC_Dup : <<include>>
+UC4 ..> UC4_Alert : <<extend>>
+UC5 ..> UC5_Auto : <<include>>
+
+@enduml

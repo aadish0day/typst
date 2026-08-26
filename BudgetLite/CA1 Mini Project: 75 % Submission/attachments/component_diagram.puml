@@ -1,0 +1,42 @@
+@startuml
+skinparam style strictuml
+skinparam monochrome true
+skinparam defaultFontName "Times New Roman"
+skinparam defaultFontSize 16
+skinparam packageFontSize 16
+skinparam cardFontSize 15
+skinparam backgroundColor white
+skinparam ArrowColor black
+skinparam PackageBorderColor black
+skinparam PackageBackgroundColor #F8F9FA
+skinparam CardBorderColor black
+skinparam CardBackgroundColor #FFFFFF
+
+title BudgetLite - 5-Tier Reactive Architecture (75% Milestone)
+
+package "1. Presentation Layer (Flutter UI)" as L1 {
+  card "• App Shell & Material 3 Nav (app.dart)\n• Home Dashboard & Reimbursement Tracker Sheet\n• Transactions Ledger & Multi-Category Split\n• Monthly Budgets & Highlight Navigation\n• Savings Goals & What-If Reduction Simulator\n• Insights Activity Heatmap & PDF Share Dialog\n• SMS Review Queue & Settings/Theme Customizer" as C1
+}
+
+package "2. State Management Layer (Riverpod 2.x)" as L2 {
+  card "• TransactionNotifier (CRUD, splits, auto-scan)\n• BudgetNotifier (limits, alerts & highlight focus)\n• GoalNotifier (savings goals & simulator state)\n• Reactive StreamProviders (live DB query streams)\n• SettingsNotifier (biometrics, themes, backup/restore)" as C2
+}
+
+package "3. Core Business Logic & Feature Engines" as L3 {
+  card "• Reimbursement Engine (Receivables & settled status)\n• Insights Analytics Engine (Velocity, quartile heatmaps)\n• PDF Report Builder (On-device vector PDF builder)\n• Biometric Security Guard (local_auth auto-lock)\n• On-Demand SMS Ingestion & Payee Parser\n• Notification Service (80% & 100% threshold alerts)" as C3
+}
+
+package "4. Data Access Layer (Drift ORM & DAOs)" as L4 {
+  card "• AppDatabase & Generated DAOs (database.dart)\n• Schema v5 (payee column & schema migrations)\n• JSON Exporter/Importer & Quote-Safe CSV Parser\n• Stream Query Observers" as C4
+}
+
+database "5. Local Storage & Hardware Security" as L5 {
+  card "• Local SQLite Database File (app.db)\n• Android Hardware KeyStore (Biometric Sensor Lock)" as C5
+}
+
+L1 -down-> L2 : "Watches Reactive StreamProviders"
+L2 -down-> L3 : "Executes Business Engines & Deduplication"
+L3 -down-> L4 : "Delegates SQLite CRUD & Watch Streams"
+L4 -down-> L5 : "Performs ACID SQL Execution"
+
+@enduml

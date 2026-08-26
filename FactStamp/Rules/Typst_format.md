@@ -17,6 +17,15 @@ Copy-paste this single starter block at the top of any standalone submission fil
   margin: (left: 1.5in, right: 1in, top: 1in, bottom: 1in), // 1.5in left margin for single-sided binding
   numbering: "1",
   number-align: center,
+  // Mandatory Black Page Border for Black Books and Assignments
+  background: place(
+    center + horizon,
+    rect(
+      width: 100% - 1.5cm,
+      height: 100% - 1.5cm,
+      stroke: 1pt + black,
+    )
+  ),
 )
 
 // Cross-Platform Font Fallbacks (Windows/Mac/Linux CI compatibility)
@@ -327,6 +336,7 @@ REST endpoints documentation...
 
 ## 6. PDF Quality & Submission Discipline
 
+- **Mandatory Black Page Border:** Every Black Book project document and Assignment/Submission **MUST** include a solid black border (`stroke: 1pt + black`) configured in `#set page(background: place(center + horizon, rect(width: 100% - 1.5cm, height: 100% - 1.5cm, stroke: 1pt + black)))`.
 - **Exact Folder & Sub-file Naming Rule:** Submission directory names **MUST EXACTLY MATCH** the user's input/prompt string (e.g. `Submission of Chp 4: 4.2.2 Data Integrity and Constraints, 4.4 Security Issues/`). Inside the directory, `.typ` and `.pdf` files **MUST USE** a descriptive title slug (e.g. `data_integrity_and_security_issues.typ` and `data_integrity_and_security_issues.pdf`).
 - **PDF Metadata:** Prepend `#set document(title: "FactStamp - <Section>", author: "Aadish")` to every `.typ` file.
 - **Orphan Prevention:** Place `#pagebreak(weak: true)` before major section headings if near page bottom.

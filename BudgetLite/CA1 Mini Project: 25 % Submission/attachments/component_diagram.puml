@@ -1,0 +1,42 @@
+@startuml
+skinparam style strictuml
+skinparam monochrome true
+skinparam defaultFontName "Times New Roman"
+skinparam defaultFontSize 16
+skinparam packageFontSize 16
+skinparam cardFontSize 15
+skinparam backgroundColor white
+skinparam ArrowColor black
+skinparam PackageBorderColor black
+skinparam PackageBackgroundColor #F8F9FA
+skinparam CardBorderColor black
+skinparam CardBackgroundColor #FFFFFF
+
+title BudgetLite - Layered Architecture Diagram
+
+package "1. Presentation Layer (Flutter UI)" as L1 {
+  card "• App Shell & 6-Tab Navigation (app.dart)\n• Home Dashboard & Balance Hero (home_screen.dart)\n• Transactions Ledger & Quick Add Modal\n• Monthly Budget Meters & Envelope Setup\n• SMS Review Queue & Pending Confirmations" as C1
+}
+
+package "2. State Management Layer (Riverpod 2.x)" as L2 {
+  card "• TransactionNotifier (CRUD, transfers, scheduler)\n• BudgetNotifier (monthly income & threshold alerts)\n• SettingsNotifier (user preferences & custom rules)\n• Reactive FutureProviders (thisMonthTxns, budgets)" as C2
+}
+
+package "3. Core Engines & Business Logic" as L3 {
+  card "• SMS Parser Engine (Regex heuristics & merchant mapping)\n• Auto-Categorization Engine (Keyword regex matching)\n• Duplicate Detection Engine (Fuzzy date/amount checks)\n• Recurring Transaction Engine (Auto-posting on boot)\n• Formatters (Currency INR/USD/EUR & yyyy-MM keys)" as C3
+}
+
+package "4. Data Access Layer (Drift ORM)" as L4 {
+  card "• AppDatabase & Code-Generated DAOs (database.dart)\n• Relational Tables (Accounts, Categories, Transactions,\n  Budgets, Goals, MonthlyIncome, AppSettings)\n• Default Category Seeder & SQLite Migrations" as C4
+}
+
+database "5. Local Device Storage" as L5 {
+  card "• Local SQLite Database File (app.db)\n• Hardware KeyStore (Biometric Authentication Lock)" as C5
+}
+
+L1 -down-> L2 : "Dispatches UI Actions & Watches State"
+L2 -down-> L3 : "Executes Parsing, Detection & Scheduling"
+L3 -down-> L4 : "Delegates Persistence"
+L4 -down-> L5 : "Executes ACID SQL Operations"
+
+@enduml

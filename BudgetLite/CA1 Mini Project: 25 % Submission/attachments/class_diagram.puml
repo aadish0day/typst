@@ -1,0 +1,94 @@
+@startuml
+skinparam style strictuml
+skinparam monochrome true
+skinparam defaultFontName "Times New Roman"
+skinparam defaultFontSize 15
+skinparam classFontSize 15
+skinparam classAttributeFontSize 14
+skinparam backgroundColor white
+skinparam ArrowColor black
+skinparam ClassBorderColor black
+skinparam ClassBackgroundColor #F8F9FA
+
+title BudgetLite - Domain Class Diagram
+
+class Account {
+  +id: String
+  +name: String
+  +balance: double
+  +currency: String
+}
+
+class Category {
+  +id: String
+  +name: String
+  +icon: String
+  +color: int
+  +type: String
+}
+
+class Transaction {
+  +id: String
+  +amount: double
+  +categoryId: String
+  +accountId: String
+  +date: DateTime
+  +isRecurring: bool
+}
+
+class Budget {
+  +id: String
+  +categoryId: String
+  +month: String
+  +allocatedAmount: double
+}
+
+class CategorizationRule {
+  +keyword: String
+  +categoryId: String
+  +toRegExp(): RegExp
+}
+
+class SmsParser {
+  +{static} parseMessage(body): ParsedSmsTxn?
+}
+
+class DuplicateDetector {
+  +{static} findDuplicates(params): Result
+}
+
+class TransactionNotifier {
+  -db: AppDatabase
+  +addTransaction(txn): Future
+  +transferFunds(params): Future
+  +postDueRecurring(): Future<int>
+}
+
+class BudgetNotifier {
+  -db: AppDatabase
+  +setBudget(catId, month, amt): Future
+  +checkBudgetThresholds(ctx, catId): Future
+}
+
+' Column 1 stacking
+Account -[hidden]down-> Category
+Category -[hidden]down-> Transaction
+Transaction -[hidden]down-> Budget
+
+' Column 2 stacking
+CategorizationRule -[hidden]down-> SmsParser
+SmsParser -[hidden]down-> DuplicateDetector
+DuplicateDetector -[hidden]down-> TransactionNotifier
+TransactionNotifier -[hidden]down-> BudgetNotifier
+
+' Side-by-side alignment
+Account -[hidden]right-> CategorizationRule
+
+' Relationships
+Account "1" *-- "many" Transaction : holds
+Category "1" *-- "many" Transaction : categorizes
+Category "1" *-- "many" Budget : allocates
+TransactionNotifier ..> Transaction : creates
+BudgetNotifier ..> Budget : manages
+
+@enduml
