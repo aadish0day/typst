@@ -150,7 +150,7 @@
   "Submission Date", "August 2026"
 )
 
-#v(10pt)
+#pagebreak()
 
 // ==========================================
 // TABLE OF CONTENTS
@@ -162,9 +162,7 @@
   depth: 2,
 )
 
-#v(12pt)
-#line(length: 100%, stroke: 0.4pt + luma(180))
-#v(12pt)
+#pagebreak()
 
 // ==========================================
 // SECTION 1: ABSTRACT

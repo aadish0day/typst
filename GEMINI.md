@@ -50,3 +50,6 @@ For all **Black Book** project reports/dissertations and **Assignments / Submiss
 3. **Submissions & Folder Naming**:
    - Folder name must match the assignment/submission prompt.
    - Files inside should use descriptive snake_case slugs (`.typ` and `.pdf`).
+
+4. **Table of Contents (TOC)**:
+   - When included, the Table of Contents (`#outline(...)`) **MUST** be placed on its own dedicated page, enclosed with `#pagebreak()` before and after.
