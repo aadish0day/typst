@@ -23,8 +23,8 @@ This workspace maintains the complete academic documentation, reports, and compi
 - **Source Snapshot:** Commit `2d57e78` (*"feat: add recurring transactions, SMS parsing, accounts, and auto-categorization"*, Jul 24, 2026)
 - **Core Scope:** Database Schema v2 (7 tables), multi-account ledger, automated recurring transaction engine, on-device regex SMS parsing & review queue, keyword-based auto-categorization, duplicate transaction detector, and Material 3 UI foundations.
 - **Deliverables:**
-  - [`main.pdf`](./CA1%20Mini%20Project:%2025%20%25%20Submission/main.pdf) (19 Pages, fully compiled with 5 vector PlantUML diagrams)
-  - [`main.typ`](./CA1%20Mini%20Project:%2025%20%25%20Submission/main.typ) (Typst master source)
+  - [`ca1_mini_project_25_submission.pdf`](./CA1%20Mini%20Project:%2025%20%25%20Submission/ca1_mini_project_25_submission.pdf) (19 Pages, fully compiled with 5 vector PlantUML diagrams)
+  - [`ca1_mini_project_25_submission.typ`](./CA1%20Mini%20Project:%2025%20%25%20Submission/ca1_mini_project_25_submission.typ) (Typst master source)
   - [`CA1_Mini_Project_Submission.md`](./CA1%20Mini%20Project:%2025%20%25%20Submission/CA1_Mini_Project_Submission.md) (Markdown reference)
 
 ---
@@ -40,8 +40,8 @@ This workspace maintains the complete academic documentation, reports, and compi
   - **'What-If' Savings Goal Simulator:** Scenario reduction sliders calculating accelerated goal completion.
   - **Data Management & Theming:** JSON database export/import, quote-safe CSV ingestion, Light/Dark/System theming.
 - **Deliverables:**
-  - [`main.pdf`](./CA1%20Mini%20Project:%2050%20%25%20Submission/main.pdf) (21 Pages, fully compiled with 6 vector PlantUML diagrams)
-  - [`main.typ`](./CA1%20Mini%20Project:%2050%20%25%20Submission/main.typ) (Typst master source)
+  - [`ca1_mini_project_50_submission.pdf`](./CA1%20Mini%20Project:%2050%20%25%20Submission/ca1_mini_project_50_submission.pdf) (21 Pages, fully compiled with 6 vector PlantUML diagrams)
+  - [`ca1_mini_project_50_submission.typ`](./CA1%20Mini%20Project:%2050%20%25%20Submission/ca1_mini_project_50_submission.typ) (Typst master source)
   - [`CA1_Mini_Project_50_Submission.md`](./CA1%20Mini%20Project:%2050%20%25%20Submission/CA1_Mini_Project_50_Submission.md) (Markdown reference)
 
 ---
@@ -56,8 +56,8 @@ This workspace maintains the complete academic documentation, reports, and compi
   - **Comprehensive Test Automation Suite:** Unit and regression tests covering duplicate transaction detection, bank SMS regex parsing, CSV statement import, and formatters.
   - **Material 3 UX Redesign:** Animated bottom navigation bar, high-contrast metric cards, and transaction row subtitle dates.
 - **Deliverables:**
-  - [`main.pdf`](./CA1%20Mini%20Project:%2075%20%25%20Submission/main.pdf) (17 Pages, fully compiled with 6 vector PlantUML diagrams)
-  - [`main.typ`](./CA1%20Mini%20Project:%2075%20%25%20Submission/main.typ) (Typst master source)
+  - [`ca1_mini_project_75_submission.pdf`](./CA1%20Mini%20Project:%2075%20%25%20Submission/ca1_mini_project_75_submission.pdf) (17 Pages, fully compiled with 6 vector PlantUML diagrams)
+  - [`ca1_mini_project_75_submission.typ`](./CA1%20Mini%20Project:%2075%20%25%20Submission/ca1_mini_project_75_submission.typ) (Typst master source)
   - [`CA1_Mini_Project_75_Submission.md`](./CA1%20Mini%20Project:%2075%20%25%20Submission/CA1_Mini_Project_75_Submission.md) (Markdown reference)
 
 ---
@@ -70,6 +70,6 @@ This workspace maintains the complete academic documentation, reports, and compi
   - **Complete Offline Feature Matrix:** Multi-account ledger, split transactions, envelope budgeting with 80%/100% push alerts, What-If simulator, quartile heatmaps, on-device PDF generation, reimbursement tracker, and biometric auto-lock.
   - **Quality Assurance & Verification:** Zero static analysis issues (`flutter analyze`), unit and regression test suites passing, locked 60fps scrolling.
 - **Deliverables:**
-  - [`main.pdf`](./CA1%20Mini%20Project:%20100%20%25%20Submission/main.pdf) (16 Pages, fully compiled with 6 vector PlantUML diagrams)
-  - [`main.typ`](./CA1%20Mini%20Project:%20100%20%25%20Submission/main.typ) (Typst master source)
+  - [`ca1_mini_project_100_submission.pdf`](./CA1%20Mini%20Project:%20100%20%25%20Submission/ca1_mini_project_100_submission.pdf) (16 Pages, fully compiled with 6 vector PlantUML diagrams)
+  - [`ca1_mini_project_100_submission.typ`](./CA1%20Mini%20Project:%20100%20%25%20Submission/ca1_mini_project_100_submission.typ) (Typst master source)
   - [`CA1_Mini_Project_100_Submission.md`](./CA1%20Mini%20Project:%20100%20%25%20Submission/CA1_Mini_Project_100_Submission.md) (Markdown reference)

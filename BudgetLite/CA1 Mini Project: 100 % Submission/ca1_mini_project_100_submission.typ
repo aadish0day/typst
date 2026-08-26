@@ -10,9 +10,18 @@
 
 #set page(
   paper: "a4",
-  margin: (left: 1.25in, right: 1in, top: 1in, bottom: 1in),
+  margin: (left: 1.5in, right: 1in, top: 1in, bottom: 1in),
   numbering: "1",
   number-align: center,
+  // Mandatory Black Page Border
+  background: place(
+    center + horizon,
+    rect(
+      width: 100% - 1.5cm,
+      height: 100% - 1.5cm,
+      stroke: 1pt + black,
+    )
+  ),
 )
 
 // Cross-Platform Font Fallbacks
