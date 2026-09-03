@@ -1,0 +1,137 @@
+@startuml
+skinparam style strictuml
+skinparam monochrome true
+skinparam defaultFontName "Liberation Sans"
+skinparam defaultFontSize 11
+skinparam defaultFontStyle bold
+skinparam titleFontSize 16
+skinparam titleFontStyle bold
+
+skinparam backgroundColor white
+skinparam ArrowColor black
+skinparam ArrowThickness 2.0
+skinparam ArrowFontSize 10
+skinparam ArrowFontStyle bold
+
+skinparam objectBorderColor black
+skinparam objectBorderThickness 2.0
+skinparam objectBackgroundColor #F8F9FA
+skinparam objectFontSize 11
+skinparam objectFontStyle bold
+
+title FactStamp - Runtime Object Diagram (Consensus Resolution Snapshot)
+
+' Submitter & Duplicate Cluster
+object "submitter : User" as sub {
+  uid = "usr_9901"
+  displayName = "Rahul K."
+  reputation = 50
+  totalVerifications = 3
+  isAdmin = false
+}
+
+object "dup : DuplicateCluster" as dup {
+  id = "dup_501"
+  canonicalClaimId = "clm_89234"
+  duplicateText = "All bank ATMs will stop working..."
+  jaccardScore = 0.84
+}
+
+' Canonical Claim Instance
+object "c1 : Claim" as c1 {
+  id = "clm_89234"
+  text = "RBI closing all ATMs tonight 12AM..."
+  category = "financial"
+  status = "verified"
+  verdict = "FALSE"
+  confidence = 93.1
+  quorumCount = 3
+  submittedBy = "usr_9901"
+}
+
+' Verifications (Quorum votes)
+object "v1 : Verification" as v1 {
+  id = "ver_101"
+  claimId = "clm_89234"
+  verifierId = "usr_4021"
+  verdict = "FALSE"
+  sourceUrl = "https://pib.gov.in/FactCheck/..."
+  sourceCredibility = 95
+  verifierReputation = 88
+}
+
+object "v2 : Verification" as v2 {
+  id = "ver_102"
+  claimId = "clm_89234"
+  verifierId = "usr_8819"
+  verdict = "FALSE"
+  sourceUrl = "https://rbi.org.in/press/..."
+  sourceCredibility = 98
+  verifierReputation = 94
+}
+
+object "v3 : Verification" as v3 {
+  id = "ver_103"
+  claimId = "clm_89234"
+  verifierId = "usr_1204"
+  verdict = "FALSE"
+  sourceUrl = "https://timesofindia.indiatimes.com/..."
+  sourceCredibility = 80
+  verifierReputation = 76
+}
+
+' Verifiers
+object "u1 : User" as u1 {
+  uid = "usr_4021"
+  displayName = "Priya Sharma"
+  reputation = 88
+  totalVerifications = 42
+}
+
+object "u2 : User" as u2 {
+  uid = "usr_8819"
+  displayName = "Dr. Rajesh Iyer"
+  reputation = 94
+  totalVerifications = 115
+}
+
+object "u3 : User" as u3 {
+  uid = "usr_1204"
+  displayName = "Ananya Desai"
+  reputation = 76
+  totalVerifications = 19
+}
+
+' Consensus Result & Fact Card
+object "cr : ConsensusResult" as cr {
+  verdict = "FALSE"
+  confidence = 93.1
+  agreementRatio = 1.0
+  reputationAvg = 86.0
+  sourceQualityAvg = 91.0
+  isCertified = true
+}
+
+object "card : FactCardGenerator" as card {
+  targetElement = "#fact-card-preview"
+  outputResolution = "1080x1080"
+  colorSpace = "sRGB"
+  exportFormat = "PNG"
+}
+
+' Links & Multiplicities
+sub -down-> c1 : submits
+dup -down-> c1 : clusters into
+
+c1 *-down-> v1 : contains
+c1 *-down-> v2 : contains
+c1 *-down-> v3 : contains
+
+u1 -down-> v1 : casts
+u2 -down-> v2 : casts
+u3 -down-> v3 : casts
+
+c1 -down-> cr : produces
+c1 -down-> card : renders into
+
+@enduml

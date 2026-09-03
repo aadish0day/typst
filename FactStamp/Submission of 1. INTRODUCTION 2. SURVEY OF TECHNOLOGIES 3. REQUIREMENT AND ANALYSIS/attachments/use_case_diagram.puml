@@ -1,0 +1,78 @@
+@startuml
+skinparam style strictuml
+skinparam monochrome true
+skinparam defaultFontName "Liberation Sans"
+skinparam defaultFontSize 18
+skinparam defaultFontStyle bold
+skinparam titleFontSize 24
+skinparam titleFontStyle bold
+
+skinparam backgroundColor white
+skinparam ArrowColor black
+skinparam ArrowThickness 2.5
+skinparam ArrowFontSize 15
+skinparam ArrowFontStyle bold
+
+skinparam UsecaseBorderColor black
+skinparam UsecaseBorderThickness 2.5
+skinparam UsecaseBackgroundColor #F8F9FA
+skinparam UsecaseFontSize 17
+skinparam UsecaseFontStyle bold
+
+skinparam ActorBorderColor black
+skinparam ActorBorderThickness 2.5
+skinparam ActorBackgroundColor #FFFFFF
+skinparam ActorFontSize 18
+skinparam ActorFontStyle bold
+
+skinparam RectangleBorderColor black
+skinparam RectangleBorderThickness 2.5
+skinparam RectangleBackgroundColor transparent
+skinparam RectangleFontSize 20
+skinparam RectangleFontStyle bold
+
+title FactStamp - Comprehensive UML Use Case Diagram
+
+actor "Public Submitter\n(WhatsApp User)" as User
+actor "Community Verifier\n(Reviewer)" as Verifier
+actor "Platform Administrator\n(Governance)" as Admin
+
+rectangle "FactStamp Verification System" {
+  usecase "UC1: Submit Forward\n(Text or Screenshot)" as UC1
+  usecase "UC2: Extract Text via OCR" as UC2
+  usecase "UC3: Detect Duplicate Claim\n(Jaccard Index >= 0.75)" as UC3
+  usecase "UC4: Browse Pending Quorum Queue\n(Quorum N >= 3)" as UC4
+  usecase "UC5: Submit Verdict with Source URL\nand Factual Justification" as UC5
+  usecase "UC6: Calculate Weighted Consensus\nand Update Reputation" as UC6
+  usecase "UC7: View Certified Claim Verdict\nand Confidence Score" as UC7
+  usecase "UC8: Export 1080x1080px\nFact-Check PNG Card" as UC8
+  usecase "UC9: View Misinformation Dashboard\nand Weekly Trends" as UC9
+  usecase "UC10: Audit Disputed Claims\nand System Telemetry" as UC10
+}
+
+User --> UC1
+User --> UC7
+User --> UC8
+User --> UC9
+
+UC1 ..> UC2 : <<include>>
+UC1 ..> UC3 : <<include>>
+
+Verifier --> UC4
+Verifier --> UC5
+Verifier --> UC9
+
+UC5 ..> UC6 : <<trigger>>
+
+Admin --> UC9
+Admin --> UC10
+
+UC1 -[hidden]down-> UC3
+UC3 -[hidden]down-> UC4
+UC4 -[hidden]down-> UC5
+UC5 -[hidden]down-> UC6
+UC6 -[hidden]down-> UC7
+UC7 -[hidden]down-> UC8
+UC8 -[hidden]down-> UC9
+UC9 -[hidden]down-> UC10
+@enduml

@@ -94,10 +94,13 @@ Step 5: Compile Typst PDF deliverable & Verify formatting rules
    - Weighted Confidence Formula: $\text{Confidence} = (A \times 40\%) + (R \times 30\%) + (S \times 30\%)$.
    - Duplicate Matching Threshold: Jaccard word-overlap index $J(A, B) \ge 0.75$.
 4. **Step 4 — Format in Typst**: Follow formatting rules from [`Rules/Typst_format.md`](file:///home/aadish/Documents/typst/FactStamp/Rules/Typst_format.md):
-   - Include Master Setup Block & `#set heading(numbering: "1.1")`.
+   - Include Master Setup Block: **Times New Roman** font, **12pt Justified** content (`#set text(size: 12pt)` & `#set par(justify: true)`).
+   - Heading Hierarchy: **Headings 16pt Bold** (`level: 1`), **Subheadings 14pt Bold** (`level: 2`), **Sub-subheadings 13pt Bold** (`level: 3`).
+   - **New Topic on New Page (Mandatory)**: `#show heading.where(level: 1): it => { pagebreak(weak: true); it }`.
+   - Mandatory solid black page border (`1pt + black`).
    - Use `#styled-table()` for academic tables.
    - Use `- *Bold Label*:` for list items (never double stars `**` or line-start `*`).
-   - Use `#outline(title: [Table of Contents], indent: 1.5em, depth: 3)` for TOC generation.
+   - Use `#outline(title: [Table of Contents], indent: 1.5em, depth: 3)` for TOC generation (dedicated page).
 5. **Step 5 — Compile & Verify**: Run `npx typst compile` and verify that the output `.pdf` compiles cleanly with exit code 0.
 
 ---

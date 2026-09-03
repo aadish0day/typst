@@ -31,25 +31,43 @@ For all **Black Book** project reports/dissertations and **Assignments / Submiss
 
 ## 2. General Formatting & Typography Rules
 
-1. **Font Settings**:
+1. **Font & Paragraph Settings**:
    ```typst
    #set text(
      font: ("Times New Roman", "Liberation Serif", "Nimbus Roman", "DejaVu Serif"),
-     size: 11pt, // 11pt - 12pt for formal academic text
+     size: 12pt, // Mandatory 12pt for content
      lang: "en",
      hyphenate: true,
    )
-   #set par(justify: true, leading: 0.65em, first-line-indent: 0pt)
+   #set par(justify: true, leading: 0.65em, first-line-indent: 0pt) // Mandatory Justified Content
    #set heading(numbering: "1.1")
    ```
 
-2. **Tables**:
+2. **Heading & Subheading Hierarchy**:
+   - **Headings (Level 1)**: `16pt`, **Bold**
+   - **Subheadings (Level 2)**: `14pt`, **Bold**
+   - **Sub-subheadings (Level 3)**: `13pt`, **Bold**
+   - **New Topic on New Page (Mandatory)**: Every new topic or major section (Level 1 Heading) **MUST** start on a new page.
+   ```typst
+   #show heading.where(level: 1): set text(size: 16pt, weight: "bold")
+   #show heading.where(level: 2): set text(size: 14pt, weight: "bold")
+   #show heading.where(level: 3): set text(size: 13pt, weight: "bold")
+
+   // Mandatory: New topic on new page
+   #show heading.where(level: 1): it => {
+     pagebreak(weak: true)
+     it
+   }
+   ```
+
+3. **Tables**:
    - Headers: bold and centered, top/bottom black borders (`1.2pt + black`).
    - Cell borders: thin light gray (`0.4pt + luma(180)`).
 
-3. **Submissions & Folder Naming**:
+4. **Submissions & Folder Naming**:
    - Folder name must match the assignment/submission prompt.
    - Files inside should use descriptive snake_case slugs (`.typ` and `.pdf`).
 
-4. **Table of Contents (TOC)**:
+5. **Table of Contents (TOC)**:
    - When included, the Table of Contents (`#outline(...)`) **MUST** be placed on its own dedicated page, enclosed with `#pagebreak()` before and after.
+

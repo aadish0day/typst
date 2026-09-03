@@ -36,7 +36,19 @@ Copy-paste this single starter block at the top of any standalone submission fil
   hyphenate: true, // Prevents text clipping in narrow table cells
 )
 
-#set par(justify: true, leading: 0.65em, first-line-indent: 0pt)
+#set par(justify: true, leading: 0.65em, first-line-indent: 0pt) // Mandatory Justified Content (12pt Times New Roman)
+#set heading(numbering: "1.1")
+
+// Heading Styling Rules: Heading 16pt bold, Subheadings 14pt bold
+#show heading.where(level: 1): set text(size: 16pt, weight: "bold")
+#show heading.where(level: 2): set text(size: 14pt, weight: "bold")
+#show heading.where(level: 3): set text(size: 13pt, weight: "bold")
+
+// Mandatory Rule: New topic / major section on new page
+#show heading.where(level: 1): it => {
+  pagebreak(weak: true)
+  it
+}
 
 // Global Table Cell Styling
 #show table.cell: set text(size: 10pt)
@@ -60,7 +72,23 @@ Copy-paste this single starter block at the top of any standalone submission fil
 
 ---
 
-## 2. One Format, Dual-Mode Compilation
+## 2. Heading, Typography & Layout Rules Summary
+
+| Hierarchy / Element | Typography / Formatting Specification | Typst Implementation |
+|---|---|---|
+| **Font Family** | Times New Roman (Cross-platform serif fallbacks) | `font: ("Times New Roman", "Liberation Serif", "Nimbus Roman", "DejaVu Serif")` |
+| **Content / Body** | **12pt**, **Justified**, `leading: 0.65em` | `#set text(size: 12pt)` & `#set par(justify: true)` |
+| **Headings (Level 1)** | **16pt**, **Bold**, numbered `"1.1"` | `#show heading.where(level: 1): set text(size: 16pt, weight: "bold")` |
+| **Subheadings (Level 2)** | **14pt**, **Bold** | `#show heading.where(level: 2): set text(size: 14pt, weight: "bold")` |
+| **Sub-subheadings (Level 3)** | **13pt**, **Bold** | `#show heading.where(level: 3): set text(size: 13pt, weight: "bold")` |
+| **New Topic on New Page** | **Mandatory** pagebreak before every Level 1 topic | `#show heading.where(level: 1): it => { pagebreak(weak: true); it }` |
+| **Page Border** | Solid black border (`1pt + black`) | `rect(width: 100% - 1.5cm, height: 100% - 1.5cm, stroke: 1pt + black)` |
+| **Binding Margin** | Left: `1.5in`, Right/Top/Bottom: `1in` | `margin: (left: 1.5in, right: 1in, top: 1in, bottom: 1in)` |
+
+
+---
+
+## 3. One Format, Dual-Mode Compilation
 
 Same page setup, typography, heading style, table formats, and diagram rules apply to every individual submission `.typ` AND the final assembled blackbook. 
 
@@ -100,7 +128,7 @@ typst compile --input mode=blackbook master_blackbook.typ master_blackbook.pdf
 
 ---
 
-## 3. Full Front Matter Drop-In Templates (Assembled Blackbook)
+## 4. Full Front Matter Drop-In Templates (Assembled Blackbook)
 
 Pre-formatted, copy-pasteable Typst blocks for all 5 mandatory front-matter pages. Uses flex vertical spacing (`#v(1fr)`) to ensure single-page containment regardless of title text length.
 
@@ -258,7 +286,7 @@ FactStamp is a community-powered WhatsApp misinformation fact-checker...
 
 ---
 
-## 4. Formal Component Helpers
+## 5. Formal Component Helpers
 
 ### A. Reusable Academic Table Helper (`styled-table`)
 ```typst
@@ -311,7 +339,7 @@ For wide diagrams (Level 2 DFDs, full Package Diagrams):
 
 ---
 
-## 5. Appendix & Back-Matter Section Setup
+## 6. Appendix & Back-Matter Section Setup
 
 Transition to Back-Matter (Appendices) using a lettered heading numbering reset:
 
@@ -334,8 +362,15 @@ REST endpoints documentation...
 
 ---
 
-## 6. PDF Quality & Submission Discipline
+## 7. PDF Quality & Submission Discipline
 
+- **Mandatory Typography Hierarchy:**
+  - **Headings (Level 1 / Topics):** `16pt`, **Bold** (`#show heading.where(level: 1): set text(size: 16pt, weight: "bold")`).
+  - **Subheadings (Level 2):** `14pt`, **Bold** (`#show heading.where(level: 2): set text(size: 14pt, weight: "bold")`).
+  - **Sub-subheadings (Level 3):** `13pt`, **Bold** (`#show heading.where(level: 3): set text(size: 13pt, weight: "bold")`).
+  - **Content / Body Text:** `12pt`, **Justified** (`#set text(size: 12pt)` with `#set par(justify: true)`).
+  - **Font Family:** **Times New Roman** with cross-platform serif fallbacks (`Liberation Serif`, `Nimbus Roman`, `DejaVu Serif`).
+- **New Topic on New Page (Mandatory):** Every new topic or major section (Level 1 Heading) **MUST** start on a fresh new page (`#show heading.where(level: 1): it => { pagebreak(weak: true); it }` or explicit `#pagebreak()`).
 - **Mandatory Black Page Border:** Every Black Book project document and Assignment/Submission **MUST** include a solid black border (`stroke: 1pt + black`) configured in `#set page(background: place(center + horizon, rect(width: 100% - 1.5cm, height: 100% - 1.5cm, stroke: 1pt + black)))`.
 - **Exact Folder & Sub-file Naming Rule:** Submission directory names **MUST EXACTLY MATCH** the user's input/prompt string (e.g. `Submission of Chp 4: 4.2.2 Data Integrity and Constraints, 4.4 Security Issues/`). Inside the directory, `.typ` and `.pdf` files **MUST USE** a descriptive title slug (e.g. `data_integrity_and_security_issues.typ` and `data_integrity_and_security_issues.pdf`).
 - **PDF Metadata:** Prepend `#set document(title: "FactStamp - <Section>", author: "Aadish")` to every `.typ` file.

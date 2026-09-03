@@ -1,0 +1,60 @@
+@startuml
+skinparam style strictuml
+skinparam monochrome true
+skinparam defaultFontName "Liberation Sans"
+skinparam defaultFontSize 16
+skinparam defaultFontStyle bold
+skinparam titleFontSize 22
+skinparam titleFontStyle bold
+
+skinparam backgroundColor white
+skinparam ArrowColor black
+skinparam ArrowThickness 2.5
+skinparam ArrowFontSize 14
+skinparam ArrowFontStyle bold
+
+skinparam ActivityBorderColor black
+skinparam ActivityBorderThickness 2.5
+skinparam ActivityBackgroundColor #F8F9FA
+skinparam ActivityFontSize 15
+skinparam ActivityFontStyle bold
+
+skinparam ActivityDiamondBorderColor black
+skinparam ActivityDiamondBorderThickness 2.5
+skinparam ActivityDiamondBackgroundColor #FFFFFF
+skinparam ActivityDiamondFontSize 14
+skinparam ActivityDiamondFontStyle bold
+
+title FactStamp - Operational Workflow & Architectural Scope
+
+start
+
+:Receive Suspicious Forward\nin WhatsApp Chat Group;
+
+:Submit Claim to FactStamp\n(Raw Text or Screenshot);
+
+if (Submission is Screenshot?) then (yes)
+  :Compress Image via Canvas API;
+  :Extract Text via Tesseract.js (WASM);
+else (no)
+  :Normalize Plaintext String;
+endif
+
+:Execute Jaccard Duplicate Check\nagainst Firestore Claims Store;
+
+if (Jaccard Index J >= 0.75?) then (Duplicate Found)
+  :Fetch Existing Certified Verdict\n(Sub-Second Response);
+else (Unique Claim)
+  :Enqueue Claim into Public\nQuorum Verification Registry;
+  :Independent Community Review\n(Minimum Quorum N >= 3);
+  :Submit Verdicts, Citations & Rationales;
+  :Compute Multi-Factor Consensus\nC = 0.40A + 0.30R + 0.30S;
+  :Update Verifier Reputation Scores;
+endif
+
+:Compile Shareable 1080x1080px\nFact-Check PNG Card (html2canvas);
+
+:User Downloads Square Fact Card\nand Forwards into WhatsApp Chat;
+
+stop
+@enduml

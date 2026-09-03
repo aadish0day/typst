@@ -1,0 +1,74 @@
+digraph PERT_Chart {
+  bgcolor="white"
+  fontname="Liberation Sans Bold"
+  label="FactStamp - PERT Network Diagram (Activity-on-Node)"
+  labelloc=t
+  fontsize=20
+  rankdir=TB
+  nodesep=0.4
+  ranksep=0.45
+  margin=0.04
+
+  node [fontname="Liberation Sans Bold", fontsize=11, shape=record, style="filled,bold", fillcolor="#F8F9FA", color="#000000", penwidth=2.0]
+  edge [fontname="Liberation Sans Bold", fontsize=10, color="#000000", penwidth=2.0]
+
+  // Rank 1
+  T1 [label="{ T1: Requirements & Scope | Te: 6d | Slack: 0 [CRITICAL] }|{ ES: 0 | EF: 6 | LS: 0 | LF: 6 }", fillcolor="#FFFFFF", penwidth=3.0]
+
+  // Rank 2: T2 and T3 in parallel
+  { rank=same;
+    T2 [label="{ T2: Tech Survey | Te: 4d | Slack: 91d }|{ ES: 6 | EF: 10 | LS: 97 | LF: 101 }"]
+    T3 [label="{ T3: Architecture & Schema | Te: 8d | Slack: 0 [CRITICAL] }|{ ES: 6 | EF: 14 | LS: 6 | LF: 14 }", fillcolor="#FFFFFF", penwidth=3.0]
+  }
+
+  // Rank 3: T4 and T5 in parallel
+  { rank=same;
+    T4 [label="{ T4: Module 1 (Auth & Profile) | Te: 10d | Slack: 17d }|{ ES: 14 | EF: 24 | LS: 31 | LF: 41 }"]
+    T5 [label="{ T5: Module 2 (Ingestion) | Te: 12d | Slack: 0 [CRITICAL] }|{ ES: 14 | EF: 26 | LS: 14 | LF: 26 }", fillcolor="#FFFFFF", penwidth=3.0]
+  }
+
+  // Rank 4: T6
+  T6 [label="{ T6: Client OCR Pipeline | Te: 8d | Slack: 0 [CRITICAL] }|{ ES: 26 | EF: 34 | LS: 26 | LF: 34 }", fillcolor="#FFFFFF", penwidth=3.0]
+
+  // Rank 5: T7
+  T7 [label="{ T7: Module 3 (Jaccard Dedup) | Te: 7d | Slack: 0 [CRITICAL] }|{ ES: 34 | EF: 41 | LS: 34 | LF: 41 }", fillcolor="#FFFFFF", penwidth=3.0]
+
+  // Rank 6: T8
+  T8 [label="{ T8: Module 4 (Quorum Queue) | Te: 14d | Slack: 0 [CRITICAL] }|{ ES: 41 | EF: 55 | LS: 41 | LF: 55 }", fillcolor="#FFFFFF", penwidth=3.0]
+
+  // Rank 7: T9
+  T9 [label="{ T9: Module 8 (Anti-Sybil & Rep) | Te: 9d | Slack: 0 [CRITICAL] }|{ ES: 55 | EF: 64 | LS: 55 | LF: 64 }", fillcolor="#FFFFFF", penwidth=3.0]
+
+  // Rank 8: T10
+  T10 [label="{ T10: Module 5 (Consensus Engine) | Te: 11d | Slack: 0 [CRITICAL] }|{ ES: 64 | EF: 75 | LS: 64 | LF: 75 }", fillcolor="#FFFFFF", penwidth=3.0]
+
+  // Rank 9: T11 and T12 in parallel
+  { rank=same;
+    T11 [label="{ T11: Module 6 (Fact PNG Card) | Te: 10d | Slack: 0 [CRITICAL] }|{ ES: 75 | EF: 85 | LS: 75 | LF: 85 }", fillcolor="#FFFFFF", penwidth=3.0]
+    T12 [label="{ T12: Module 7 (Analytics) | Te: 8d | Slack: 2d }|{ ES: 75 | EF: 83 | LS: 77 | LF: 85 }"]
+  }
+
+  // Rank 10: T13
+  T13 [label="{ T13: Integration & Hardening | Te: 10d | Slack: 0 [CRITICAL] }|{ ES: 85 | EF: 95 | LS: 85 | LF: 95 }", fillcolor="#FFFFFF", penwidth=3.0]
+
+  // Rank 11: T14
+  T14 [label="{ T14: Final Submission | Te: 6d | Slack: 0 [CRITICAL] }|{ ES: 95 | EF: 101 | LS: 95 | LF: 101 }", fillcolor="#FFFFFF", penwidth=3.0]
+
+  // Edges: Critical Path highlighted
+  T1 -> T3 [label=" Critical Path ", penwidth=3.5]
+  T1 -> T2 [style=dashed, label=" Slack: 91d "]
+  T3 -> T5 [label=" Critical Path ", penwidth=3.5]
+  T3 -> T4 [style=dashed, label=" Slack: 17d "]
+  T5 -> T6 [label=" Critical Path ", penwidth=3.5]
+  T6 -> T7 [label=" Critical Path ", penwidth=3.5]
+  T7 -> T8 [label=" Critical Path ", penwidth=3.5]
+  T4 -> T8 [style=dashed]
+  T8 -> T9 [label=" Critical Path ", penwidth=3.5]
+  T8 -> T10 [style=dotted]
+  T9 -> T10 [label=" Critical Path ", penwidth=3.5]
+  T10 -> T11 [label=" Critical Path ", penwidth=3.5]
+  T10 -> T12 [style=dashed, label=" Slack: 2d "]
+  T11 -> T13 [label=" Critical Path ", penwidth=3.5]
+  T12 -> T13 [style=dashed]
+  T13 -> T14 [label=" Total: 101 Days ", penwidth=3.5]
+}

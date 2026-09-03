@@ -1,0 +1,65 @@
+@startuml
+skinparam style strictuml
+skinparam monochrome true
+skinparam defaultFontName "Liberation Sans"
+skinparam defaultFontSize 18
+skinparam defaultFontStyle bold
+skinparam titleFontSize 24
+skinparam titleFontStyle bold
+
+skinparam backgroundColor white
+skinparam ArrowColor black
+skinparam ArrowThickness 2.5
+skinparam ArrowFontSize 14
+skinparam ArrowFontStyle bold
+
+skinparam RectangleBorderColor black
+skinparam RectangleBorderThickness 2.5
+skinparam RectangleBackgroundColor #F8F9FA
+skinparam RectangleFontSize 16
+skinparam RectangleFontStyle bold
+
+skinparam PackageBorderColor black
+skinparam PackageBorderThickness 2.5
+skinparam PackageBackgroundColor transparent
+skinparam PackageFontSize 19
+skinparam PackageFontStyle bold
+
+title FactStamp - Layered Technology Stack Architecture
+
+package "1. Presentation Layer (Client Browser)" as P1 {
+  rectangle "React 18 (Virtual DOM & Concurrent Mode)\n+ Vite 5 (Native ES Modules & HMR)" as UI_Core
+  rectangle "Tailwind CSS v4 (Saffron Sleek Theme & OKLCH Tokens)\n+ Lucide React Icons + Recharts Analytics" as UI_Style
+  UI_Core -[hidden]right-> UI_Style
+}
+
+package "2. Client Edge Compute Layer (Browser Memory)" as P2 {
+  rectangle "HTML5 Canvas API (Image Resizing < 500KB)\n+ Tesseract.js (WebAssembly OCR Engine)" as Client_OCR
+  rectangle "html2canvas + OKLCH-to-sRGB Patch\n(1080x1080px Fact-Check Square PNG Generator)" as Client_Export
+  Client_OCR -[hidden]right-> Client_Export
+}
+
+package "3. Algorithmic Processing Engine" as P3 {
+  rectangle "Jaccard Token Similarity Index (J >= 0.75)\n[Sub-100ms In-Memory Duplicate Detection]" as Algo_Dedup
+  rectangle "Multi-Factor Weighted Quorum Consensus Model\n[C = 0.40A + 0.30R + 0.30S & Reputation Dynamics]" as Algo_Consensus
+  Algo_Dedup -[hidden]right-> Algo_Consensus
+}
+
+package "4. Managed Backend & Real-Time Data Layer" as P4 {
+  rectangle "Firebase Authentication (OAuth 2.0 & Email/Password)\n[Session Hijacking Defense & Token Management]" as Cloud_Auth
+  rectangle "Google Cloud Firestore (Multi-Region NoSQL)\n[Real-Time WebSocket Listeners & Document Stores]" as Cloud_DB
+  Cloud_Auth -[hidden]right-> Cloud_DB
+}
+
+package "5. Governance, Security Rules & Edge Hosting" as P5 {
+  rectangle "Declarative Firestore Security Rules\n[Anti-Sybil Locks, Self-Verification Defense & RBAC]" as Gov_Security
+  rectangle "Vercel Global Edge Network (TLS 1.3 / HTTPS)\n[100% Free-Tier Serverless Operational Model]" as Edge_Deploy
+  Gov_Security -[hidden]right-> Edge_Deploy
+}
+
+P1 -down-> P2 : Ingest Claim & Style Templates
+P2 -down-> P3 : Extracted Text & Normalized Tokens
+P3 -down-> P4 : Persist Claims & Query Quorum
+P4 -down-> P5 : Enforce Security Rules & Edge Route
+
+@enduml
