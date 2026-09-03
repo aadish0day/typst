@@ -1,0 +1,55 @@
+@startuml
+skinparam style strictuml
+skinparam monochrome true
+skinparam defaultFontName "Liberation Sans"
+skinparam defaultFontSize 16
+skinparam defaultFontStyle bold
+skinparam titleFontSize 22
+skinparam titleFontStyle bold
+skinparam RectangleBorderThickness 2.5
+skinparam ArrowThickness 2.5
+
+title Smart Waste Management System - Non-Functional Requirements Quality Tree
+
+package "NFR System Quality Attributes" {
+  component "1. Performance & Scale" as NFR1 {
+    [P95 API Latency < 150ms]
+    [MQTT Ingestion 10k msg/min]
+    [Spatial GIS Query < 25ms]
+  }
+
+  component "2. Reliability & Availability" as NFR2 {
+    [99.95% System Uptime SLA]
+    [MTTR < 15 Minutes]
+    [Offline SQLite Sync Queue]
+  }
+
+  component "3. Security & Privacy" as NFR3 {
+    [TLS 1.3 & MQTT X.509]
+    [AES-256 Storage Encryption]
+    [Granular RBAC Permission Matrix]
+  }
+
+  component "4. Safety & Hazard Response" as NFR4 {
+    [Fire & Gas Alert < 2.0 Seconds]
+    [Driver Motion Input Lockout]
+    [GDPR & Spatial Privacy Masking]
+  }
+
+  component "5. Scalability & Maintainability" as NFR5 {
+    [Kubernetes Pod Auto-Scaling]
+    [Decoupled Microservices]
+    [>85% Unit Test Coverage]
+  }
+
+  component "6. Sustainability & Power" as NFR6 {
+    [> 3-Year Battery Sensor Life]
+    [CO2 Fleet Carbon Tracking]
+  }
+}
+
+NFR1 -[hidden]down-> NFR2
+NFR2 -[hidden]down-> NFR3
+NFR4 -[hidden]down-> NFR5
+NFR5 -[hidden]down-> NFR6
+@enduml

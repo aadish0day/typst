@@ -1,0 +1,74 @@
+@startuml
+skinparam style strictuml
+skinparam monochrome true
+skinparam defaultFontName "Liberation Sans"
+skinparam defaultFontSize 18
+skinparam defaultFontStyle bold
+skinparam titleFontSize 24
+skinparam titleFontStyle bold
+skinparam EntityFontSize 20
+skinparam EntityFontStyle bold
+skinparam ClassAttributeFontSize 16
+skinparam ArrowThickness 2.5
+skinparam EntityBorderThickness 2.5
+
+title Smart Waste Management System - Entity Relationship Diagram
+
+entity SmartBin {
+  * bin_id : string <<PK>>
+  --
+  location_lat : float
+  location_lng : float
+  capacity_liters : int
+  fill_level_pct : float
+  status : string
+  last_updated : timestamp
+}
+
+entity TelemetryLog {
+  * log_id : string <<PK>>
+  --
+  bin_id : string <<FK>>
+  fill_level : float
+  battery_level : float
+  temperature : float
+  recorded_at : timestamp
+}
+
+entity IncidentReport {
+  * report_id : string <<PK>>
+  --
+  citizen_uid : string <<FK>>
+  image_url : string
+  ai_waste_category : string
+  geo_lat : float
+  geo_lng : float
+  status : string
+  created_at : timestamp
+}
+
+entity CollectionRoute {
+  * route_id : string <<PK>>
+  --
+  driver_uid : string <<FK>>
+  vehicle_id : string
+  target_bin_ids : list<string>
+  total_distance_km : float
+  route_status : string
+  assigned_at : timestamp
+}
+
+entity WasteLog {
+  * log_id : string <<PK>>
+  --
+  route_id : string <<FK>>
+  bin_id : string <<FK>>
+  weight_kg : float
+  collected_at : timestamp
+}
+
+SmartBin ||--o{ TelemetryLog : "generates"
+SmartBin ||--o{ WasteLog : "collected in"
+CollectionRoute ||--o{ WasteLog : "includes"
+IncidentReport }|--|| SmartBin : "associated with"
+@enduml

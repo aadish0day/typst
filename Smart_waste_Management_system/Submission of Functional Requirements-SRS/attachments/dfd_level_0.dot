@@ -1,0 +1,36 @@
+digraph DFD_Level_0 {
+  bgcolor="white"
+  fontname="Liberation Sans Bold"
+  label="Smart Waste Management System - Context Level 0 DFD"
+  labelloc=t
+  fontsize=30
+  rankdir=TB
+  nodesep=0.6
+  ranksep=0.9
+  margin=0.1
+
+  node [fontname="Liberation Sans Bold", fontsize=22, style="filled,bold", fillcolor="#F8F9FA", color="#000000", penwidth=3.0]
+  edge [fontname="Liberation Sans Bold", fontsize=16, color="#000000", penwidth=2.5]
+
+  // External Entities (Box)
+  Citizen [shape=box, margin="0.2,0.15", label="Citizen / Public User"]
+  IoTBins [shape=box, margin="0.2,0.15", label="IoT Smart Waste Bins"]
+  Driver [shape=box, margin="0.2,0.15", label="Collection Driver"]
+  MunicipalAdmin [shape=box, margin="0.2,0.15", label="Municipal Admin"]
+
+  // Central System Process (Circle)
+  SystemProcess [shape=circle, margin="0.2,0.2", label="1.0\nSmart Waste Management\nSystem Core Engine"]
+
+  // Data Flows
+  Citizen -> SystemProcess [label=" 1. Report Overflow / Dumping & Geo-Tag "]
+  SystemProcess -> Citizen [label=" 2. Status Notifications & Rewards "]
+
+  IoTBins -> SystemProcess [label=" 3. Telemetry (Fill %, Temp, GPS) "]
+  SystemProcess -> IoTBins [label=" 4. Threshold & Config Updates "]
+
+  SystemProcess -> Driver [label=" 5. Optimized Route & Pickup List "]
+  Driver -> SystemProcess [label=" 6. Collection Confirmation Logs "]
+
+  MunicipalAdmin -> SystemProcess [label=" 7. Policy Setup & Fleet Commands "]
+  SystemProcess -> MunicipalAdmin [label=" 8. Real-Time Maps & Waste Analytics "]
+}

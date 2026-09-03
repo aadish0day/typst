@@ -1,0 +1,41 @@
+@startuml
+skinparam style strictuml
+skinparam monochrome true
+skinparam defaultFontName "Liberation Sans"
+skinparam defaultFontSize 18
+skinparam defaultFontStyle bold
+skinparam titleFontSize 24
+skinparam titleFontStyle bold
+skinparam ArrowThickness 2.5
+skinparam ComponentBorderThickness 2.5
+skinparam RectangleBorderThickness 2.5
+
+title Smart Waste Management System - Security & Encryption Architecture
+
+rectangle "Client & Sensor Layer" {
+  component [IoT Smart Bin Sensor] as Sensor
+  component [Citizen Mobile App] as CitizenApp
+  component [Driver Tablet App] as DriverApp
+}
+
+rectangle "Edge Security & Ingestion Tier" {
+  component [MQTT Gateway\n(TLS 8883 / X.509)] as MQTT
+  component [API Rate Limiter\n(Token Bucket 100/min)] as RateLimiter
+  component [HTTPS REST Gateway\n(TLS 1.3)] as HTTPS
+}
+
+rectangle "Core Services & Data Vault" {
+  component [Firebase Auth & RBAC] as Auth
+  component [Cloud Application Engine] as CoreEngine
+  database [PostgreSQL / Firestore\n(AES-256 Storage Encryption)] as DB
+}
+
+Sensor --> MQTT : Encrypted Telemetry
+CitizenApp --> HTTPS : TLS 1.3 Requests
+DriverApp --> HTTPS : TLS 1.3 Requests
+
+HTTPS --> RateLimiter
+RateLimiter --> Auth : Validate JWT Token
+Auth --> CoreEngine : Authorized Context
+CoreEngine --> DB : Encrypted Spatial Queries
+@enduml

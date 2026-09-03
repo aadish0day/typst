@@ -1,0 +1,55 @@
+@startuml
+skinparam style strictuml
+skinparam monochrome true
+skinparam defaultFontName "Liberation Sans"
+skinparam defaultFontSize 18
+skinparam defaultFontStyle bold
+skinparam titleFontSize 24
+skinparam titleFontStyle bold
+skinparam ArrowThickness 2.5
+skinparam ArrowFontSize 15
+skinparam ArrowFontStyle bold
+skinparam UsecaseFontSize 18
+skinparam UsecaseFontStyle bold
+skinparam ActorFontSize 19
+skinparam ActorFontStyle bold
+skinparam UsecaseBorderThickness 2.5
+skinparam ActorBorderThickness 2.5
+skinparam RectangleBorderThickness 2.5
+
+title Smart Waste Management System - Use Case Diagram
+left to right direction
+
+actor "Citizen User" as Citizen
+actor "IoT Sensor Gateway" as Gateway
+actor "Collection Driver" as Driver
+actor "Municipal Admin" as Admin
+
+rectangle "Smart Waste Management System Boundary" {
+  usecase "Report Overflow / Illegal Dump" as UC1
+  usecase "Transmit Bin Telemetry" as UC2
+  usecase "Check Fill Threshold" as UC3
+  usecase "Calculate Dynamic Routes" as UC4
+  usecase "View Pickup Navigation" as UC5
+  usecase "Log Waste Collection" as UC6
+  usecase "Categorize Waste Image" as UC7
+  usecase "View City Analytics" as UC8
+  usecase "Manage Fleet & Bins" as UC9
+}
+
+Citizen --> UC1
+Citizen --> UC7
+
+Gateway --> UC2
+UC2 ..> UC3 : <<include>>
+UC3 ..> UC4 : <<trigger threshold>>
+
+Driver --> UC5
+Driver --> UC6
+
+Admin --> UC8
+Admin --> UC9
+Admin --> UC4
+
+UC1 ..> UC7 : <<include AI classification>>
+@enduml
