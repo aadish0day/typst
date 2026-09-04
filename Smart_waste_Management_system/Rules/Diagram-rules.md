@@ -2,20 +2,42 @@
 
 Hybrid architecture, decided after peer review: **PlantUML for UML diagrams, Graphviz for topological flow graphs, native Typst for linear/tabular content.** Three tools now, not two — each used where it's actually the right fit, not where it's merely possible.
 
+## Master Required Diagrams Checklist
+
+| #   | Diagram Name                                | Syllabus Section                 | Primary Tool / Format      |
+| --- | ------------------------------------------- | -------------------------------- | -------------------------- |
+| 1   | PERT Chart                                  | Ch 3.3 (Planning & Scheduling)   | Typst / Mermaid / Graphviz |
+| 2   | GANTT Chart                                 | Ch 3.3 (Planning & Scheduling)   | Typst / Mermaid / Image    |
+| 3   | Data Flow Diagram (DFD) — Level 0 (Context) | Ch 3.6 (Conceptual Models)       | Graphviz (.dot → .svg)     |
+| 4   | Data Flow Diagram (DFD) — Level 1           | Ch 3.6 (Conceptual Models)       | Graphviz (.dot → .svg)     |
+| 5   | Data Flow Diagram (DFD) — Level 2           | Ch 3.6 (Conceptual Models)       | Graphviz (.dot → .svg)     |
+| 6   | Use Case Diagram                            | Ch 3.6 (Conceptual Models)       | PlantUML (.puml → .svg)    |
+| 7   | Activity Diagram                            | Ch 3.6 (Conceptual Models)       | PlantUML (.puml → .svg)    |
+| 8   | State Diagram (State Machine)               | Ch 3.6 (Conceptual Models)       | PlantUML (.puml → .svg)    |
+| 9   | Sequence Diagram                            | Ch 3.6 (Conceptual Models)       | Typst Fletcher / PlantUML  |
+| 10  | Class Diagram                               | Ch 3.6 (Conceptual Models)       | PlantUML (.puml → .svg)    |
+| 11  | Object Diagram                              | Ch 3.6 (Conceptual Models)       | PlantUML (.puml → .svg)    |
+| 12  | Package Diagram                             | Ch 3.6 (Conceptual Models)       | PlantUML (.puml → .svg)    |
+| 13  | Deployment Diagram                          | Ch 3.6 (Conceptual Models)       | PlantUML (.puml → .svg)    |
+| 14  | Component Diagram                           | Ch 3.6 (Conceptual Models)       | PlantUML (.puml → .svg)    |
+| 15  | Entity-Relationship (E-R) Diagram           | Ch 3.6 (Conceptual Models) & Ch 4.2 (Data Design) | PlantUML (.puml → .svg)    |
+| 16  | UI Wireframes & Screen Layouts              | Ch 4.3 & Ch 6.1 (UI & Manual)    | SVG / High-Res Mockups     |
+| 17  | Overall System Architecture Diagram         | Ch 5.1 (Implementation Approach) | PlantUML / Mermaid / SVG   |
+
 ## Rule 1 — PlantUML (`.puml` → `svg` → `#image()`) for UML diagrams
 
 Anything that IS formally a UML diagram type gets PlantUML's native UML DSL instead of Graphviz's record-label string hacks.
 
-| Diagram type | Why PlantUML over Graphviz |
-|---|---|
-| ER Diagrams | Native `entity` blocks + crow's-foot relations (`||--o{`) — no manual record-string escaping |
-| Class Diagrams | Native `class`/`abstract class`, `--|>` inheritance, `..>` dependency — ~60% less code than Graphviz record hacks, and a single missing `\l` can't silently break the layout anymore |
-| Object Diagrams | Native `object` keyword, same instance-vs-type clarity as Class without record syntax |
-| Component Diagrams | Native `component`/`interface` blocks with clean port notation |
-| Package Diagrams | Native `package` blocks — same nesting Graphviz needed `subgraph cluster_x` hacks for, without the hacks |
-| Deployment Diagrams | Native `node`/`artifact` syntax, purpose-built for this exact diagram type |
-| Use Case Diagrams | Native `actor`/`usecase`, built-in `<<include>>`/`<<extend>>` stereotypes |
-| State Diagrams | Native `state` blocks, `[*]` for initial/final — purpose-built, not a topological hack |
+| Diagram type        | Why PlantUML over Graphviz                                                                               |
+| ------------------- | -------------------------------------------------------------------------------------------------------- |
+| ER Diagrams         | Native `entity` blocks + crow's-foot relations (`                                                        |                                                                                                                                             | --o{`) — no manual record-string escaping |
+| Class Diagrams      | Native `class`/`abstract class`, `--                                                                     | >`inheritance,`..>`dependency — ~60% less code than Graphviz record hacks, and a single missing`\l` can't silently break the layout anymore |
+| Object Diagrams     | Native `object` keyword, same instance-vs-type clarity as Class without record syntax                    |
+| Component Diagrams  | Native `component`/`interface` blocks with clean port notation                                           |
+| Package Diagrams    | Native `package` blocks — same nesting Graphviz needed `subgraph cluster_x` hacks for, without the hacks |
+| Deployment Diagrams | Native `node`/`artifact` syntax, purpose-built for this exact diagram type                               |
+| Use Case Diagrams   | Native `actor`/`usecase`, built-in `<<include>>`/`<<extend>>` stereotypes                                |
+| State Diagrams      | Native `state` blocks, `[*]` for initial/final — purpose-built, not a topological hack                   |
 
 **Rule of thumb:** if the diagram type has an official UML notation, it's PlantUML — full stop, regardless of node count.
 
@@ -23,19 +45,19 @@ Anything that IS formally a UML diagram type gets PlantUML's native UML DSL inst
 
 Reserved now for diagrams that are **not** UML — pure node/edge topology where auto-routing is what matters, not standard notation.
 
-| Diagram type | Why Graphviz still wins here |
-|---|---|
+| Diagram type                        | Why Graphviz still wins here                                                                                                   |
+| ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
 | DFDs (Level 0/1/2, Context Diagram) | Not a UML type — pure data-flow topology. Graphviz's auto-layout is still the right tool; PlantUML has no native DFD notation. |
 
 If you ever have a genuinely non-UML topological graph (dependency graphs, generic flowcharts with no UML equivalent), it goes here too. Everything UML moved to Rule 1.
 
 ## Rule 3 — Native Typst (or `fletcher`) for linear/tabular content
 
-| Case | Why native is right here |
-|---|---|
-| Sequence diagrams | Fletcher (or hand-drawn) gives 100% font-consistency with the rest of the document and searchable PDF text — timing/lifelines were never a great fit for either dot or PlantUML's auto-layout anyway |
-| Event Tables | Tabular data, not a diagram — `#table()`, see Rule 4 |
-| Small 2–3 box inline callouts | Too trivial to justify an external compile step |
+| Case                          | Why native is right here                                                                                                                                                                             |
+| ----------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Sequence diagrams             | Fletcher (or hand-drawn) gives 100% font-consistency with the rest of the document and searchable PDF text — timing/lifelines were never a great fit for either dot or PlantUML's auto-layout anyway |
+| Event Tables                  | Tabular data, not a diagram — `#table()`, see Rule 4                                                                                                                                                 |
+| Small 2–3 box inline callouts | Too trivial to justify an external compile step                                                                                                                                                      |
 
 ## Rule 4 — Event Table is not a diagram
 
@@ -67,8 +89,8 @@ Some diagrams resist top-to-bottom restructuring without becoming unreadable —
 
 - **`reflow: true` is mandatory.** Without it, Typst rotates the image in place without resizing its allocated layout box, so a wide diagram rotated 90° either gets clipped or leaves huge dead space around it. `reflow: true` lets the now-tall-and-narrow rotated box actually claim the right amount of vertical space on the page.
 - **`-90deg` vs `90deg`** just changes which side the "top" of the original diagram ends up on — pick whichever reads more naturally when the physical book page is turned (test both, they're not equivalent for a reader rotating a bound page).
-- **The catch, unavoidable with this approach:** every label, class name, and arrow annotation *inside* the SVG rotates along with the diagram. The image itself becomes readable again once the reader physically turns the book sideways — but on the page as printed (unrotated), all text runs vertically. This is fine for a diagram the reader is expected to turn the book for, same as the landscape-page approach — the difference is purely whether the *page boundary* rotates (Rule 5a alt: `#page(flipped: true)`) or just the *image* rotates within a portrait page (this rule). Rotating the image keeps the rest of that page's portrait content (captions, body text) upright and normal, which is the main reason to prefer this over a full landscape page when the diagram shares a page with regular text.
-- Add a one-line caption near the image either way: *"Turn page sideways to view Figure X.X"* — the reader has no other visual cue that rotation is expected.
+- **The catch, unavoidable with this approach:** every label, class name, and arrow annotation _inside_ the SVG rotates along with the diagram. The image itself becomes readable again once the reader physically turns the book sideways — but on the page as printed (unrotated), all text runs vertically. This is fine for a diagram the reader is expected to turn the book for, same as the landscape-page approach — the difference is purely whether the _page boundary_ rotates (Rule 5a alt: `#page(flipped: true)`) or just the _image_ rotates within a portrait page (this rule). Rotating the image keeps the rest of that page's portrait content (captions, body text) upright and normal, which is the main reason to prefer this over a full landscape page when the diagram shares a page with regular text.
+- Add a one-line caption near the image either way: _"Turn page sideways to view Figure X.X"_ — the reader has no other visual cue that rotation is expected.
 - Still try restructuring the diagram vertically first (fewer nodes per rank, splitting one large diagram into two) — reach for rotation only when that's genuinely not workable, since a rotated figure breaks reading flow more than a normal one.
 
 ## Workflow — two build chains now
@@ -88,7 +110,7 @@ dot -Tsvg diagram.dot -o diagram.svg
 typst compile main.typ main.pdf
 ```
 
-**New dependency, worth knowing before deadline week:** PlantUML needs a JVM (`java -jar plantuml.jar` under the hood, or the `plantuml` CLI wrapper). Verify `java -version` and `plantuml -version` both work *now*, not the night before a submission — this is the one new failure point the hybrid approach introduces. Graphviz's `dot` stays a native binary with no such dependency, which is exactly why DFDs stayed on it.
+**New dependency, worth knowing before deadline week:** PlantUML needs a JVM (`java -jar plantuml.jar` under the hood, or the `plantuml` CLI wrapper). Verify `java -version` and `plantuml -version` both work _now_, not the night before a submission — this is the one new failure point the hybrid approach introduces. Graphviz's `dot` stays a native binary with no such dependency, which is exactly why DFDs stayed on it.
 
 Keep `.puml`/`.dot` sources + their compiled `.svg` inside the submission's `attachments/` subfolder either way — same convention regardless of which tool produced the file.
 
@@ -192,6 +214,7 @@ digraph DFD {
 ## Per-diagram-type templates
 
 ### ER Diagram (PlantUML)
+
 ```plantuml
 @startuml
 skinparam style strictuml
@@ -233,6 +256,7 @@ Claim ||--o{ Verdict : "has many"
 ```
 
 ### Class Diagram (PlantUML)
+
 ```plantuml
 @startuml
 skinparam style strictuml
@@ -275,9 +299,11 @@ CommunityVerifier ..> Verification : submits
 Claim "1" *-- "many" Verification : has
 @enduml
 ```
+
 `--|>` inheritance, `..>` dependency, `*--` composition, `o--` aggregation — native PlantUML arrows, no `arrowhead=` fiddling.
 
 ### Object Diagram (PlantUML)
+
 ```plantuml
 @startuml
 skinparam style strictuml
@@ -304,6 +330,7 @@ v1 --> c1 : verified
 ```
 
 ### Component Diagram (PlantUML)
+
 ```plantuml
 @startuml
 skinparam style strictuml
@@ -328,6 +355,7 @@ API --> GeminiVision : OCR
 ```
 
 ### Package Diagram (PlantUML)
+
 ```plantuml
 @startuml
 skinparam style strictuml
@@ -355,6 +383,7 @@ package "Verification Module" {
 ```
 
 ### Deployment Diagram (PlantUML)
+
 ```plantuml
 @startuml
 skinparam style strictuml
@@ -388,6 +417,7 @@ node "Google Cloud" {
 ```
 
 ### State Diagram (PlantUML)
+
 ```plantuml
 @startuml
 skinparam style strictuml
@@ -410,6 +440,7 @@ Contested --> [*]
 ```
 
 ### Use Case Diagram (PlantUML — Left-to-Right 2-Column Standard)
+
 ```plantuml
 @startuml
 skinparam style strictuml
@@ -457,6 +488,7 @@ Engine --> UC7
 ```
 
 ### DFD (Graphviz — the one type on dot)
+
 ```dot
 digraph DFD {
   bgcolor="white"
@@ -480,6 +512,7 @@ digraph DFD {
 ## File naming & location
 
 ### Folder & File Naming Rule
+
 - **Folder Name**: **MUST EXACTLY MATCH** the title/prompt specified by the user (e.g. `Submission of Chp 4: 4.2.2 Data Integrity and Constraints, 4.4 Security Issues/`).
 - **Sub-file Names (`.typ` & `.pdf`)**: Use a concise **descriptive title slug** with lowercase words and underscores (e.g. `data_integrity_and_security_issues.typ` & `data_integrity_and_security_issues.pdf`).
 
@@ -510,6 +543,7 @@ Submission of 3.6 Conceptual Models - Data Flow Diagram/
 ```
 
 Rules:
+
 - One source file + one `.svg` per diagram, even if two diagrams are related — don't combine ER + Class into one `.puml`.
 - Filenames are `<diagram_type>_<qualifier>.puml` or `.dot` — lowercase, underscores, no spaces.
 - Reference from Typst as `#image("attachments/er_diagram.svg", width: 100%)` — identical regardless of source tool.
@@ -570,10 +604,10 @@ Claim "1" *-- "many" Verification : has
 ```
 
 Compile:
+
 ```bash
 plantuml -tsvg attachments/class_diagram_core.puml
 typst compile class_diagram_er.typ class_diagram_er.pdf
 ```
 
 Every other UML diagram type follows this same skeleton — skinparam block stays identical, only the diagram body changes per the templates above. DFDs are the one exception and keep using the Graphviz worked example (dot → svg, large-font block).
-
