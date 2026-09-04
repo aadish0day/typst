@@ -150,7 +150,7 @@ In accordance with IEEE Std 830-1998 (*Recommended Practice for Software Require
   "REQ-4", "Quorum Verification Queue", "The system shall enqueue unique claims into a public verification registry. Authenticated verifiers can inspect pending claims, select a verdict candidate (*TRUE*, *FALSE*, *MISLEADING*, *UNVERIFIABLE*), provide an authoritative citation URL, and submit a concise factual rationale.",
   "REQ-5", "Multi-Factor Weighted Consensus Engine", "The system shall mandate a minimum quorum of three ($N >= 3$) independent verifications before computing composite consensus confidence: $C = 0.40 A + 0.30 R + 0.30 S$. Claims with $C >= 70\\%$ shall be marked as *CERTIFIED*; claims below $70\\%$ shall remain open or expire as *CONTESTED* after 7 days.",
   "REQ-6", "Anti-Sybil Reputation Engine", "The system shall initialize verifier reputation at 50 points ($R_0 = 50$, range $[0, 100]$). Verifiers aligning with certified consensus receive $+2$ points; divergent outlier votes receive a $-3$ point penalty. Database rules shall strictly prevent users from verifying their own submitted claims.",
-  "REQ-7", "1080×1080px Fact Card Generator", "The system shall render a client-side visual fact card via `html2canvas` featuring a prominent color banner, claim summary, circular SVG Trust Ring, domain citation badge, and verification timestamp. A pre-render DOM transformer shall convert OKLCH color spaces to standard sRGB.",
+  "REQ-7", "1080×1080px Fact Card Generator", "The system shall render a client-side visual fact card via `html-to-image` featuring a prominent color banner, claim summary, circular SVG Trust Ring, domain citation badge, and verification timestamp with 100% native Tailwind CSS v4 OKLCH color support.",
   "REQ-8", "Misinformation Analytics Dashboard", "The system shall provide an interactive analytics portal visualizing 7-day submission volume trends, category distribution (Health, Politics, Finance, Scams), and verified accuracy leaderboards using Recharts.",
   "REQ-9", "Role-Based Access Control (RBAC)", "The system shall enforce three user roles: *Submitter* (unauthenticated, submit/download only), *Verifier* (authenticated, review/vote/profile), and *Admin* (administrative monitoring and dispute management).",
   "REQ-10", "Security Inactivity Session Lock", "The client auth wrapper shall monitor user activity and invalidate active sessions following 30 minutes of continuous idle time to defend against device borrowing and session hijacking."
@@ -184,7 +184,7 @@ The engineering lifecycle is decomposed into 14 discrete, measurable work activi
 - *$T_6$: Tokenization & Jaccard Duplicate Detection Engine* (Build string normalizer and $J >= 0.75$ duplicate index).
 - *$T_7$: Quorum Verification Queue & Real-Time Sync Subsystem* (Build verification queue with Firestore `onSnapshot`).
 - *$T_8$: Multi-Factor Weighted Quorum Consensus Engine* (Implement consensus scoring $C = 0.40A + 0.30R + 0.30S$).
-- *$T_9$: Dynamic 1080×1080px Fact Card Generator & OKLCH Transformer* (Build `html2canvas` exporter and CSS patch).
+- *$T_9$: Dynamic 1080×1080px Fact Card Generator* (Build `html-to-image` native SVG `<foreignObject>` exporter).
 - *$T_{10}$: Misinformation Analytics Dashboard & Trend Visualizer* (Implement 7-day rolling charts with Recharts).
 - *$T_{11}$: Integration & End-to-End System Testing* (Execute automated unit tests, cross-browser validation, and security audits).
 - *$T_{12}$: User Acceptance Testing (UAT) & Civic Verifier Trials* (Conduct pilot verification with student peer groups).
@@ -274,7 +274,7 @@ The system is partitioned into Developer Workstation specifications and Target E
   "Frontend Framework", "React 18 & TypeScript 5", "React 18.3 with TypeScript for static type-safety and robust compile-time interfaces.",
   "Build Toolchain", "Vite 5 (esbuild & Rollup)", "Sub-50ms Hot Module Replacement (HMR) and optimized production chunk splitting.",
   "Styling & UI Library", "Tailwind CSS v4 & Lucide Icons", "Rust-based Oxide compiler; custom *Saffron Sleek* color tokens and accessible UI icons.",
-  "Computer Vision & Canvas", "Tesseract.js v5 & html2canvas", "WebAssembly client OCR engine and DOM-to-canvas 1080×1080px rasterizer.",
+  "Computer Vision & Canvas", "Tesseract.js v5 & html-to-image", "WebAssembly client OCR engine and native SVG foreignObject 1080×1080px rasterizer.",
   "Cloud BaaS & SDK", "Firebase JS SDK v10+", "Firebase Authentication and Cloud Firestore client libraries with real-time listeners.",
   "Document Compilation", "Typst v0.15+", "High-performance academic typesetter for official university dissertation deliverables."
 )

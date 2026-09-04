@@ -35,7 +35,7 @@ package "1. Presentation Layer (Client Browser)" as P1 {
 
 package "2. Client Edge Compute Layer (Browser Memory)" as P2 {
   rectangle "HTML5 Canvas API (Image Resizing < 500KB)\n+ Tesseract.js (WebAssembly OCR Engine)" as Client_OCR
-  rectangle "html2canvas + OKLCH-to-sRGB Patch\n(1080x1080px Fact-Check Square PNG Generator)" as Client_Export
+  rectangle "html-to-image (SVG foreignObject Engine)\n(1080x1080px High-DPI Fact-Check PNG Generator)" as Client_Export
   Client_OCR -[hidden]right-> Client_Export
 }
 

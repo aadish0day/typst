@@ -128,7 +128,7 @@ Effective management of the *FactStamp* engineering lifecycle requires decomposi
 - *T8: Module 4: Quorum Verification Queue Subsystem:* Building the real-time public verification queue requiring a minimum quorum of three ($N >= 3$) independent community reviews.
 - *T9: Module 8: Verifier Reputation & Anti-Sybil Subsystem:* Enforcing Firestore security rules, self-verification locks, and historical accuracy tracking.
 - *T10: Module 5: Weighted Consensus & Confidence Engine:* Implementing the multi-factor scoring formula ($C = 0.40 A + 0.30 R + 0.30 S$) and verdict classification.
-- *T11: Module 6: Dynamic Fact-Check PNG Card Generator:* Engineering the `html2canvas` 1080#text[×]1080px square card compiler with OKLCH-to-sRGB pre-render transformations.
+- *T11: Module 6: Dynamic Fact-Check PNG Card Generator:* Engineering the `html-to-image` 1080×1080px square card compiler with native SVG foreignObject rasterization.
 - *T12: Module 7: Misinformation Analytics Dashboard:* Developing weekly rolling-window aggregations and Recharts visual category distribution graphs.
 - *T13: System Integration, Security Audit & Usability Testing:* Conducting cross-browser verification, APCA contrast ratio audits, and anti-Sybil penetration tests.
 #pagebreak()

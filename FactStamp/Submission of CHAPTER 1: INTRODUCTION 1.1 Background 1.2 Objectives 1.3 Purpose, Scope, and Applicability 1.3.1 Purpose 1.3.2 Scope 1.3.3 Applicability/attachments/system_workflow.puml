@@ -52,7 +52,7 @@ else (Unique Claim)
   :Update Verifier Reputation Scores;
 endif
 
-:Compile Shareable 1080x1080px\nFact-Check PNG Card (html2canvas);
+:Compile Shareable 1080x1080px\nFact-Check PNG Card (html-to-image);
 
 :User Downloads Square Fact Card\nand Forwards into WhatsApp Chat;
 

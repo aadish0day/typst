@@ -65,7 +65,7 @@ package "5. Consensus & Confidence Engine" {
 }
 
 package "6. Generation & Counter-Spread" {
-  [Client-Side Card Generator (html2canvas)\n1080x1080px WhatsApp Fact-Check Card] as CARD
+  [Client-Side Card Generator (html-to-image)\n1080x1080px WhatsApp Fact-Check Card] as CARD
   [Share Back into Originating WhatsApp Group\n(Reversing Misinformation Flow)] as SHARE
   VERDICT -down-> CARD : Render Visual Fact-Check Stamp
   CARD -down-> SHARE : User Downloads & Forwards PNG

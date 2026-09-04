@@ -140,7 +140,7 @@ Misinformation propagated across end-to-end encrypted messaging applications rep
 
 Unique claims enter a public *Verification Quorum Queue*, where a minimum of three independent, authenticated community verifiers examine primary sources and submit their verdicts (*TRUE*, *FALSE*, *MISLEADING*, or *UNVERIFIABLE*) along with verifiable reference citations. A multi-factor consensus engine synthesizes these inputs into a final weighted confidence score ($C = 0.40 A + 0.30 R + 0.30 S$), combining raw agreement ratio ($A$), verifier reputation history ($R$), and source credibility tier ($S$). 
 
-Rather than confining fact-checks to an isolated web repository, FactStamp compiles verified claims client-side using `html2canvas` into a crisp, standardized, 1080#text[×]1080px square *Fact-Check PNG Card*. This card features color-coded status stamps, confidence percentages, verified source citations, and succinct counter-explanations. Users download this visual card and forward it directly back into the originating WhatsApp chat groups, weaponizing the platform's native forwarding culture to replace viral misinformation with verified truth.
+Rather than confining fact-checks to an isolated web repository, FactStamp compiles verified claims client-side using `html-to-image` utilizing browser-native SVG `<foreignObject>` rasterization into a crisp, standardized, 1080#text[×]1080px square *Fact-Check PNG Card*. This card features color-coded status stamps, confidence percentages, verified source citations, and succinct counter-explanations. Users download this visual card and forward it directly back into the originating WhatsApp chat groups, weaponizing the platform's native forwarding culture to replace viral misinformation with verified truth.
 
 #v(8pt)
 
@@ -178,7 +178,7 @@ The primary engineering and research objectives of FactStamp are:
 - *Objective 4: Community Quorum Verification Queue:* Construct a transparent, real-time verification queue requiring a minimum quorum of three ($N >= 3$) independent community reviews before a verdict can be finalized.
 - *Objective 5: Multi-Factor Weighted Consensus Engine:* Formulate an algorithmic scoring model that computes a composite confidence percentage based on verifier agreement ratio (40%), verifier historical reputation (30%), and source domain credibility (30%).
 - *Objective 6: Sybil-Resistant Verifier Reputation Subsystem:* Design an automated reputation tracking system ($0$ to $100$ scale) that rewards verifiers whose submissions align with verified consensus and penalizes bad actors, preventing collusion and self-verification tampering.
-- *Objective 7: Dynamic WhatsApp-Optimized PNG Card Generator:* Engineer a client-side graphic rendering module using `html2canvas` that exports 1080#text[×]1080px square fact-check cards containing claim snippets, verdict badges, trust rings, and primary source links.
+- *Objective 7: Dynamic WhatsApp-Optimized PNG Card Generator:* Engineer a client-side graphic rendering module using `html-to-image` that exports 1080#text[×]1080px square fact-check cards containing claim snippets, verdict badges, trust rings, and primary source links.
 - *Objective 8: Public Misinformation Analytics Dashboard:* Implement an interactive analytical dashboard illustrating weekly misinformation surges, category distributions (Health, Political, Financial, Religious), top debunked claims, and verifier leaderboards.
 
 #v(8pt)
@@ -248,7 +248,7 @@ FactStamp is architected as a modular, reactive, single-page web application com
 3. *Module 3: Jaccard Token-Based Duplicate Detection Engine:* Evaluates incoming text against Firestore claim collections using normalized Jaccard word-overlap metrics to eliminate redundant queues.
 4. *Module 4: Community Verification Quorum Queue:* Dispatches unverified claims to an open verification registry, managing independent reviews until the three-verifier quorum threshold ($N >= 3$) is reached.
 5. *Module 5: Weighted Consensus & Confidence Calculation Engine:* Implements the mathematical formula aggregating verifier decisions, individual historical reputation scores, and source domain validity.
-6. *Module 6: Dynamic 1080#text[×]1080px Fact-Check Card Generator:* Renders client-side PNG images styled to WhatsApp graphic dimensions using `html2canvas` with custom OKLCH color normalization patches.
+6. *Module 6: Dynamic 1080#text[×]1080px Fact-Check Card Generator:* Renders client-side PNG images styled to WhatsApp graphic dimensions using `html-to-image` with native SVG foreignObject rasterization.
 7. *Module 7: Public Verification Registry & Analytics Dashboard:* Computes weekly categorical trend reports, leaderboard matrices, and categorical breakdowns using Recharts.
 8. *Module 8: System Security, Anti-Sybil Defense & Real-Time Alerts:* Enforces Firestore database security rules, self-verification locks, input sanitation, and reactive snapshot notification listeners.
 
@@ -336,7 +336,7 @@ FactStamp utilizes a cutting-edge, high-performance web engineering stack:
   "Database Storage", "Cloud Firestore NoSQL", "Real-time reactive document streams with granular security rules.",
   "Image Compression", "HTML5 Canvas API", "Client-side image scaling to 1200px max dimension, base64 payload under 500 KB.",
   "Text Extraction (OCR)", "Tesseract.js / Web OCR", "Client-side character recognition extracting text from forward screenshots.",
-  "Card Rasterization", "html2canvas + OKLCH Patch", "Rasterizes DOM elements to 1080×1080px PNG with modern color space compatibility.",
+  "Card Rasterization", "html-to-image (SVG foreignObject)", "Rasterizes DOM elements to 1080×1080px PNG with modern color space compatibility.",
   "Analytical Charts", "Recharts", "Interactive SVG/Canvas data visualization for category distributions and trend metrics.",
   "Containerization", "Docker & Compose", "Reproducible production container definitions for multi-platform staging."
 )
@@ -376,7 +376,7 @@ FactStamp utilizes a cutting-edge, high-performance web engineering stack:
 A thorough feasibility evaluation establishes that FactStamp is completely viable across technical, operational, and financial dimensions:
 
 == Technical Feasibility
-All planned capabilities leverage stable, production-hardened web standards. Client-side OCR via WebAssembly/Tesseract.js functions reliably across modern mobile browsers. `html2canvas` reliably compiles complex styled DOM nodes into high-resolution PNG images. Firebase Firestore provides 99.95% cloud availability with sub-50ms snapshot sync latencies.
+All planned capabilities leverage stable, production-hardened web standards. Client-side OCR via WebAssembly/Tesseract.js functions reliably across modern mobile browsers. `html-to-image` reliably compiles complex styled DOM nodes into high-resolution PNG images. Firebase Firestore provides 99.95% cloud availability with sub-50ms snapshot sync latencies.
 
 == Operational Feasibility
 FactStamp requires zero centralized moderation staff to process daily submissions. The 3-verifier quorum model, coupled with transparent source URL attribution and peer reputation tracking, decentralizes governance. The Jaccard duplicate detection engine automatically shields community reviewers from re-evaluating identical viral rumors.
@@ -401,7 +401,7 @@ FactStamp adopts an *Agile / Scrum* iterative process model. Because user experi
   headers: ("Sprint / Period", "Phase Name", "Key Deliverables & Engineering Activities", "Status"),
   "Sprint 1\n(June 2026)", "Foundation &\nIngestion Pipeline", "Initialize React-Vite project; configure Firebase Auth; implement text submission forms and client-side image compression; integrate OCR text extraction; code Jaccard duplicate detection algorithm.", "Completed",
   "Sprint 2\n(July 2026)", "Quorum &\nConsensus Engine", "Construct public Verification Queue; implement 3-verifier quorum voting interface; code weighted consensus formula and verifier reputation scoring model; enforce Firestore security rules.", "Completed",
-  "Sprint 3\n(August 2026)", "Card Generator &\nAnalytics Subsystem", "Integrate html2canvas 1080×1080px fact-check card generator; develop trending misinformation analytics dashboard with Recharts; build real-time reactive notifications.", "Completed",
+  "Sprint 3\n(August 2026)", "Card Generator &\nAnalytics Subsystem", "Integrate html-to-image 1080×1080px card generator; develop trending misinformation analytics dashboard with Recharts; build real-time reactive notifications.", "Completed",
   "Sprint 4\n(Sept 2026)", "Security Hardening\n& Final Evaluation", "Conduct anti-Sybil attack stress tests, APCA contrast ratio accessibility audit, cross-browser verification; finalize IEEE 830 Black Book documentation; practical viva examination.", "Underway"
 )
 
@@ -442,4 +442,4 @@ Upon completion of Course JUSIT-DSCPR503, the following deliverables will be for
 4. Garimella, K., & Eckles, D., *"Images and Misinformation in Political Groups: Evidence from WhatsApp in India,"* in _Proc. ACM Hum.-Comput. Interact._, CSCW, 2020.
 5. Jaccard, P., *"Étude comparative de la distribution florale dans une portion des Alpes et des Jura,"* _Bulletin de la Société Vaudoise des Sciences Naturelles_, vol. 37, pp. 547-579, 1901.
 6. Google Firebase Documentation, *"Cloud Firestore Security Rules & Realtime Snapshot Listeners,"* Google Developers, 2025. [Online]. Available: `https://firebase.google.com/docs/firestore`.
-7. Nikolov, N., *"html2canvas: Screenshots with JavaScript,"* Open-Source Software Specification, 2023. [Online]. Available: `https://html2canvas.hertzen.com`.
+7. Bubkoo, *"html-to-image: Generates images from HTML nodes using SVG and Canvas,"* Open-Source Software Specification, 2024. [Online]. Available: `https://github.com/bubkoo/html-to-image`.

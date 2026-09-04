@@ -27,7 +27,7 @@ digraph DFD_Level_1 {
   P2 [shape=ellipse, label="2.0\nJaccard Duplicate\nDetection Engine", fillcolor="#FFFFFF"]
   P3 [shape=ellipse, label="3.0\nQuorum Verification\nQueue Manager", fillcolor="#FFFFFF"]
   P4 [shape=ellipse, label="4.0\nConsensus &\nConfidence Engine", fillcolor="#FFFFFF"]
-  P5 [shape=ellipse, label="5.0\nFact-Check Card\nGenerator (html2canvas)", fillcolor="#FFFFFF"]
+  P5 [shape=ellipse, label="5.0\nFact-Check Card\nGenerator (html-to-image)", fillcolor="#FFFFFF"]
   P6 [shape=ellipse, label="6.0\nAnalytics &\nTrends Subsystem", fillcolor="#FFFFFF"]
 
   // Flows

@@ -249,7 +249,7 @@ The system architecture decomposes into seven primary object-oriented classes:
 4. *`ConsensusResult` (Value Object Class):* Immutable output object encapsulating `verdict`, composite `confidence` percentage, `agreementRatio` ($A$), `verifierReputationAvg` ($R$), `sourceQualityAvg` ($S$), and boolean `isCertified` flag.
 5. *`ConsensusCalculator` (Domain Service Class):* Stateless domain engine computing multi-factor confidence: $C = 0.40 A + 0.30 R + 0.30 S$. Evaluates quorum votes, computes sub-metrics, and produces a sealed `ConsensusResult`.
 6. *`DuplicateDetector` (Utility Service Class):* Stateless utility performing text normalization, tokenization, stop-word elimination, and pairwise Jaccard similarity index computation ($J >= 0.75$) across cached claims.
-7. *`FactCardGenerator` (Presentation Service Class):* Orchestrates client-side DOM-to-canvas rendering via `html2canvas`, executing the OKLCH-to-sRGB transformer and exporting square $1080 times 1080$px PNG image buffers.
+7. *`FactCardGenerator` (Presentation Service Class):* Orchestrates client-side DOM-to-canvas rendering via `html-to-image` via browser-native SVG `<foreignObject>` rasterization, executing the OKLCH-to-sRGB transformer and exporting square $1080 times 1080$px PNG image buffers.
 
 #pagebreak()
 

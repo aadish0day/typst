@@ -2,6 +2,28 @@
 
 Hybrid architecture, decided after peer review: **PlantUML for UML diagrams, Graphviz for topological flow graphs, native Typst for linear/tabular content.** Three tools now, not two — each used where it's actually the right fit, not where it's merely possible.
 
+## Master Required Diagrams Checklist
+
+| # | Diagram Name | Syllabus Section | Primary Tool / Format |
+|---|---|---|---|
+| 1 | PERT Chart | Ch 3.3 (Planning & Scheduling) | Typst / Mermaid / Graphviz |
+| 2 | GANTT Chart | Ch 3.3 (Planning & Scheduling) | Typst / Mermaid / Image |
+| 3 | Data Flow Diagram (DFD) — Level 0 (Context) | Ch 3.6 (Conceptual Models) | Graphviz (.dot → .svg) |
+| 4 | Data Flow Diagram (DFD) — Level 1 | Ch 3.6 (Conceptual Models) | Graphviz (.dot → .svg) |
+| 5 | Data Flow Diagram (DFD) — Level 2 | Ch 3.6 (Conceptual Models) | Graphviz (.dot → .svg) |
+| 6 | Use Case Diagram | Ch 3.6 (Conceptual Models) | PlantUML (.puml → .svg) |
+| 7 | Activity Diagram | Ch 3.6 (Conceptual Models) | PlantUML (.puml → .svg) |
+| 8 | State Diagram (State Machine) | Ch 3.6 (Conceptual Models) | PlantUML (.puml → .svg) |
+| 9 | Sequence Diagram | Ch 3.6 (Conceptual Models) | Typst Fletcher / PlantUML |
+| 10 | Class Diagram | Ch 3.6 (Conceptual Models) | PlantUML (.puml → .svg) |
+| 11 | Object Diagram | Ch 3.6 (Conceptual Models) | PlantUML (.puml → .svg) |
+| 12 | Package Diagram | Ch 3.6 (Conceptual Models) | PlantUML (.puml → .svg) |
+| 13 | Deployment Diagram | Ch 3.6 (Conceptual Models) | PlantUML (.puml → .svg) |
+| 14 | Component Diagram | Ch 3.6 (Conceptual Models) | PlantUML (.puml → .svg) |
+| 15 | Entity-Relationship (E-R) Diagram | Ch 3.6 (Conceptual Models) & Ch 4.2 (Data Design) | PlantUML (.puml → .svg) |
+| 16 | UI Wireframes & Screen Layouts | Ch 4.3 & Ch 6.1 (UI & Manual) | SVG / High-Res Mockups |
+| 17 | Overall System Architecture Diagram | Ch 5.1 (Implementation Approach) | PlantUML / Mermaid / SVG |
+
 ## Rule 1 — PlantUML (`.puml` → `svg` → `#image()`) for UML diagrams
 
 Anything that IS formally a UML diagram type gets PlantUML's native UML DSL instead of Graphviz's record-label string hacks.

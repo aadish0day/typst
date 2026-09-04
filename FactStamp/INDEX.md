@@ -37,7 +37,7 @@ This document is the **authoritative master reference** for both human developer
 | **Template Folder Index** | [`template/README.md`](file:///home/aadish/Documents/typst/FactStamp/template/README.md) | Index of all reference markdown templates in the `template/` directory. |
 | **Academic Synopsis & 7 Modules** | [`Obsidian: documentation/full.md`](file:///home/aadish/Documents/Obsidian/Project/persnoal/FactStamp/documentation/full.md) | Project abstract, problem statement, 8 objectives, and detailed specs for all 7 system modules. |
 | **UI Design System & Tokens** | [`Obsidian: documentation/ui.md`](file:///home/aadish/Documents/Obsidian/Project/persnoal/FactStamp/documentation/ui.md) | `Saffron Sleek` design system, OKLCH warm-tinted color ramps, fluid tokens, DM Sans typography, zero-purple mandate. |
-| **Dev Logs & Bug Tracebacks** | [`Obsidian: daily-doc/31-7-26.md`](file:///home/aadish/Documents/Obsidian/Project/persnoal/FactStamp/daily-doc/31-7-26.md) | Developer interaction log, bug tracebacks, `html2canvas` `oklab` color parsing patch details. |
+| **Dev Logs & Bug Tracebacks** | [`Obsidian: daily-doc/31-7-26.md`](file:///home/aadish/Documents/Obsidian/Project/persnoal/FactStamp/daily-doc/31-7-26.md) | Developer interaction log, bug tracebacks, migration from legacy JS canvas parser to `html-to-image` due to OKLCH color parsing breakdown. |
 | **Obsidian Vault Master Hub** | [`Obsidian: INDEX.md`](file:///home/aadish/Documents/Obsidian/Project/persnoal/FactStamp/INDEX.md) | Master hub note in Obsidian connecting notes, daily docs, and problem logs (`[[INDEX]]`). |
 | **Github Application Summary** | [`Github: README.md`](file:///home/aadish/Documents/Github/FactStamp/README.md) | Codebase setup, dependencies, Docker Compose runtimes, and Firebase Local Emulator suite. |
 
@@ -56,7 +56,7 @@ This document is the **authoritative master reference** for both human developer
 * [`src/pages/Submit.tsx`](file:///home/aadish/Documents/Github/FactStamp/src/pages/Submit.tsx) — Forward submission form (text input + screenshot base64 image compression/OCR text extraction).
 * [`src/pages/VerifyQueue.tsx`](file:///home/aadish/Documents/Github/FactStamp/src/pages/VerifyQueue.tsx) — Community verification queue listing claims awaiting 3-verifier quorum consensus.
 * [`src/pages/VerifyDetail.tsx`](file:///home/aadish/Documents/Github/FactStamp/src/pages/VerifyDetail.tsx) — Verifier workbench view for evaluating claims, adding source links, and submitting verdicts.
-* [`src/pages/ClaimDetail.tsx`](file:///home/aadish/Documents/Github/FactStamp/src/pages/ClaimDetail.tsx) — Single claim view with verdict badge, confidence breakdown, source list, and `html2canvas` PNG card export.
+* [`src/pages/ClaimDetail.tsx`](file:///home/aadish/Documents/Github/FactStamp/src/pages/ClaimDetail.tsx) — Single claim view with verdict badge, confidence breakdown, source list, and `html-to-image` PNG card export.
 * [`src/pages/Dashboard.tsx`](file:///home/aadish/Documents/Github/FactStamp/src/pages/Dashboard.tsx) — Misinformation analytics dashboard with Recharts trend graphs, category distribution, and top verifiers.
 * [`src/pages/Profile.tsx`](file:///home/aadish/Documents/Github/FactStamp/src/pages/Profile.tsx) — User profile page displaying verifier reputation score, submitted claims, and accuracy stats.
 * [`src/pages/SignIn.tsx`](file:///home/aadish/Documents/Github/FactStamp/src/pages/SignIn.tsx) — Authentication sign-in view (Email/Password & Google OAuth).
@@ -67,7 +67,7 @@ This document is the **authoritative master reference** for both human developer
 * [`src/components/Navbar.tsx`](file:///home/aadish/Documents/Github/FactStamp/src/components/Navbar.tsx) — Main application navigation header with active tab indicator, search bar, and user avatar menu.
 * [`src/components/Footer.tsx`](file:///home/aadish/Documents/Github/FactStamp/src/components/Footer.tsx) — Application footer with quick links, tech stack badges, and copyright info.
 * [`src/components/ClaimCard.tsx`](file:///home/aadish/Documents/Github/FactStamp/src/components/ClaimCard.tsx) — Compact card preview for claims in grids or search results.
-* [`src/components/FactCheckCard.tsx`](file:///home/aadish/Documents/Github/FactStamp/src/components/FactCheckCard.tsx) — 1080×1080px WhatsApp-optimised verdict card template targeted by `html2canvas`.
+* [`src/components/FactCheckCard.tsx`](file:///home/aadish/Documents/Github/FactStamp/src/components/FactCheckCard.tsx) — 1080×1080px card template exported by `html-to-image`.
 * [`src/components/VerdictStamp.tsx`](file:///home/aadish/Documents/Github/FactStamp/src/components/VerdictStamp.tsx) — Visual verdict stamp badge (`TRUE`, `FALSE`, `MISLEADING`, `UNVERIFIED`).
 * [`src/components/DashboardChart.tsx`](file:///home/aadish/Documents/Github/FactStamp/src/components/DashboardChart.tsx) — Recharts wrapper for trend graphs and category pie/bar charts.
 * [`src/components/NotificationBell.tsx`](file:///home/aadish/Documents/Github/FactStamp/src/components/NotificationBell.tsx) — Real-time notification menu for verifier updates and consensus alerts.
@@ -118,7 +118,7 @@ This document is the **authoritative master reference** for both human developer
 * [`src/lib/imageCompression.ts`](file:///home/aadish/Documents/Github/FactStamp/src/lib/imageCompression.ts) — Client-side screenshot image compression pipeline producing compact base64 strings.
 * [`src/lib/apca.ts`](file:///home/aadish/Documents/Github/FactStamp/src/lib/apca.ts) — APCA contrast math library ensuring accessibility compliance.
 * [`src/lib/weeklyReport.ts`](file:///home/aadish/Documents/Github/FactStamp/src/lib/weeklyReport.ts) — Client-side analytics & weekly trending report computation engine.
-* [`src/lib/utils.ts`](file:///home/aadish/Documents/Github/FactStamp/src/lib/utils.ts) — General helper functions including `html2canvas` computed style patcher (converts `oklch`/`oklab` to `rgb`/`rgba`).
+* [`src/lib/utils.ts`](file:///home/aadish/Documents/Github/FactStamp/src/lib/utils.ts) — Helper utilities.
 
 ### 7. Data Services (`src/services/`)
 * [`src/services/firebaseService.ts`](file:///home/aadish/Documents/Github/FactStamp/src/services/firebaseService.ts) — Firestore CRUD service operations for `claims`, `verifications`, and `users` collections.
@@ -151,7 +151,7 @@ Dissertation chapter structure for Course **`JUSIT-DSCPR503` (Project Dissertati
 
 * **Front Matter**: Title Page, Approved Proforma, Authenticated Work Certificate, Role & Responsibility Form, Abstract, Acknowledgement, Table of Contents, Table of Figures.
 * **Chapter 1: Introduction**: Background, Objectives (1–8), Purpose, Scope, Applicability, Achievements, Report Organization.
-* **Chapter 2: Survey of Technologies**: Evaluation of React 18, Vite 5, Tailwind CSS v4, Firebase v12, Framer Motion, Recharts, html2canvas, Docker.
+* **Chapter 2: Survey of Technologies**: Evaluation of React 18, Vite 5, Tailwind CSS v4, Firebase v12, Framer Motion, Recharts, html-to-image, Docker.
 * **Chapter 3: Requirements and Analysis**: Problem Definition, Requirements Spec, Planning/Scheduling, SW/HW Requirements, Conceptual Models (DFDs Level 0/1/2, Use Cases).
 * **Chapter 4: System Design**: Basic Modules (7 Modules), Data Design & Firestore Schemas, Procedural Design/Algorithms (Jaccard, Consensus), UI Design (`Saffron Sleek`), Security Issues, Test Case Design.
 * **Chapter 5: Implementation and Testing**: Implementation Approaches, Code Efficiency, Unit/Integrated/Beta Testing, Modifications, Test Cases.
@@ -179,11 +179,11 @@ Where:
 - $R$ = Normalized Average Reputation Score of participating verifiers ($\frac{\bar{R}_{\text{verifiers}}}{100}$).
 - $S$ = Source Quality Score (1.0 for WHO/Ministry of Health/Official news, 0.5 for secondary sources, 0.2 for unlinked sources).
 
-### 3. HTML2Canvas OKLCH/OKLAB Color Function Patch
-`html2canvas` fails to parse modern CSS `oklch()` and `oklab()` color functions used in Tailwind CSS v4. `src/lib/utils.ts` implements a computed style converter:
-- Clones target DOM elements before rendering.
-- Reads resolved `getComputedStyle(element)` values (which browsers evaluate to standard `rgb()` or `rgba()`).
-- Replaces raw stylesheet CSS custom properties on cloned elements before passing to `html2canvas`.
+### 3. HTML-to-Image Card Export Engine (Replaced Legacy JS Canvas Parser)
+The legacy JS canvas parser was replaced with `html-to-image` because its internal CSS parser choked on `oklch()` / `oklab()`, whereas `html-to-image` uses browser-native SVG `<foreignObject>` canvas rasterization:
+- Employs browser-native SVG `<foreignObject>` rendering rather than a custom JavaScript CSS parser.
+- Natively supports CSS Color Level 4 syntax (`oklch`, `oklab`) and Tailwind CSS v4 design tokens without color conversion failures.
+- Produces crisp 1080×1080px (2x DPI) shareable PNG cards with zero layout distortion or font clipping.
 
 ---
 
@@ -198,7 +198,7 @@ flowchart TD
     E --> F["3 Independent Community Verifiers"]
     F --> G["Weighted Consensus Engine (Module 5)"]
     G --> H["Final Verdict & Confidence %"]
-    H --> I["html2canvas Card Generator (Module 6)"]
+    H --> I["html-to-image Card Generator (Module 6)"]
     I --> J["WhatsApp Shareable PNG Export"]
     H --> K["Analytics Dashboard (Module 7)"]
 ```
@@ -208,7 +208,7 @@ flowchart TD
 3. **Module 3: Duplicate Engine**: Jaccard word-overlap similarity threshold `0.75`.
 4. **Module 4: Verification Queue**: Minimum 3 verifications with source URL and plain-language explanation.
 5. **Module 5: Consensus & Confidence Engine**: 40% verifier agreement, 30% verifier reputation, 30% source quality.
-6. **Module 6: Fact-Check Card Generator**: 1080×1080px client-side PNG export via `html2canvas`.
+6. **Module 6: Fact-Check Card Generator**: 1080×1080px client-side PNG export via `html-to-image`.
 7. **Module 7: Misinformation Dashboard**: Recharts analytics, weekly reports, category distribution.
 
 ---

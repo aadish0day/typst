@@ -171,11 +171,14 @@ User interface aesthetics, mobile readability, and contrast compliance are param
 
 #pagebreak()
 
-=== The Saffron Sleek Design System & OKLCH Color Geometry
+=== The Saffron Sleek Design System, OKLCH Color Geometry & Pan-Indic Typography
 FactStamp establishes a unique visual identity—*Saffron Sleek*—designed specifically for high-contrast legibility in bright sunlight across Indian mobile environments:
-- *Canvas Surfaces:* Warm, low-strain cream (`#FFFDF8`) replacing harsh pure white (`#FFFFFF`).
-- *Primary Brand Accent:* Deep cultural saffron (`#D97706`).
-- *Typographic Rhythm:* Crisp ink-slate (`#0F172A`) ensuring maximum contrast against cream backgrounds.
+- *Canvas Surfaces:* Warm, low-strain cream (`#FFFDF8`) in light mode; deep warm charcoal (`oklch(0.115 0.018 55)`) in dark mode, accessible via a universal sliding dual-icon theme toggle (`<ThemeToggle />`).
+- *Primary Brand Accent:* Deep cultural saffron (`#BA3E03` / `oklch(0.50 0.18 48)`).
+- *Typographic Rhythm & Pan-Indic Script Stack:*
+  - *Primary Newsroom Sans:* *Plus Jakarta Sans* (variable 400–800) providing crisp, authoritative editorial weight.
+  - *Native Vernacular Support:* *Noto Sans Devanagari* (400, 500, 600, 700) guaranteeing native rendering for Hindi, Marathi, and regional Devanagari forwards with zero broken glyphs or font baseline shifts.
+  - *Fixed-Width Tabular Metrics:* Native CSS `tabular-nums` (`font-variant-numeric: tabular-nums`) enforcing exact alignment for consensus fractions ($0/3$), confidence percentages, and countdown timers at $0 "KB"$ extra network payload, eliminating third-party monospace developer fonts.
 - *Semantic Verdict Gamut:*
   - *TRUE:* Vivid emerald green (`#059669` / `oklch(0.62 0.17 155)`).
   - *FALSE:* High-urgency crimson red (`#DC2626` / `oklch(0.57 0.22 27)`).
@@ -214,18 +217,21 @@ FactStamp must compile certified verdicts into shareable, high-resolution square
 #styled-table(
   columns: (1.3in, 1.1in, 1.5in, 1.4in),
   headers: ("Graphic Engine", "Execution Tier", "Key Characteristics", "Evaluation for FactStamp"),
-  "`html2canvas` (with OKLCH DOM Patch)", "Client-Side Browser DOM", "Rasterizes active HTML/CSS component tree into an HTML5 `<canvas>`; enables complex typography and SVG Trust Rings.", "*Selected Choice:* Instantaneous client-side 1080×1080px PNG export with zero cloud compute cost.",
+  "`html-to-image` (Native SVG `<foreignObject>`)", "Client-Side Browser DOM & SVG", "Rasterizes DOM components via browser-native SVG `<foreignObject>` directly to canvas; 100% native support for CSS Color 4 (`oklch`, `oklab`) and Tailwind v4.", "*Selected Choice:* Pixel-perfect 2x high-DPI 1080×1080px PNG export with zero cloud compute cost and zero layout distortion.",
+  "Legacy JS Canvas Parser (Deprecated)", "Client-Side Custom JS Parser", "Re-implements CSS parsing and canvas drawing in JavaScript.", "Fails on modern CSS: crashes with unhandled exceptions on `oklch()`, `oklab()`, and `color-mix()`; fragile style patching required.",
   "Native HTML5 2D Canvas API", "Client-Side Browser Canvas", "High drawing performance via imperative JavaScript rendering calls (`ctx.fillText`).", "Excessive code complexity: implementing text wrapping, drop shadows, and responsive badges requires hundreds of lines.",
   "Server-Side Puppeteer / Playwright", "Cloud Container (Headless Chromium)", "Pixel-perfect screenshot capture of server-rendered web pages.", "Severe memory footprint (500 MB+ RAM per Chromium process); 2–4 second latency; high cloud cost.",
   "WebAssembly Sharp / CanvasKit", "Client-Side WASM Library", "C++ graphic manipulation compiled to WebAssembly (Skia engine).", "Heavy bundle download (>2.5 MB); high initial initialization delay on 3G/4G networks."
 )
 
-=== The OKLCH Color Space DOM-Cloning Patch
-A major technical obstacle encountered during development was `html2canvas`'s inability to parse Tailwind CSS v4's modern `oklch()` color tokens, which caused exported PNG cards to render with black or transparent backgrounds. FactStamp engineers a proprietary pre-render DOM cloning transformer:
-1. The fact card component tree is cloned in an off-screen container.
-2. A recursive DOM traversal traverses every element and computes its resolved `getComputedStyle()` properties.
-3. Modern `oklch(...)` color strings are dynamically translated into standard sRGB `rgb(r, g, b)` equivalents.
-4. The sanitized clone is passed to `html2canvas`, producing crisp, artifact-free 1080#text[×]1080px fact cards.
+=== Architectural Migration: From Legacy JS Canvas Parser to Native SVG foreignObject (html-to-image)
+A critical engineering challenge during implementation was the compilation of Tailwind CSS v4 components into standalone PNG files:
+1. *The Modern CSS Color Level 4 Breakdown:* The legacy JS canvas parser library relies on an internal JavaScript CSS parser written in 2018 that only recognizes legacy sRGB notations (`#hex`, `rgb()`, `hsl()`). When parsing FactStamp's design tokens, it threw unhandled fatal exceptions (`Error: Attempting to parse an unsupported color function "oklab"`), halting card generation completely.
+2. *Failure of Brute-Force DOM Patching:* Multiple workarounds were tested—including CSSOM stylesheet regex replacement, `@layer` rule mutation, and inline style cloning. However, mutating dynamic stylesheets corrupted Vite HMR, choked on nested `color-mix()` expressions, and caused font metric collapse and clipped SVG badge borders.
+3. *Definitive Resolution via `html-to-image`:* The architecture was systematically migrated to `html-to-image`. Instead of re-implementing CSS algorithms in JavaScript, `html-to-image` deep-clones the target component node, encapsulates the live HTML tree within an SVG `<foreignObject>`, and leverages the browser's native C++ rendering engine (Blink, Gecko, WebKit) to draw the graphic onto an HTML5 canvas at `pixelRatio: 2`. This guarantees:
+  - 100% native support for `oklch()`, `oklab()`, CSS variables, and complex SVG badges.
+  - Zero layout shifts and perfect font-metric preservation.
+  - Complete elimination of technical debt, enabling the legacy canvas parser to be permanently uninstalled from `package.json`.
 
 == Text Tokenization & Duplicate Detection Algorithms
 To protect community verifiers from evaluating identical viral hoaxes repeatedly, FactStamp analyzes incoming claims against existing Firestore records using string similarity algorithms:
@@ -288,11 +294,11 @@ The following synthesis matrix summarizes the comprehensive technical evaluation
   columns: (1.1in, 1.1in, 1.3in, 1.8in),
   headers: ("Subsystem Layer", "Chosen Technology", "Discarded Alternatives", "Decisive Architectural Justification"),
   "Frontend UI & Reactivity", "React 18 + Vite 5", "Next.js 14, Vue.js 3, Angular 17, Webpack", "Virtual DOM fiber reconciler enables non-blocking UI transitions; Vite delivers sub-50ms HMR and compact tree-shaken ESM production bundles.",
-  "Styling & Design Tokens", "Tailwind CSS v4 (Saffron Sleek)", "Bootstrap 5, CSS Modules, Styled Components", "Rust-based Oxide engine compiles zero-runtime CSS; native OKLCH theme tokens; guarantees APCA mobile readability in sunlight.",
+  "Styling & Design Tokens", "Tailwind CSS v4 (Saffron Sleek) + Plus Jakarta Sans & Noto Sans", "Bootstrap 5, CSS Modules, Styled Components", "Rust-based Oxide engine compiles zero-runtime CSS; native OKLCH theme tokens; pan-Indic typography supports vernacular Hindi/Marathi forwards.",
   "Cloud Database & Sync", "Google Cloud Firestore", "Supabase, MongoDB Atlas, Firebase Realtime DB", "Native real-time WebSocket listeners (`onSnapshot`); 50k daily free reads; declarative security rules eliminate custom middle-tier servers.",
   "Identity & Access", "Firebase Auth (OAuth 2.0)", "Auth0, Supabase Auth, Custom JWT Server", "Turnkey Google OAuth and email/password sessions; direct integration with Firestore security rules; zero vulnerability surface.",
   "In-Browser OCR Engine", "Tesseract.js v5 (WASM)", "Google Cloud Vision, AWS Textract, EasyOCR", "Client-side WebAssembly execution preserves 100% user privacy; zero API subscription costs; sub-2s mobile execution.",
-  "Fact Card Generator", "html2canvas + OKLCH Patch", "Server Puppeteer, HTML5 Canvas API, Sharp", "Generates shareable 1080×1080px square PNG cards directly in browser; zero server CPU load; custom transformer fixes OKLCH rendering.",
+  "Fact Card Generator", "html-to-image (SVG foreignObject)", "Legacy JS Canvas Parser, Server Puppeteer, Canvas API, Sharp", "Browser-native SVG <foreignObject> rasterization guarantees 100% CSS Color 4 (OKLCH) fidelity, 2x retina sharpness, and zero cloud server load.",
   "Duplicate Detection", "Jaccard Token Index ($J >= 0.75$)", "Levenshtein Distance, Cosine TF-IDF, MinHash", "Sub-5ms execution on mobile; invariant to word reordering and emoji padding; catches 96.4% of viral forward variants.",
   "Consensus Algorithm", "Multi-Factor Quorum Engine", "Simple Majority, Liquid Democracy, Blockchain PoS", "Weights raw agreement ($40\%$) with verifier historical track record ($30\%$) and source credibility ($30\%$), neutralizing Sybil bots.",
   "Analytics & Visuals", "Recharts (SVG React)", "Chart.js, D3.js, Apache ECharts", "Declarative SVG rendering matching React state lifecycle; zero external Canvas DOM dependencies; responsive mobile scaling.",
@@ -311,7 +317,7 @@ The following synthesis matrix summarizes the comprehensive technical evaluation
 3. Garimella, K., & Eckles, D., *"Images and Misinformation in Political Groups: Evidence from WhatsApp in India,"* in _Proc. ACM Hum.-Comput. Interact._, vol. 4, no. CSCW2, Article 130, pp. 1-25, 2020.
 4. Jaccard, P., *"Étude comparative de la distribution florale dans une portion des Alpes et des Jura,"* _Bulletin de la Société Vaudoise des Sciences Naturelles_, vol. 37, pp. 547-579, 1901.
 5. Google Firebase Documentation, *"Cloud Firestore Security Rules & Realtime Snapshot Listeners,"* Google Developers, 2025. [Online]. Available: `https://firebase.google.com/docs/firestore`.
-6. Nikolov, N., *"html2canvas: Screenshots with JavaScript,"* Open-Source Software Specification, 2023. [Online]. Available: `https://html2canvas.hertzen.com`.
+6. Bubkoo, *"html-to-image: Generates images from HTML nodes using SVG and Canvas,"* Open-Source Software Specification, 2024. [Online]. Available: `https://github.com/bubkoo/html-to-image`.
 7. React Development Team, *"React v18.0: Concurrent Features & Suspense Architecture,"* Meta Open Source, 2022. [Online]. Available: `https://react.dev/blog/2022/03/29/react-v18`.
 8. Tailwind Labs, *"Tailwind CSS v4.0: High-Performance Engine & Modern Color Systems,"* 2024. [Online]. Available: `https://tailwindcss.com/blog/tailwindcss-v4-alpha`.
 9. Levinson, M., *"Tesseract.js: Pure Javascript OCR for more than 100 Languages,"* 2023. [Online]. Available: `https://tesseract.projectnaptha.com`.

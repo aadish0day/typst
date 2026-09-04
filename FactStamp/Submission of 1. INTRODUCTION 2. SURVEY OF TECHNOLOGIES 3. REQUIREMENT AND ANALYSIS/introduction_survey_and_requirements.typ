@@ -131,7 +131,7 @@ The primary engineering, algorithmic, and operational objectives of FactStamp ar
 - *Transparent Community Quorum Verification Queue:* Establish an open, democratic review queue requiring a minimum quorum of three ($N >= 3$) independent, authenticated verifiers before a claim can be formally certified.
 - *Multi-Factor Weighted Consensus Engine:* Formulate an algorithmic scoring model that computes a composite confidence percentage ($C = 0.40 A + 0.30 R + 0.30 S$) by weighting raw voter agreement ratio ($A$), verifier historical reputation ($R$), and primary source domain credibility ($S$).
 - *Sybil-Resistant Reputation Tracking:* Implement a tamper-resistant reputation tracking subsystem ($0$ to $100$ scale) that rewards verifiers who consistently align with certified consensus and programmatically locks claim submitters from reviewing their own submissions.
-- *WhatsApp-Native Visual Artifact Generation:* Engineer a client-side rendering pipeline utilizing `html2canvas` with custom OKLCH color normalization to compile crisp, unalterable 1080#text[×]1080px square PNG fact-check cards designed specifically for WhatsApp image sharing.
+- *WhatsApp-Native Visual Artifact Generation:* Engineer a client-side rendering pipeline utilizing `html-to-image` via browser-native SVG `<foreignObject>` rasterization to compile crisp, unalterable 1080#text[×]1080px square PNG fact-check cards designed specifically for WhatsApp image sharing.
 - *Public Analytical Transparency:* Deliver an interactive analytics dashboard presenting weekly misinformation volume surges, category distributions (Health, Political, Financial, Religious), and verifier accuracy leaderboards.
 
 == Purpose, Scope, and Applicability
@@ -159,7 +159,7 @@ FactStamp is applicable across multiple key stakeholder groups:
 The development and benchmarking of the FactStamp platform achieved several critical milestones:
 - *Sub-Second Duplicate Resolution:* Achieving an average execution latency of under $85 "ms"$ for Jaccard token comparisons against Firestore collections, shielding community verifiers from redundant workloads.
 - *Zero Infrastructure Operational Expense:* Developing a completely serverless, zero-budget cloud architecture leveraging the Firebase Spark tier and Vercel edge deployment with zero reliance on paid external APIs.
-- *Client-Side Canvas OKLCH Compatibility:* Authoring a proprietary pre-render DOM cloning patch resolving `html2canvas` color-parsing failures with modern Tailwind CSS v4 OKLCH color spaces.
+- *Native SVG foreignObject Graphic Rasterization:* Overcoming legacy JavaScript CSS parser breakdowns by implementing an `html-to-image` client pipeline with 100% native support for Tailwind CSS v4 OKLCH color spaces.
 - *High-Assurance Quorum Integrity:* Enforcing Firestore security rules that prevent self-verification and validate source citation formatting at the database transaction layer.
 
 == Organisation of Report
@@ -229,7 +229,8 @@ Extracting unformatted forward text from user-uploaded screenshots is a foundati
 
 == Graphic Compilation & Fact-Check Card Engines
 Generating an unalterable, square PNG image directly on the user's mobile device:
-- *`html2canvas`:* Renders standard HTML/CSS DOM trees into an HTML5 `<canvas>` element completely client-side. Allows dynamic layout changes, custom typography, and trust ring indicators using standard React JSX. A custom pre-render pass normalizes OKLCH color values to sRGB before rasterization.
+- *`html-to-image`:* Renders standard HTML/CSS DOM trees into an HTML5 `<canvas>` via browser-native SVG `<foreignObject>` rasterization. Provides 100% native compatibility with CSS Color Level 4 (`oklch`, `oklab`), dynamic CSS variables, and high-DPI (2x) export without requiring fragile CSSOM regex patches or falling back on server-side rendering.
+- *Legacy JS Canvas Parser (Deprecated):* Legacy JavaScript CSS parser. Threw unhandled fatal exceptions when encountering modern Tailwind v4 wide-gamut OKLCH tokens (`Error: Attempting to parse an unsupported color function "oklab"`), mandating its retirement and replacement.
 - *Server-Side Puppeteer / Playwright:* Launches headless Chromium instances in cloud containers to screenshot HTML pages. While rendering is pixel-perfect, server resource consumption (RAM/CPU) is massive and introduces 2–4 second latency per export.
 - *Native HTML5 Canvas Drawing API:* Highly performant; however, hand-coding responsive text wrapping, shadows, badges, and icon SVGs using imperative 2D context commands requires hundreds of fragile lines of code.
 
@@ -247,11 +248,11 @@ The selected technology architecture is synthesized below:
   columns: (1.4in, 1.4in, 1fr),
   headers: ("Subsystem Layer", "Chosen Technology", "Core Decisive Factor"),
   "Client Frontend", "React 18 + Vite 5", "Sub-second HMR, rich declarative UI ecosystem, optimized production bundle.",
-  "Styling & Tokens", "Tailwind CSS v4", "High-performance CSS engine with native OKLCH theme variables.",
+  "Styling & Tokens", "Tailwind CSS v4 + Pan-Indic Typography", "High-performance CSS engine with native OKLCH theme variables; Plus Jakarta Sans & Noto Sans Devanagari.",
   "Database & Rules", "Cloud Firestore", "Managed real-time document listeners, declarative security rules, zero server maintenance.",
   "Identity Management", "Firebase Authentication", "Turnkey Google OAuth and email sessions with zero security vulnerability risks.",
   "OCR Text Extraction", "Tesseract.js / Web OCR", "Client-side WebAssembly execution with zero paid API dependencies.",
-  "Fact Card Generator", "html2canvas + OKLCH Patch", "Instantaneous client-side 1080×1080px PNG generation for WhatsApp sharing.",
+  "Fact Card Generator", "html-to-image (SVG foreignObject)", "Instantaneous client-side 1080×1080px 2x PNG generation with native OKLCH support.",
   "Analytics Engine", "Recharts + Client Aggregates", "Declarative SVG charting for weekly misinformation distributions and trends."
 )
 
@@ -283,14 +284,14 @@ In compliance with IEEE Std 830-1998 (Recommended Practice for Software Requirem
   "REQ-4", "Jaccard Duplicate Detection Engine", "The system shall normalize incoming claim text and compute token-level Jaccard similarity against all existing claims. If similarity $J(A, B) >= 0.75$, the system shall prevent redundant submission and route the user to the existing claim.", "High",
   "REQ-5", "Quorum Verification Queue", "The system shall enqueue unique claims into a public verification registry. The system shall require a minimum of three ($N >= 3$) independent verifications before allowing consensus calculation. Verifiers shall submit a verdict, credible source URL, and explanation.", "High",
   "REQ-6", "Weighted Consensus Calculation", "Upon reaching quorum ($N >= 3$), the system shall execute the multi-factor consensus formula: $C = 0.40 A + 0.30 R + 0.30 S$. The system shall categorize the claim as TRUE, FALSE, MISLEADING, or UNVERIFIABLE.", "High",
-  "REQ-7", "Fact-Check Card Generator", "The system shall dynamically generate a 1080×1080px square PNG card displaying claim text, verdict stamp, confidence ring, verifier count, source domains, and verification date using html2canvas with OKLCH-to-sRGB translation.", "High",
+  "REQ-7", "Fact-Check Card Generator", "The system shall dynamically generate a 1080×1080px square 2x PNG card displaying claim text, verdict stamp, confidence ring, verifier count, source domains, and verification date using html-to-image via native SVG foreignObject rasterization.", "High",
   "REQ-8", "Analytics Dashboard & Reports", "The system shall compute weekly misinformation metrics, category volume breakdowns (Health, Political, Financial, Religious), most debunked claims, and top verifier leaderboards.", "Medium",
   "REQ-9", "Anti-Sybil Security Locks", "The system shall enforce security rules prohibiting claim submitters from voting on their own claims. Verifiers shall be restricted to a single immutable vote per claim.", "High",
   "REQ-10", "Reactive Real-Time Notifications", "The system shall maintain Firestore snapshot listeners alerting users in real-time when their submitted claims reach quorum or when their verifier reputation score updates.", "Medium"
 )
 
 === Non-Functional Requirements (Quality Attributes)
-- *Performance Requirements (NFR-1):* Duplicate similarity computation across 5,000 indexed claims shall execute in under $150 "ms"$ on standard 4G mobile networks. Client-side fact-check card generation via `html2canvas` shall complete in under $800 "ms"$.
+- *Performance Requirements (NFR-1):* Duplicate similarity computation across 5,000 indexed claims shall execute in under $150 "ms"$ on standard 4G mobile networks. Client-side fact-check card generation via `html-to-image` shall complete in under $800 "ms"$.
 - *Security Requirements (NFR-2):* All database interactions shall be governed by declarative Cloud Firestore security rules enforcing user ownership and data shape validation. Client inputs shall be sanitized against Cross-Site Scripting (XSS).
 - *Reliability & Availability (NFR-3):* The serverless database architecture shall guarantee $99.95\%$ platform uptime with multi-region replication. Claims submitted offline shall queue locally via Firestore offline cache.
 - *Usability & Accessibility (NFR-4):* The user interface shall adhere to Accessible Perceptual Contrast Algorithm (APCA) contrast standards, achieving high readability on small mobile screens in direct outdoor sunlight.
@@ -298,7 +299,7 @@ In compliance with IEEE Std 830-1998 (Recommended Practice for Software Requirem
 
 === External Interface Requirements
 - *User Interfaces:* Clean single-page interface using the Saffron Sleek theme; mobile-first bottom navigation bar; one-click "Download Card" button; clear color-coded verdict pills.
-- *Software Interfaces:* Firebase Authentication SDK v10.x, Cloud Firestore Web SDK v10.x, Tesseract.js v5.x, html2canvas v1.4.x, Recharts v2.x.
+- *Software Interfaces:* Firebase Authentication SDK v10.x, Cloud Firestore Web SDK v10.x, Tesseract.js v5.x, html-to-image v1.11.x, Recharts v2.x.
 - *Communications Interfaces:* Secure HTTPS/TLS 1.3 encryption for all web transport; WebSocket connections for Firestore reactive real-time snapshot listeners.
 
 == Planning and Scheduling
@@ -321,7 +322,7 @@ As established in our software engineering methodology analysis, FactStamp selec
    - 3.2 Multi-factor weighted consensus calculator and reputation scoring algorithm.
    - 3.3 Firestore security rules enforcement and anti-Sybil self-verification locks.
 4. *Phase 4: Graphic Export, Analytics & Evaluation (Sprint 4)*
-   - 4.1 1080×1080px Fact-check PNG card generator with OKLCH color patch.
+   - 4.1 1080×1080px Fact-check PNG card generator with html-to-image SVG engine.
    - 4.2 Trending misinformation dashboard, category analytics, and notifications.
    - 4.3 End-to-end integration testing, APCA contrast audits, and Black Book documentation.
 
@@ -332,7 +333,7 @@ As established in our software engineering methodology analysis, FactStamp selec
   headers: ("Sprint / Period", "Development Phase", "Core Engineering Activities & Deliverables", "Target Status"),
   "Sprint 1\n(June 2026)", "Architecture &\nIngestion Layer", "Project scaffolding; Firebase Auth configuration; claim submission forms; canvas image compression; Tesseract.js OCR integration; Jaccard duplicate detection algorithm.", "Completed",
   "Sprint 2\n(July 2026)", "Quorum Queue &\nConsensus Engine", "Verification queue UI; independent verifier review forms; multi-factor consensus formula; verifier reputation model; Firestore security rules and anti-Sybil locks.", "Completed",
-  "Sprint 3\n(August 2026)", "Card Generator &\nAnalytics Subsystem", "html2canvas 1080×1080px card generator; OKLCH-to-sRGB pre-render transformer; weekly misinformation analytics dashboard; real-time notification bells.", "Completed",
+  "Sprint 3\n(August 2026)", "Card Generator &\nAnalytics Subsystem", "html-to-image 1080×1080px card generator; SVG foreignObject engine; weekly misinformation analytics dashboard; real-time notification bells.", "Completed",
   "Sprint 4\n(Sept 2026)", "Security Hardening\n& Final Evaluation", "Anti-Sybil attack penetration testing; cross-browser mobile verification; comprehensive IEEE 830 documentation; university viva examination.", "Underway"
 )
 
@@ -411,5 +412,5 @@ The Use Case Diagram formalizes system boundaries, actor roles, and functional i
 4. Garimella, K., & Eckles, D., *"Images and Misinformation in Political Groups: Evidence from WhatsApp in India,"* in _Proc. ACM Hum.-Comput. Interact._, CSCW, 2020.
 5. Jaccard, P., *"Étude comparative de la distribution florale dans une portion des Alpes et des Jura,"* _Bulletin de la Société Vaudoise des Sciences Naturelles_, vol. 37, pp. 547-579, 1901.
 6. Google Firebase Documentation, *"Cloud Firestore Security Rules & Realtime Snapshot Listeners,"* Google Developers, 2025. [Online]. Available: `https://firebase.google.com/docs/firestore`.
-7. Nikolov, N., *"html2canvas: Screenshots with JavaScript,"* Open-Source Software Specification, 2023. [Online]. Available: `https://html2canvas.hertzen.com`.
+7. Bubkoo, *"html-to-image: Generates images from HTML nodes using SVG and Canvas,"* Open-Source Software Specification, 2024. [Online]. Available: `https://github.com/bubkoo/html-to-image`.
 8. Pressman, R. S., & Maxim, B. R., *"Software Engineering: A Practitioner's Approach,"* 9th ed., McGraw-Hill Education, 2020.

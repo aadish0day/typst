@@ -179,8 +179,8 @@ The overarching aim of the *FactStamp* research and engineering project is to de
    - Enforce declarative Firestore security rules that programmatically lock claim submitters from verifying their own claims, neutralizing Sybil voting rings.
 
 7. *WhatsApp-Native Visual Artifact Generation (1080×1080px Fact Card):*
-   - Author a client-side graphical compiler utilizing `html2canvas` that transforms rendered React DOM components into pixel-perfect, square 1:1 PNG images.
-   - Engineer a proprietary CSS pre-render cloning transformer resolving `html2canvas` parsing failures with modern Tailwind CSS v4 OKLCH color spaces.
+   - Author a client-side graphical compiler utilizing `html-to-image` via browser-native SVG `<foreignObject>` rasterization that transforms rendered React DOM components into pixel-perfect, square 1:1 PNG images.
+   - Eliminate legacy JavaScript CSS parsing breakdowns, ensuring 100% native support for Tailwind CSS v4 OKLCH color spaces and dynamic CSS variables without brittle stylesheet patching.
    - Design visual stamps incorporating clear verdict color banners (Green for True, Crimson for False, Amber for Misleading, Slate for Unverifiable), claim summaries, dynamic SVG Trust Rings, source domain pills, and verification timestamps.
 
 8. *Public Analytical Transparency & Misinformation Surveillance:*
@@ -207,7 +207,7 @@ The functional, technical, and operational boundaries of the FactStamp platform 
   columns: (1.3in, 1.4in, 1fr),
   headers: ("Scope Dimension", "Technical Boundary", "Operational Implementation in FactStamp"),
   "Architecture & Tech Stack", "Modern Decoupled Single-Page Application (SPA)", "Engineered using React 18, Vite 5, TypeScript, Tailwind CSS v4 (Saffron Sleek design system), and Google Cloud Firestore.",
-  "Computational Model", "Client-Side Edge Execution", "All image compression, Tesseract.js WebAssembly OCR extraction, and html2canvas graphic compilation run within client browser runtimes.",
+  "Computational Model", "Client-Side Edge Execution", "All image compression, Tesseract.js WebAssembly OCR extraction, and html-to-image graphic compilation run within client browser runtimes.",
   "Infrastructure & Hosting", "100% Serverless Free Tier", "Runs completely on Firebase Spark tier and Vercel Edge Hosting; zero monthly cloud server bills or database maintenance overhead.",
   "Platform Boundaries", "Non-Invasive Protocol Layer", "Strictly avoids reverse-engineering WhatsApp's proprietary encrypted client or incurring WhatsApp Business API costs; operates via standard web interfaces."
 )
@@ -264,6 +264,6 @@ FactStamp is designed for broad real-world applicability across distinct societa
 3. Garimella, K., & Eckles, D., *"Images and Misinformation in Political Groups: Evidence from WhatsApp in India,"* in _Proc. ACM Hum.-Comput. Interact._, vol. 4, no. CSCW2, Article 130, pp. 1-25, 2020.
 4. Jaccard, P., *"Étude comparative de la distribution florale dans une portion des Alpes et des Jura,"* _Bulletin de la Société Vaudoise des Sciences Naturelles_, vol. 37, pp. 547-579, 1901.
 5. Google Firebase Documentation, *"Cloud Firestore Security Rules & Realtime Snapshot Listeners,"* Google Developers, 2025. [Online]. Available: `https://firebase.google.com/docs/firestore`.
-6. Nikolov, N., *"html2canvas: Screenshots with JavaScript,"* Open-Source Software Specification, 2023. [Online]. Available: `https://html2canvas.hertzen.com`.
+6. Bubkoo, *"html-to-image: Generates images from HTML nodes using SVG and Canvas,"* Open-Source Software Specification, 2024. [Online]. Available: `https://github.com/bubkoo/html-to-image`.
 7. Schwaber, K., & Sutherland, J., *"The Scrum Guide: The Definitive Guide to Scrum: The Rules of the Game,"* Scrum.org, Nov. 2020.
 8. Pressman, R. S., & Maxim, B. R., *"Software Engineering: A Practitioner's Approach,"* 9th ed., McGraw-Hill Education, 2020.
