@@ -1,0 +1,178 @@
+@startuml
+skinparam style strictuml
+top to bottom direction
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName "Liberation Sans"
+skinparam defaultFontSize 11
+skinparam defaultFontStyle bold
+skinparam titleFontSize 17
+skinparam titleFontStyle bold
+
+skinparam ArrowColor #212121
+skinparam ArrowThickness 1.8
+skinparam ArrowFontSize 10
+skinparam ArrowFontStyle bold
+
+skinparam PackageBorderColor #212121
+skinparam PackageBorderThickness 2.0
+skinparam PackageBackgroundColor #FFFFFF
+skinparam PackageFontSize 12
+skinparam PackageFontStyle bold
+
+skinparam ComponentBorderColor #212121
+skinparam ComponentBorderThickness 1.5
+skinparam ComponentBackgroundColor #FDFDFD
+skinparam ComponentFontSize 10
+skinparam ComponentFontStyle bold
+
+title ZAWER Jewellery Platform - Package Architecture Diagram
+
+' =========================================================
+' 1. FLUTTER FRONTEND ARCHITECTURAL LAYERS
+' =========================================================
+package "zawer_jewellery_app (Flutter Mobile Client Layer)" as FlutterApp {
+
+  package "presentation::screens" as PkgScreens {
+    component [SplashScreen / BottomNavScreen] as S1
+    component [LoginScreen / RegisterScreen\nForgotPasswordScreen] as S2
+    component [HomeScreen / ProductDetailsScreen\nProductApiTestScreen] as S3
+    component [CartScreen / WishlistScreen] as S4
+    component [CheckoutScreen / OffersScreen] as S5
+    component [OrdersScreen / OrderTrackingScreen\nProfileScreen] as S6
+    S1 -[hidden]down-> S2
+    S2 -[hidden]down-> S3
+    S4 -[hidden]down-> S5
+    S5 -[hidden]down-> S6
+    S1 -[hidden]right-> S4
+  }
+
+  package "presentation::widgets" as PkgWidgets {
+    component [ProductCard / ImageCarouselSlider\n(CachedNetworkImage, Shimmer)] as W1
+    component [MilestoneTimelineTile\nGPS Hub Location Pin] as W2
+    component [PrivilegeOfferBadge\nLuxuryRatingBar] as W3
+    W1 -[hidden]down-> W2
+    W2 -[hidden]down-> W3
+  }
+
+  package "data::services" as PkgServices {
+    component [ApiService\n(Retry Mechanism, JWT Bearer Injection,\nREST Client: Auth, Products, Cart, Orders, Offers)] as ApiServiceComp
+  }
+
+  package "domain::models" as PkgFlutterModels {
+    component [UserModel (user_model.dart)\nOfferModel (offer_model.dart)] as FM1
+    component [ProductModel (product_model.dart)\nOrderModel & TimelineStep (order_model.dart)] as FM2
+    FM1 -[hidden]down-> FM2
+  }
+
+  package "presentation::utils" as PkgUtils {
+    component [AppTheme & ThemeController\n(Light / Dark Luxury Mode)] as U1
+    component [AppColors & AppTextStyles\n(Gold Palette & Fraunces Serif)] as U2
+    component [AppConstants\n(Base URLs, Keys & Asset Paths)] as U3
+    U1 -[hidden]down-> U2
+    U2 -[hidden]down-> U3
+  }
+
+  ' Structural Layout Alignment (Two-Column Layout)
+  PkgScreens -[hidden]right-> PkgWidgets
+  PkgScreens -[hidden]down-> PkgServices
+  PkgWidgets -[hidden]down-> PkgFlutterModels
+  PkgFlutterModels -[hidden]down-> PkgUtils
+
+  ' Inter-Package Dependencies
+  PkgScreens ..> PkgWidgets : <<renders>>
+  PkgScreens ..> PkgServices : <<dispatches>>
+  PkgScreens ..> PkgFlutterModels : <<binds>>
+  PkgScreens ..> PkgUtils : <<styles via>>
+  PkgWidgets ..> PkgUtils : <<styles via>>
+  PkgWidgets ..> PkgFlutterModels : <<displays>>
+  PkgServices ..> PkgFlutterModels : <<deserializes JSON>>
+}
+
+' =========================================================
+' 2. NETWORK PROTOCOL BOUNDARY
+' =========================================================
+cloud "Network Protocol Boundary\n(TLS 1.3 / HTTPS RESTful API | Bearer JWT Header)" as NetLayer #FFFFFF
+
+' =========================================================
+' 3. EXPRESS BACKEND ARCHITECTURAL LAYERS
+' =========================================================
+package "zawer_backend (Node.js / Express REST API Engine)" as BackendApp {
+
+  package "api::routes" as PkgRoutes {
+    component [authRoutes.js (/api/auth)\nproductRoutes.js (/api/products)] as R1
+    component [cartRoutes.js (/api/cart)\nwishlistRoutes.js (/api/wishlist)] as R2
+    component [orderRoutes.js (/api/orders)\nofferRoutes.js (/api/offers)] as R3
+    R1 -[hidden]down-> R2
+    R2 -[hidden]down-> R3
+  }
+
+  package "security::middleware" as PkgMiddleware {
+    component [authMiddleware.js\n(JWT Verification, Bearer Extraction\n& req.userId Attachment)] as MW1
+  }
+
+  package "business::controllers" as PkgControllers {
+    component [authController.js\n(Registration, Login, OTP, Profile)] as C1
+    component [productController.js\n(Catalog Browsing, Search, Reviews)] as C2
+    component [cartController.js & wishlistController.js\n(Cart CRUD & Wishlist Synchronization)] as C3
+    component [offerController.js\n(Coupon Validation, Dynamic Pricing Caps)] as C4
+    component [orderController.js\n(Checkout, ZWR-XXXXXX Generator,\n6-Stage Milestone Tracker, AI Insights)] as C5
+    C1 -[hidden]down-> C2
+    C2 -[hidden]down-> C3
+    C3 -[hidden]down-> C4
+    C4 -[hidden]down-> C5
+  }
+
+  package "persistence::models" as PkgBackendModels {
+    component [User.js (users Schema, bcrypt)\nProduct.js (products & reviewSchema)] as BM1
+    component [Cart.js (carts & cartItemSchema)\nWishlist.js (wishlists Schema)] as BM2
+    component [Order.js (orders, orderItemSchema,\ntimelineStepSchema, ZWR Tracking)\nOffer.js (offers Schema, calculateDiscount)] as BM3
+    BM1 -[hidden]down-> BM2
+    BM2 -[hidden]down-> BM3
+  }
+
+  package "infrastructure::config" as PkgConfig {
+    component [db.js\n(Mongoose Connection Pool,\nMONGO_URI & Life-cycle Handlers)] as CF1
+  }
+
+  package "database::seed" as PkgSeed {
+    component [product.js & offer.js\n(Initial Seeding: Rings, Necklaces,\nChains, Earrings, ROYAL20, SOLITAIRE5000)] as SD1
+  }
+
+  ' Structural Layout Alignment
+  PkgRoutes -[hidden]right-> PkgMiddleware
+  PkgRoutes -[hidden]down-> PkgControllers
+  PkgMiddleware -[hidden]down-> PkgBackendModels
+  PkgControllers -[hidden]down-> PkgConfig
+  PkgBackendModels -[hidden]down-> PkgSeed
+
+  ' Inter-Package Dependencies
+  PkgRoutes ..> MW1 : <<protects via>>
+  PkgRoutes ..> C1 : <<delegates to>>
+  PkgRoutes ..> C2 : <<delegates to>>
+  PkgRoutes ..> C3 : <<delegates to>>
+  PkgRoutes ..> C4 : <<delegates to>>
+  PkgRoutes ..> C5 : <<delegates to>>
+  PkgControllers ..> BM1 : <<executes CRUD>>
+  PkgControllers ..> BM2 : <<executes CRUD>>
+  PkgControllers ..> BM3 : <<executes CRUD>>
+  PkgBackendModels ..> CF1 : <<managed via>>
+  SD1 ..> BM1 : <<populates>>
+  SD1 ..> CF1 : <<connects via>>
+}
+
+' =========================================================
+' 4. DATABASE PERSISTENCE STORAGE
+' =========================================================
+database "MongoDB Storage (zawer_jewellery)" as MongoStorage #FFFFFF {
+  folder "Collections" as Collections {
+    [users, products, carts]
+    [wishlists, offers, orders]
+  }
+}
+
+' Cross-Layer Connections (Component to Component / Node)
+ApiServiceComp -down-> NetLayer : JSON Request\nPayload
+NetLayer -down-> R1 : Dispatches Request
+CF1 -down-> MongoStorage : Mongoose ODM / Wire Protocol
+
+@enduml

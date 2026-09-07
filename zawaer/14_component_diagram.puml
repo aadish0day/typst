@@ -1,0 +1,189 @@
+@startuml 14_component_diagram
+skinparam style strictuml
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName "Liberation Sans"
+skinparam defaultFontSize 12
+skinparam defaultFontColor #212121
+skinparam arrowColor #212121
+skinparam arrowThickness 1.2
+skinparam roundcorner 4
+skinparam shadowing false
+
+skinparam component {
+  BackgroundColor #F8F9FA
+  BorderColor #212121
+  BorderThickness 1.2
+  HeaderBackgroundColor #E9ECEF
+  FontName "Liberation Sans"
+  FontSize 12
+  FontColor #212121
+}
+
+skinparam interface {
+  BackgroundColor #FAFAFA
+  BorderColor #212121
+  BorderThickness 1.2
+  FontName "Liberation Sans"
+  FontSize 11
+  FontColor #212121
+}
+
+skinparam port {
+  BackgroundColor #E9ECEF
+  BorderColor #212121
+  BorderThickness 1.2
+}
+
+skinparam package {
+  BackgroundColor #FFFFFF
+  BorderColor #495057
+  BorderThickness 1.3
+  FontName "Liberation Sans"
+  FontSize 13
+  FontStyle bold
+  FontColor #212121
+}
+
+skinparam note {
+  BackgroundColor #FFFDF7
+  BorderColor #BDBDBD
+  BorderThickness 1
+  FontName "Liberation Sans"
+  FontSize 11
+  FontColor #212121
+}
+
+package "Client Subsystem (Flutter Application)" as ClientPackage {
+
+  component "UI Presentation Components" as ClientUI {
+    portout "out_req" as UI_Out
+  }
+
+  interface "IClientApiService" as IClientApi
+
+  component "Networking & Transport Component\n(ApiService.dart)" as ApiClientComp {
+    portin "in_api" as API_In
+    portout "out_http" as API_Out
+  }
+
+  UI_Out ..> IClientApi : requires
+  IClientApi -- API_In : provides
+}
+
+interface "HTTP / REST API\n(Port 5000 / JSON)" as IHttpRest
+
+API_Out ..> IHttpRest : requires
+
+package "Backend Service Subsystem (Docker Container: zawer_backend)" as BackendPackage {
+
+  component "API Gateway & Middleware Ingress" as IngressComp {
+    portin "p_ingress" as P_Ingress
+    portout "p_route" as P_Route
+  }
+
+  IHttpRest -- P_Ingress : provides
+
+  interface "ISecuredRequestDispatcher" as IRouteDisp
+  P_Route ..> IRouteDisp : dispatches
+
+  package "Functional Business Logic Components" as BusinessComponents {
+
+    component "Authentication Component\n(authController & JWT)" as AuthComp {
+      portin "p_auth" as P_Auth
+      portout "p_auth_db" as P_AuthDB
+    }
+
+    component "Catalog & Review Component\n(productController)" as ProductComp {
+      portin "p_prod" as P_Prod
+      portout "p_prod_db" as P_ProdDB
+    }
+
+    component "Cart & Wishlist Component\n(cartController & wishlistController)" as CartWishComp {
+      portin "p_cart" as P_Cart
+      portout "p_cart_db" as P_CartDB
+    }
+
+    component "Order & Tracking Component\n(orderController)" as OrderComp {
+      portin "p_order" as P_Order
+      portout "p_order_db" as P_OrderDB
+      portout "p_order_ext" as P_OrderExt
+    }
+
+    component "Promotion & Discount Component\n(offerController)" as OfferComp {
+      portin "p_offer" as P_Offer
+      portout "p_offer_db" as P_OfferDB
+    }
+
+    IRouteDisp -- P_Auth : provides
+    IRouteDisp -- P_Prod : provides
+    IRouteDisp -- P_Cart : provides
+    IRouteDisp -- P_Order : provides
+    IRouteDisp -- P_Offer : provides
+  }
+
+  interface "IOfferDiscountCalculator" as IDiscountCalc
+  OfferComp -- IDiscountCalc : provides
+  OrderComp ..> IDiscountCalc : requires (coupon deduction)
+
+  package "Data Access & ODM Subsystem" as ODMSubsystem {
+    interface "IUserDataAccess" as IUserDAO
+    interface "IProductDataAccess" as IProductDAO
+    interface "ICartWishlistDataAccess" as ICartWishDAO
+    interface "IOrderDataAccess" as IOrderDAO
+    interface "IOfferDataAccess" as IOfferDAO
+
+    component "Mongoose Persistence Engine\n(db.js & Models)" as ODMComp {
+      portin "p_models" as P_Models
+      portout "p_mongo_wire" as P_MongoWire
+    }
+
+    P_AuthDB ..> IUserDAO : requires
+    P_ProdDB ..> IProductDAO : requires
+    P_CartDB ..> ICartWishDAO : requires
+    P_OrderDB ..> IOrderDAO : requires
+    P_OfferDB ..> IOfferDAO : requires
+
+    IUserDAO -- P_Models : provides
+    IProductDAO -- P_Models : provides
+    ICartWishDAO -- P_Models : provides
+    IOrderDAO -- P_Models : provides
+    IOfferDAO -- P_Models : provides
+  }
+}
+
+interface "MongoDB Wire Protocol\n(Port 27017 / BSON)" as IMongoWire
+P_MongoWire ..> IMongoWire : requires
+
+package "Database Subsystem (MongoDB 7.0)" as MongoPackage {
+  component "MongoDB Database Server\n(zawer_mongo / Atlas Cluster)" as MongoComp {
+    portin "p_db_listener" as P_DBListener
+  }
+  IMongoWire -- P_DBListener : provides
+}
+
+package "External Logistics Partner Ecosystem" as ExternalPackage {
+  interface "ISequelLogisticsAPI\n(HTTPS Webhook / REST)" as ISequelAPI
+
+  component "Sequel Secure Logistics Hub\n(Armored Courier Fleet)" as SequelComp {
+    portin "p_sequel" as P_Sequel
+  }
+  ISequelAPI -- P_Sequel : provides
+}
+
+P_OrderExt ..> ISequelAPI : requires (tamper seal & GPS sync)
+
+note top of IngressComp
+  <b>Ingress Filters:</b>
+  - CORS Whitelist Validation
+  - Express JSON Body Deserialization
+  - authMiddleware: Bearer Token Decoding
+end note
+
+note bottom of OrderComp
+  <b>CBSE Contract:</b>
+  Order component coordinates with
+  Promotion component for coupon discounts
+  and with Sequel Logistics for tracking milestones.
+end note
+
+@enduml

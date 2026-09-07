@@ -1,0 +1,307 @@
+@startuml 04_frontend_class_diagram
+skinparam style strictuml
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName "Liberation Sans"
+skinparam defaultFontSize 12
+skinparam defaultFontColor #212121
+skinparam arrowColor #212121
+skinparam arrowThickness 1.2
+skinparam roundcorner 4
+skinparam shadowing false
+
+skinparam class {
+  BackgroundColor #F8F9FA
+  BorderColor #212121
+  BorderThickness 1.2
+  HeaderBackgroundColor #E9ECEF
+  FontName "Liberation Sans"
+  FontSize 12
+  FontColor #212121
+}
+
+skinparam package {
+  BackgroundColor #FFFFFF
+  BorderColor #495057
+  BorderThickness 1.3
+  FontName "Liberation Sans"
+  FontSize 13
+  FontStyle bold
+  FontColor #212121
+}
+
+skinparam note {
+  BackgroundColor #FFFDF7
+  BorderColor #BDBDBD
+  BorderThickness 1
+  FontName "Liberation Sans"
+  FontSize 11
+  FontColor #212121
+}
+
+package "zawer_jewellery_app/lib/models" as ModelsPkg {
+
+  class "Product" as ProductModel {
+    +id: String
+    +name: String
+    +category: String
+    +description: String
+    +price: double
+    +originalPrice: double
+    +discountPercentage: double
+    +isSpecialOffer: bool
+    +offerTag: String
+    +rating: double
+    +images: List<String>
+    +isFavourite: bool
+    +hasDiscount: bool
+    +savingsAmount: double
+    +Product(...)
+    +Product.fromJson(json: Map<String, dynamic>): Product
+    +toJson(): Map<String, dynamic>
+  }
+
+  class "OrderTrackingModel" as OrderTrackingModel {
+    +orderId: String
+    +trackingNumber: String
+    +currentStatus: String
+    +courierPartner: String
+    +currentLocation: String
+    +estimatedDelivery: DateTime?
+    +aiDeliveryInsight: String
+    +customerName: String
+    +address: String
+    +phone: String
+    +totalAmount: double
+    +createdAt: DateTime?
+    +items: List<OrderItemModel>
+    +timeline: List<TrackingStep>
+    +OrderTrackingModel(...)
+    +OrderTrackingModel.fromJson(json: Map<String, dynamic>): OrderTrackingModel
+  }
+
+  class "OrderItemModel" as OrderItemModel {
+    +productId: String
+    +name: String
+    +image: String
+    +price: double
+    +quantity: int
+    +OrderItemModel(...)
+    +OrderItemModel.fromJson(json: Map<String, dynamic>): OrderItemModel
+  }
+
+  class "TrackingStep" as TrackingStep {
+    +status: String
+    +title: String
+    +description: String
+    +location: String
+    +timestamp: DateTime?
+    +isCompleted: bool
+    +TrackingStep(...)
+    +TrackingStep.fromJson(json: Map<String, dynamic>): TrackingStep
+  }
+
+  class "OfferModel" as OfferModel {
+    +id: String
+    +code: String
+    +title: String
+    +description: String
+    +discountType: String
+    +discountValue: double
+    +maxDiscount: double
+    +minOrderAmount: double
+    +applicableCategory: String
+    +expiryDate: DateTime?
+    +isExpired: bool
+    +daysRemaining: int
+    +hoursRemaining: int
+    +isValid: bool
+    +tag: String
+    +bannerImage: String
+    +terms: List<String>
+    +usedCount: int
+    +discountLabel: String
+    +minOrderText: String
+    +calculateDiscount(subtotal: double): double
+    +OfferModel(...)
+    +OfferModel.fromJson(json: Map<String, dynamic>): OfferModel
+    +toJson(): Map<String, dynamic>
+  }
+
+  OrderTrackingModel *-- "1..*" OrderItemModel : contains
+  OrderTrackingModel *-- "1..*" TrackingStep : contains
+}
+
+package "zawer_jewellery_app/lib/services" as ServicesPkg {
+
+  class "ApiService" as ApiService <<Service>> {
+    {static} +baseUrl: String
+    {static} -_handleResponse(response: http.Response): Future<Map<String, dynamic>>
+    {static} -_send(request: Function): Future<http.Response>
+    {static} +getToken(): Future<String>
+    {static} +registerUser(name: String, email: String, phone: String, password: String): Future<Map<String, dynamic>>
+    {static} +loginUser(email: String, password: String): Future<Map<String, dynamic>>
+    {static} +getProfile(): Future<Map<String, dynamic>>
+    {static} +updateProfile(name: String, phone: String): Future<Map<String, dynamic>>
+    {static} +forgotPassword(email: String): Future<Map<String, dynamic>>
+    {static} +resetPassword(email: String, otp: String, newPassword: String): Future<Map<String, dynamic>>
+    {static} +getProducts(): Future<Map<String, dynamic>>
+    {static} +getProductById(id: String): Future<Map<String, dynamic>>
+    {static} +searchProducts(search: String): Future<Map<String, dynamic>>
+    {static} +getProductReviews(productId: String): Future<Map<String, dynamic>>
+    {static} +addProductReview(productId: String, rating: int, comment: String): Future<Map<String, dynamic>>
+    {static} +getCart(): Future<Map<String, dynamic>>
+    {static} +addToCart(productId: String, quantity: int): Future<Map<String, dynamic>>
+    {static} +updateCartQuantity(productId: String, quantity: int): Future<Map<String, dynamic>>
+    {static} +removeFromCart(productId: String): Future<Map<String, dynamic>>
+    {static} +clearCart(): Future<Map<String, dynamic>>
+    {static} +getWishlist(): Future<Map<String, dynamic>>
+    {static} +addToWishlist(productId: String): Future<Map<String, dynamic>>
+    {static} +removeFromWishlist(productId: String): Future<Map<String, dynamic>>
+    {static} +placeOrder(customerName, phone, address, paymentMethod, items, couponCode, discountAmount): Future<Map<String, dynamic>>
+    {static} +getOrders(): Future<Map<String, dynamic>>
+    {static} +getOrderById(orderId: String): Future<Map<String, dynamic>>
+    {static} +getOrderTracking(orderId: String): Future<Map<String, dynamic>>
+    {static} +trackOrderByNumber(query: String): Future<Map<String, dynamic>>
+    {static} +updateOrderStatus(orderId: String, status: String): Future<Map<String, dynamic>>
+    {static} +getOffers(): Future<Map<String, dynamic>>
+    {static} +getDiscountedProducts(): Future<Map<String, dynamic>>
+    {static} +validateCoupon(code: String, subtotal: double, category: String): Future<Map<String, dynamic>>
+  }
+}
+
+package "zawer_jewellery_app/lib/utils" as UtilsPkg {
+
+  class "ThemeController" as ThemeController <<Controller>> {
+    {static} +mode: ValueNotifier<ThemeMode>
+    {static} +load(): Future<void>
+    {static} +setDarkMode(value: bool): Future<void>
+    {static} +toggle(): void
+  }
+
+  class "AppTheme" as AppTheme <<Theme>> {
+    {static} +lightTheme: ThemeData
+    {static} +darkTheme: ThemeData
+  }
+}
+
+package "zawer_jewellery_app/lib/screens" as ScreensPkg {
+
+  class "ZawerJewelleryApp" as App <<StatelessWidget>> {
+    +build(context: BuildContext): Widget
+  }
+
+  class "SplashScreen" as SplashScreen <<StatefulWidget>>
+  class "LoginScreen" as LoginScreen <<StatefulWidget>>
+  class "RegisterScreen" as RegisterScreen <<StatefulWidget>>
+  class "ForgotPasswordScreen" as ForgotPasswordScreen <<StatefulWidget>>
+
+  class "BottomNavScreen" as BottomNavScreen <<StatefulWidget>> {
+    -currentIndex: int
+    -screens: List<Widget>
+  }
+
+  class "HomeScreen" as HomeScreen <<StatefulWidget>> {
+    -categories: List<String>
+    -products: List<Product>
+    +loadProducts(): Future<void>
+  }
+
+  class "ProductDetailsScreen" as ProductDetailsScreen <<StatefulWidget>> {
+    +product: Product
+    -quantity: int
+    -isFavourite: bool
+    -reviews: List<Map<String, dynamic>>
+    +loadReviews(): Future<void>
+    +submitReview(): Future<void>
+  }
+
+  class "OffersScreen" as OffersScreen <<StatefulWidget>> {
+    -offers: List<OfferModel>
+    -discountedProducts: List<Product>
+    -calcAmountController: TextEditingController
+    +loadOffersData(): Future<void>
+    +recalculateSimulation(): void
+  }
+
+  class "WishlistScreen" as WishlistScreen <<StatefulWidget>> {
+    -wishlist: List<Map<String, dynamic>>
+    +loadWishlist(): Future<void>
+    +moveToCart(productId: String): Future<void>
+  }
+
+  class "CartScreen" as CartScreen <<StatefulWidget>> {
+    -cartItems: List<Map<String, dynamic>>
+    -isGiftPackagingEnabled: bool
+    +loadCart(): Future<void>
+    +updateQuantity(productId: String, qty: int): Future<void>
+  }
+
+  class "CheckoutScreen" as CheckoutScreen <<StatefulWidget>> {
+    -nameController: TextEditingController
+    -phoneController: TextEditingController
+    -addressController: TextEditingController
+    -couponController: TextEditingController
+    -paymentMethod: String
+    +validateCoupon(): Future<void>
+    +submitOrder(): Future<void>
+  }
+
+  class "OrdersScreen" as OrdersScreen <<StatefulWidget>> {
+    -orders: List<Map<String, dynamic>>
+    -selectedFilter: String
+    +loadOrders(): Future<void>
+  }
+
+  class "OrderTrackingScreen" as OrderTrackingScreen <<StatefulWidget>> {
+    +orderId: String
+    -trackingData: OrderTrackingModel?
+    -stageMetadata: List<Map<String, dynamic>>
+    +loadTracking(): Future<void>
+  }
+
+  class "ProfileScreen" as ProfileScreen <<StatefulWidget>> {
+    -name: String
+    -email: String
+    -phone: String
+    +loadProfile(): Future<void>
+    +toggleDarkMode(): void
+  }
+}
+
+' Screen Routing and Navigation
+App --> ThemeController : listens to mode
+App ..> SplashScreen : initial route
+App ..> BottomNavScreen : main route
+App ..> LoginScreen : auth route
+App ..> RegisterScreen : auth route
+App ..> ForgotPasswordScreen : auth route
+
+BottomNavScreen *-- HomeScreen
+BottomNavScreen *-- OffersScreen
+BottomNavScreen *-- WishlistScreen
+BottomNavScreen *-- CartScreen
+BottomNavScreen *-- ProfileScreen
+
+HomeScreen ..> ProductDetailsScreen : opens on tap
+OffersScreen ..> ProductDetailsScreen : views discounted piece
+OffersScreen ..> CartScreen : navigates on offer claim
+WishlistScreen ..> ProductDetailsScreen : navigates to view
+WishlistScreen ..> CartScreen : moves item
+CartScreen ..> CheckoutScreen : proceeds to checkout
+CheckoutScreen ..> OrderTrackingScreen : navigates after placeOrder
+CheckoutScreen ..> OffersScreen : browse privilege codes
+OrdersScreen ..> OrderTrackingScreen : tracks selected order
+ProfileScreen --> ThemeController : toggles theme
+
+' Screen to Model Dependencies
+ProductDetailsScreen --> ProductModel : displays
+HomeScreen ..> ProductModel : lists
+OffersScreen ..> OfferModel : displays & computes
+OffersScreen ..> ProductModel : lists
+OrderTrackingScreen --> OrderTrackingModel : renders timeline
+
+' Service dependencies
+ScreensPkg ..> ApiService : invokes HTTP operations
+ApiService ..> ModelsPkg : populates data structures
+
+@enduml

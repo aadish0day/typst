@@ -1,0 +1,156 @@
+@startuml
+skinparam style strictuml
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName "Liberation Sans"
+skinparam defaultFontSize 12
+skinparam defaultFontColor #212121
+skinparam arrowColor #212121
+skinparam arrowThickness 1.2
+
+skinparam activity {
+  BackgroundColor #FFFFFF
+  BorderColor #212121
+  BorderThickness 1.2
+  FontName "Liberation Sans"
+  FontSize 12
+  FontColor #111111
+  StartColor #8B0000
+  EndColor #8B0000
+  DiamondBackgroundColor #FFFDF7
+  DiamondBorderColor #8B0000
+  DiamondFontName "Liberation Sans"
+  DiamondFontSize 11
+}
+
+skinparam partition {
+  BackgroundColor #FFFFFF
+  BorderColor #8B0000
+  BorderThickness 1.5
+  FontName "Liberation Sans"
+  FontSize 13
+  FontStyle bold
+  FontColor #8B0000
+}
+
+skinparam note {
+  BackgroundColor #FFFDF7
+  BorderColor #D4AF37
+  BorderThickness 1
+  FontName "Liberation Sans"
+  FontSize 11
+  FontColor #212121
+}
+
+|#FFFDF7|Customer / Client|
+|#FFFFFF|Flutter Client App|
+|#F9F9FB|Express API Gateway|
+|#FFFDF7|MongoDB Database|
+
+|Customer / Client|
+start
+:Browse Handcrafted Collections\n(Rings, Solitaires, Necklaces);
+:Select piece & inspect 18K/22K purity,\ngemstone specs, and BIS hallmark details;
+:Tap "Add to Bag";
+
+|Flutter Client App|
+:Check local authentication status\n(Verify JWT token in SharedPreferences);
+
+if (Is Client Authenticated?) then (No)
+  |Flutter Client App|
+  :Route to Login Screen;
+  |Customer / Client|
+  :Enter email & password credentials;
+  |Flutter Client App|
+  :Dispatch POST /api/auth/login;
+  |Express API Gateway|
+  :Authenticate user & sign 7-day JWT token;
+  |Flutter Client App|
+  :Persist token & user profile in SharedPreferences;
+else (Yes)
+endif
+
+|Flutter Client App|
+:Dispatch POST /api/cart\n(productId, quantity=1, Bearer JWT);
+
+|Express API Gateway|
+:cartController.addToCart()\nValidate product & resolve user ID;
+
+|MongoDB Database|
+:Find Cart or upsert item;\nSave cart document;
+
+|Flutter Client App|
+:Display "Product added to cart" feedback;
+|Customer / Client|
+:Open Bag & tap "Proceed to Luxury Checkout";
+
+|Flutter Client App|
+:Load checkout context;\nPrefill savedAddress, name, and phone;\nFetch cart items & joined product specs;
+
+|Customer / Client|
+if (Has Privilege Coupon?) then (Yes)
+  :Enter privilege code (e.g., 'ROYAL10')\nand tap "Apply Code";
+  |Flutter Client App|
+  :Dispatch POST /api/offers/validate-coupon\n(couponCode, orderSubtotal);
+  |Express API Gateway|
+  :offerController.validateCoupon();
+  |MongoDB Database|
+  :Query Offer by code;
+  |Express API Gateway|
+  :Validate status, expiry date, start date,\nusage limit, and minOrderAmount;
+  if (Coupon Criteria Satisfied?) then (Yes)
+    :Calculate discount amount\n(Percentage or Flat capped at maxDiscount);\nCompute finalAmount = max(0, subtotal - discount);
+    |Flutter Client App|
+    :Trigger heavy haptic feedback;\nDisplay discount chip & update Grand Total;
+  else (No)
+    :Return 400 Bad Request with\nluxury validation error message;
+    |Flutter Client App|
+    :Display error banner;\nRetain original subtotal without discount;
+  endif
+else (No)
+endif
+
+|Customer / Client|
+:Select Payment Method\n(Cash on Delivery / Armored Card on Delivery);\nVerify delivery destination address;
+:Tap "Confirm & Place Order";
+
+|Flutter Client App|
+:Validate inputs (name, phone, address, non-empty items);\nSet isPlacingOrder = true;\nDispatch POST /api/orders with Bearer JWT;
+
+|Express API Gateway|
+:orderController.placeOrder();
+:Re-verify items array, item prices, and subtotal;
+if (Coupon Code Present?) then (Yes)
+  :Re-validate offer and compute final discount;\nIncrement offer.usedCount atomically in DB;
+else (No)
+endif
+:Generate Tracking Number:\nZWR- + 6-digit random sequence;
+:Construct Initial 6-Stage Timeline:\n- Stage 1: 'Order Placed' (Completed = true)\n- Stages 2-6: Pending (Completed = false);
+:Attach Courier Partner: 'Sequel Secure Luxury Logistics';\nSet estimated delivery (+4 days) & AI insight;
+
+|MongoDB Database|
+:Order.create(orderPayload);\nPersist order document;
+
+|Express API Gateway|
+:Return 201 Created with order payload & trackingNumber;
+
+|Flutter Client App|
+:Persist savedAddress in SharedPreferences;
+:Dispatch DELETE /api/cart (clearCart);
+
+|MongoDB Database|
+:Empty user's cart items array;
+
+|Flutter Client App|
+:Render Luxury Confirmation Dialog\nwith 'ZWR-XXXXXX' tracking badge;
+
+|Customer / Client|
+:Tap "Track Vault Shipment";
+
+|Flutter Client App|
+:Navigate to OrderTrackingScreen(orderId);\nFetch live tracking from GET /api/orders/:id/tracking;
+
+|Customer / Client|
+:View Real-Time Vault Timeline,\nBIS Hallmarking Status & AI Insights;
+stop
+
+@enduml

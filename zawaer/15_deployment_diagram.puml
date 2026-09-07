@@ -1,0 +1,154 @@
+@startuml 15_deployment_diagram
+skinparam style strictuml
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName "Liberation Sans"
+skinparam defaultFontSize 12
+skinparam defaultFontColor #212121
+skinparam arrowColor #212121
+skinparam arrowThickness 1.2
+skinparam roundcorner 4
+skinparam shadowing false
+
+skinparam node {
+  BackgroundColor #F8F9FA
+  BorderColor #495057
+  BorderThickness 1.3
+  HeaderBackgroundColor #E9ECEF
+  FontName "Liberation Sans"
+  FontSize 12
+  FontColor #212121
+}
+
+skinparam artifact {
+  BackgroundColor #FFFFFF
+  BorderColor #212121
+  BorderThickness 1.2
+  FontName "Liberation Sans"
+  FontSize 11
+  FontColor #212121
+}
+
+skinparam database {
+  BackgroundColor #F8F9FA
+  BorderColor #212121
+  BorderThickness 1.2
+  FontName "Liberation Sans"
+  FontSize 12
+  FontColor #212121
+}
+
+skinparam package {
+  BackgroundColor #FFFFFF
+  BorderColor #495057
+  BorderThickness 1.3
+  FontName "Liberation Sans"
+  FontSize 13
+  FontStyle bold
+  FontColor #212121
+}
+
+skinparam note {
+  BackgroundColor #FFFDF7
+  BorderColor #BDBDBD
+  BorderThickness 1
+  FontName "Liberation Sans"
+  FontSize 11
+  FontColor #212121
+}
+
+package "Client Hardware & User Edge" {
+  node "Client Mobile Device\n<<Device>>\n(Android 12+ / iOS 15+)" as MobileDevice {
+    node "Flutter Execution Runtime\n<<Execution Environment>>" as FlutterEnv {
+      artifact "zawer_jewellery_app.apk / .ipa\n<<Artifact: Executable>>" as FlutterApp {
+        artifact "UI Components & Screen Views" as UIViews
+        artifact "ApiService (Networking Engine)" as ApiClient
+        artifact "ThemeController (Light / Dark)" as ThemeCtrl
+      }
+    }
+    database "Device Local Storage\n<<Storage>>\n(SharedPreferences)" as LocalPrefs {
+      file "auth_token.dat\n(Bearer JWT Token)" as TokenStore
+      file "settings.xml\n(Dark Mode Flag)" as SettingsStore
+    }
+    ApiClient --> LocalPrefs : reads/writes token
+    ThemeCtrl --> LocalPrefs : persists theme mode
+  }
+
+  node "Client Desktop / Web Browser\n<<Device>>\n(Chrome / Safari / Firefox)" as WebDevice {
+    node "Browser JavaScript Engine & CanvasKit\n<<Execution Environment>>" as WebEnv {
+      artifact "Flutter Web Application\n<<Artifact: HTML5 / WebAssembly>>" as WebApp
+    }
+  }
+}
+
+cloud "Public Internet / Cellular Carrier Network\n<<Network Boundary: WAN>>" as InternetCloud
+
+MobileDevice --> InternetCloud : Wi-Fi / 5G Mobile Data
+WebDevice --> InternetCloud : HTTPS / TCP Port 443
+
+package "Production Cloud / Virtual Machine Host\n<<Node: Ubuntu 22.04 LTS x86_64 / ARM64>>" as HostServer {
+
+  node "Docker Engine v26.x\n<<Virtualization Platform>>" as DockerEngine {
+
+    package "Internal Docker Virtual Network\n<<Network Boundary: zawer_network (Bridge Driver)>>" as DockerNet {
+
+      node "Docker Container: zawer_backend\n<<Execution Environment: node:20-alpine>>\nUser: node (Non-root UID 1000)\nPort: 5000" as BackendContainer {
+        artifact "Node.js 20 LTS Runtime" as NodeRuntime {
+          artifact "server.js & app.js\n<<Artifact: Express Web Server>>" as ExpressApp
+          artifact "Middleware Stack\n(cors, express.json, authMiddleware)" as MWStack
+          artifact "Mongoose ODM 8.x\n<<Artifact: Domain Models>>" as MongooseLayer
+        }
+        ExpressApp --> MWStack
+        MWStack --> MongooseLayer
+      }
+
+      node "Docker Container: zawer_mongo\n<<Execution Environment: mongo:7-jammy>>\nPort: 27017\nProfile: local-db" as MongoContainer {
+        database "MongoDB 7.0 Database Instance\n<<Database System>>" as MongoDaemon {
+          database "Database: zawaer\n(users, products, orders,\ncarts, wishlists, offers)" as CollectionsDB
+        }
+      }
+    }
+
+    database "Docker Named Persistent Volume\n<<Storage Driver: local>>" as LocalVolume {
+      folder "mongo_data (/data/db)\n(BSON Files, WiredTiger Engine, Indexes)" as MongoVolumeData
+    }
+
+    MongoContainer --> LocalVolume : mounts /data/db
+  }
+}
+
+cloud "MongoDB Atlas Cloud Cluster\n<<Managed Database Service: Replica Set>>\n(Alternative Cloud DB Provider)" as AtlasCloud {
+  database "Managed MongoDB 7.0 Cluster\n(High Availability & Auto-Sharding)" as AtlasDB
+}
+
+cloud "Third-Party External Services\n<<Public SaaS / REST APIs>>" as ExtServices {
+  node "Sequel Secure Luxury Logistics\n<<Server>>" as SequelServer {
+    artifact "Sequel Armored Transit API\n<<Service: GPS & Seal Webhook>>" as SequelAPI
+  }
+
+  node "BIS Hallmarking & Purity Registry\n<<Server>>" as BISServer {
+    artifact "BIS Certification Service\n<<Service: Authenticity Allocator>>" as BISAPI
+  }
+}
+
+' Connectivity & Protocols
+InternetCloud --> BackendContainer : HTTPS / REST JSON Requests\nHost Port Mapping: 5000:5000\nBearer JWT Header
+MongooseLayer --> MongoContainer : MongoDB Wire Protocol / BSON\nInternal DNS: mongodb://mongo:27017/test
+MongooseLayer ..> AtlasCloud : TLS 1.3 / SRV Connection String\n(mongodb+srv://user:pass@cluster.mongodb.net)
+BackendContainer ..> SequelServer : HTTPS REST Protocol (Port 443)\n(Tamper Casing & GPS Stage Tracking)
+BackendContainer ..> BISServer : HTTPS Verification Requests (Port 443)
+
+note right of BackendContainer
+  <b>Container Healthcheck:</b>
+  CMD node -e "fetch('http://localhost:5000/')"
+  Interval: 30s | Timeout: 5s | Retries: 3
+  Security: Runs as non-root 'node' user
+end note
+
+note bottom of MongoContainer
+  <b>Data Durability & Isolation:</b>
+  - Isolated bridge network: zawer_network
+  - Zero host exposure without explicit port 27017 mapping
+  - Persistent volume survival across container restarts
+end note
+
+@enduml

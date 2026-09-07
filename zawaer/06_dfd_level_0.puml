@@ -1,0 +1,47 @@
+@startuml
+skinparam style strictuml
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName "Liberation Sans"
+skinparam defaultFontSize 12
+skinparam defaultFontStyle bold
+skinparam titleFontSize 18
+skinparam titleFontStyle bold
+
+skinparam ArrowColor #212121
+skinparam ArrowThickness 2.0
+skinparam ArrowFontSize 11
+skinparam ArrowFontStyle bold
+
+skinparam RectangleBorderColor #212121
+skinparam RectangleBorderThickness 2.5
+skinparam RectangleBackgroundColor #FFFFFF
+skinparam RectangleFontSize 13
+skinparam RectangleFontStyle bold
+
+title ZAWER Jewellery Platform - Context Data Flow Diagram (DFD Level 0)
+
+' External Entities
+rectangle "**Customer**\n(Mobile App Client / HNW Patron)\n[zawer_jewellery_app]" as Customer <<External Entity>> #FDFDFD
+
+rectangle "0.0\n**ZAWER Central System**\n(Luxury Jewellery E-Commerce\n& Vault Logistics Engine)\n[zawer_backend : Express/Node.js]" as System <<Central Process>> #F8F9FA
+
+rectangle "**Payment Gateway**\n(Banking Gateway / UPI / Card / COD)\n[Payment Settlement Partner]" as PaymentGateway <<External Entity>> #FDFDFD
+
+rectangle "**Logistics Partner**\n(Sequel Secure Luxury Logistics)\n[Armored Transit & GPS Tracking]" as LogisticsPartner <<External Entity>> #FDFDFD
+
+' Inbound & Outbound Data Flows between Customer and System
+Customer -right-> System : [Inbound Customer Flows]\n1. User Registration & Auth Credentials (Email, Phone, Pass, OTP)\n2. Search Queries, Category Filters & Diamond Inquiries\n3. Cart Items, Quantity Adjustments & Wishlist Toggles\n4. Privilege Coupon Codes (ROYAL20, SOLITAIRE5000)\n5. Order Placement, Delivery Address & Payment Selection\n6. Consignment Tracking Queries (ZWR-XXXXXX)\n7. Product Ratings & Authenticity Reviews
+
+System -left-> Customer : [Outbound System Responses]\n1. JWT Bearer Tokens, Auth Responses & Profile Data\n2. Luxury Jewellery Catalog, BIS Hallmark Specs & High-Res Media\n3. Synchronized Cart & Wishlist Totals\n4. Validated Discount Amounts & Privilege Promotional Banners\n5. Order Placement Confirmation & Digital Tax Invoices\n6. Real-Time Vault Milestone Progression & AI Delivery Insights\n7. Published Review Feedback & Verified Collector Badges
+
+' Data Flows between System and Payment Gateway
+System -up-> PaymentGateway : [Payment Request]\n1. Transaction Initiation (Order ID, Net Payable Valuation)\n2. Customer Contact & Billing Metadata\n3. Selected Payment Method (Online / COD Flag)
+
+PaymentGateway -down-> System : [Payment Response]\n1. Transaction Authorization Token & Reference Number\n2. Real-Time Settlement Confirmation / Failure Callback\n3. Payment Audit Timestamp & Reconciliation Receipt
+
+' Data Flows between System and Logistics Partner
+System -down-> LogisticsPartner : [Dispatch Manifest]\n1. Armored Transit Consignment Order\n2. Encrypted Delivery Waybill & Customer Geolocation\n3. High-Value Insurance Declaration & Tamper-Evident Seal ID\n4. Dispatch Priority & Armed Escort Instructions
+
+LogisticsPartner -up-> System : [Logistics Feedback]\n1. Secure Waybill Number & Consignment ID (ZWR-XXXXXX)\n2. Real-Time Vault Milestone Scans (6 Tracking Stages)\n3. Armored Vehicle GPS Geofence & Proximity Pings\n4. Final Delivery Seal Inspection & Proof of Handover (POD)
+
+@enduml

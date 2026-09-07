@@ -1,0 +1,123 @@
+@startuml
+skinparam style strictuml
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName "Liberation Sans"
+skinparam defaultFontSize 12
+skinparam defaultFontColor #212121
+skinparam arrowColor #212121
+skinparam arrowThickness 1.2
+
+skinparam activity {
+  BackgroundColor #FFFFFF
+  BorderColor #212121
+  BorderThickness 1.2
+  FontName "Liberation Sans"
+  FontSize 12
+  FontColor #111111
+  StartColor #8B0000
+  EndColor #8B0000
+  DiamondBackgroundColor #FFFDF7
+  DiamondBorderColor #8B0000
+  DiamondFontName "Liberation Sans"
+  DiamondFontSize 11
+}
+
+skinparam partition {
+  BackgroundColor #FFFFFF
+  BorderColor #8B0000
+  BorderThickness 1.5
+  FontName "Liberation Sans"
+  FontSize 13
+  FontStyle bold
+  FontColor #8B0000
+}
+
+skinparam note {
+  BackgroundColor #FFFDF7
+  BorderColor #D4AF37
+  BorderThickness 1
+  FontName "Liberation Sans"
+  FontSize 11
+  FontColor #212121
+}
+
+|#FFFDF7|ZAWER Central Vault & Concierge|
+|#FFFFFF|Master Artisan Studio & Assay Lab|
+|#F9F9FB|Sequel Secure Luxury Logistics|
+|#FFFDF7|Customer Destination Address|
+
+|ZAWER Central Vault & Concierge|
+start
+:New Order Placed (Status: 'Order Placed');
+:Register order in Luxury Concierge Queue;\nGenerate Tracking Number ZWR-XXXXXX;
+:Queue AI Insight:\n"Jewellery safely queued. Hallmarking checks commencing.";
+:Validate payment authorization\n(Cash on Delivery or Pre-authorized Card);
+
+if (Client Cancellation Requested?) then (Yes)
+  :Transition status to 'Cancelled';
+  :Queue payment for immediate refund;\nRelease vault allocation;
+  stop
+else (No)
+endif
+
+:Transition status to 'Order Confirmed';
+:Allocate certified inventory piece from high-security vault;\nGenerate Certificate of Authenticity & BIS Record;
+:Transfer physical piece to Master Artisan Studio;
+
+|Master Artisan Studio & Assay Lab|
+:Transition status to 'Processing' (Processing & Hallmarking);\nInitiate 24-Point Comprehensive Inspection;
+
+repeat
+  :Perform Gemological Microscope Analysis\n(Prong tension, stone symmetry & clarity);
+  :Conduct Bureau of Indian Standards (BIS)\nHallmark laser etching (18K / 22K Purity Stamp);
+  :Ultrasonic bath cleaning to remove artisan polishing residues;
+  :High-luster micro-polishing & velvet presentation fitting;
+backward:Artisan rework & precision resetting;
+repeat while (24-Point Quality Inspection Passed?) is (Failed)
+->Passed;
+
+:Affix Certificate of Authenticity & BIS Hallmarking Card;\nPlace jewellery in Anti-Tarnish Velvet Presentation Box;
+:Pack inside Tamper-Evident Serialized Security Pouch;\nSeal with Holographic Dual-Barcode Label;
+
+|ZAWER Central Vault & Concierge|
+:Schedule high-security pickup with Sequel Secure Logistics;\nGenerate transit manifest & GPS custody handoff;
+
+|Sequel Secure Luxury Logistics|
+:Inspect serialized pouch seal integrity at Vault Handoff;\nTransition status to 'Shipped' (Shipped & Dispatched);
+:Log Location: 'In Transit - Sequel Armored Division';
+:Load inside 100% insured armored transit vehicle\nwith satellite dual-operator GPS tracking;
+:Real-time route optimization & transit telemetry update;
+
+:Arrival at Local Destination Express Hub;\nTransition status to 'Out for Delivery';
+:Assign dedicated White-Glove Luxury Delivery Executive;\nDispatch automated client alert: "Keep Govt Photo ID Ready";
+
+|Customer Destination Address|
+:Executive arrives at client destination address;\nRequest client Government Photo ID (Aadhaar / Passport / DL);
+
+if (ID Valid & Verified?) then (Yes)
+  :Present unopened tamper-evident serialized pouch\nfor client seal integrity examination;
+  if (Seal Intact & Approved by Client?) then (Yes)
+    :Break tamper seal in front of client;\nHand over velvet presentation box & authenticity certificate;
+    :Collect payment (if COD) & obtain digital delivery sign-off;
+    
+    |Sequel Secure Luxury Logistics|
+    :Transition status to 'Delivered';
+    :Log Location: 'Customer Destination Address';
+    :Trigger final AI Insight:\n"Store in anti-tarnish velvet box for lasting brilliance.";
+    
+    |Customer Destination Address|
+    :Client receives digital receipt & post-purchase care guide;
+    stop
+  else (Seal Broken / Tampered)
+    |Sequel Secure Luxury Logistics|
+    :Refuse delivery & quarantine package;\nTrigger immediate security escalation to ZAWER Concierge;
+    :Initiate priority vault replacement shipment;
+    stop
+  endif
+else (ID Verification Failed)
+  |Sequel Secure Luxury Logistics|
+  :Hold shipment & reschedule white-glove re-delivery;\nNotify ZAWER Luxury Concierge;
+  stop
+endif
+
+@enduml

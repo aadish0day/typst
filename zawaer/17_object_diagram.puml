@@ -1,0 +1,195 @@
+@startuml
+skinparam style strictuml
+top to bottom direction
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName "Liberation Sans"
+skinparam defaultFontSize 11
+skinparam defaultFontStyle bold
+skinparam titleFontSize 17
+skinparam titleFontStyle bold
+
+skinparam ArrowColor #212121
+skinparam ArrowThickness 1.8
+skinparam ArrowFontSize 10
+skinparam ArrowFontStyle bold
+
+skinparam ObjectBorderColor #212121
+skinparam ObjectBorderThickness 1.8
+skinparam ObjectBackgroundColor #F8F9FA
+skinparam ObjectFontSize 10
+skinparam ObjectFontStyle bold
+
+title ZAWER Jewellery Platform - Runtime Object Snapshot (Active Order ZWR-482915)
+
+' =========================================================
+' 1. USER & PROMOTIONAL PRIVILEGE OFFER
+' =========================================================
+object "patronUser : User" as usr {
+  _id = ObjectId("65e0a1b2c3d4e5f6a7b8c901")
+  name = "Aadish R. Shenoy"
+  email = "aadish.shenoy@zawer.luxury"
+  phone = "+91 98765 43210"
+  password = "$2a$10$wN3qB4r... (bcrypt hash)"
+  otpCode = ""
+  otpExpiry = null
+  createdAt = 2026-08-15T10:30:00.000Z
+}
+
+object "appliedOffer : Offer" as off {
+  _id = ObjectId("65e0a1b2c3d4e5f6a7b8c910")
+  code = "ROYAL20"
+  title = "Royal 20% Heritage Privilege"
+  discountType = "percentage"
+  discountValue = 20
+  maxDiscount = 10000
+  minOrderAmount = 25000
+  applicableCategory = "All"
+  usageLimit = 500
+  usedCount = 15
+  isActive = true
+  tag = "MAISON EXCLUSIVE"
+}
+
+' =========================================================
+' 2. ACTIVE ORDER RUNTIME AGGREGATE
+' =========================================================
+object "activeOrder : Order" as ord {
+  _id = ObjectId("65e0a1b2c3d4e5f6a7b8c920")
+  userId = "65e0a1b2c3d4e5f6a7b8c901"
+  customerName = "Aadish R. Shenoy"
+  phone = "+91 98765 43210"
+  address = "Penthouse 402, Altamount Road, Mumbai, MH 400026"
+  paymentMethod = "Online UPI / Net Banking"
+  subtotal = 61998
+  discountAmount = 10000
+  couponCode = "ROYAL20"
+  totalAmount = 51998
+  status = "Shipped"
+  trackingNumber = "ZWR-482915"
+  courierPartner = "Sequel Secure Luxury Logistics"
+  currentLocation = "Mumbai Central Vault Transit Hub"
+  estimatedDelivery = 2026-09-08T18:00:00.000Z
+  aiDeliveryInsight = "Insured armored transit with real-time route optimization."
+}
+
+' =========================================================
+' 3. ORDER ITEMS & REFERENCED CATALOG PRODUCTS
+' =========================================================
+object "item1 : OrderItem" as itm1 {
+  productId = "25"
+  name = "Diamond Pendant Necklace"
+  image = "assets/images/necklace2.jpg"
+  price = 52999
+  quantity = 1
+}
+
+object "item2 : OrderItem" as itm2 {
+  productId = "21"
+  name = "Classic Gold Band"
+  image = "assets/images/ring1.png"
+  price = 8999
+  quantity = 1
+}
+
+object "productNecklace : Product" as prod1 {
+  _id = ObjectId("65e0a1b2c3d4e5f6a7b8c902")
+  id = "25"
+  name = "Diamond Pendant Necklace"
+  category = "Necklace"
+  price = 52999
+  originalPrice = 52999
+  discountPercentage = 0
+  rating = 4.9
+  images = ["assets/images/necklace2.jpg"]
+}
+
+object "productBand : Product" as prod2 {
+  _id = ObjectId("65e0a1b2c3d4e5f6a7b8c903")
+  id = "21"
+  name = "Classic Gold Band"
+  category = "Ring"
+  price = 8999
+  originalPrice = 8999
+  discountPercentage = 0
+  rating = 4.6
+  images = ["assets/images/ring1.png"]
+}
+
+' =========================================================
+' 4. TIMELINE STEPS (6-STAGE VAULT LIFECYCLE)
+' =========================================================
+object "step1 : TimelineStep" as st1 {
+  status = "Order Placed"
+  title = "Order Placed"
+  description = "Received in concierge queue."
+  location = "ZAWER Online Hub, Mumbai"
+  timestamp = 2026-09-04T10:15:00.000Z
+  isCompleted = true
+}
+
+object "step2 : TimelineStep" as st2 {
+  status = "Order Confirmed"
+  title = "Order Confirmed"
+  description = "Certification & payment verified."
+  location = "Central Verification Center"
+  timestamp = 2026-09-04T11:30:00.000Z
+  isCompleted = true
+}
+
+object "step3 : TimelineStep" as st3 {
+  status = "Processing"
+  title = "Processing & Hallmarking"
+  description = "24-point setting inspection."
+  location = "Diamond Studio & Vault"
+  timestamp = 2026-09-04T15:45:00.000Z
+  isCompleted = true
+}
+
+object "step4 : TimelineStep" as st4 {
+  status = "Shipped"
+  title = "Shipped & Dispatched"
+  description = "Tamper-evident GPS transit casing."
+  location = "High-Security Transit Hub"
+  timestamp = 2026-09-04T19:20:00.000Z
+  isCompleted = true
+}
+
+object "step5 : TimelineStep" as st5 {
+  status = "Out for Delivery"
+  title = "Out for Delivery"
+  description = "Delivery associate en route."
+  location = "Local Express Hub"
+  timestamp = null
+  isCompleted = false
+}
+
+object "step6 : TimelineStep" as st6 {
+  status = "Delivered"
+  title = "Delivered"
+  description = "Handover with seal verification."
+  location = "Customer Address"
+  timestamp = null
+  isCompleted = false
+}
+
+' =========================================================
+' OBJECT RELATIONSHIPS & ASSOCIATIONS
+' =========================================================
+ord -up-> usr : <<placedBy>>\nuserId: "65e0a1b2...01"
+ord -up-> off : <<appliesCoupon>>\ncode: "ROYAL20"
+
+ord *-down-> itm1 : items[0]
+ord *-down-> itm2 : items[1]
+itm1 -down-> itm2
+itm1 ..> prod1 : <<snapshots>>\nproductId: "25"
+itm2 ..> prod2 : <<snapshots>>\nproductId: "21"
+prod1 -down-> prod2
+
+ord *-down-> st1 : timeline[0..5]
+st1 -down-> st2 : 1. Confirmed
+st2 -down-> st3 : 2. Processing
+st3 -right-> st4 : 3. In Transit (Active)
+st4 -down-> st5 : 4. Out for Delivery
+st5 -down-> st6 : 5. Delivered (Pending)
+
+@enduml

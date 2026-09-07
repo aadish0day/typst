@@ -1,0 +1,149 @@
+@startuml
+skinparam style strictuml
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName "Liberation Sans"
+skinparam defaultFontSize 12
+skinparam defaultFontColor #212121
+skinparam arrowColor #212121
+skinparam arrowThickness 1.2
+
+skinparam sequence {
+  LifeLineBorderColor #8B0000
+  LifeLineBackgroundColor #FFFDF7
+  GroupBorderColor #8B0000
+  GroupBackgroundColor #FAFAFA
+  GroupFontColor #8B0000
+  GroupFontSize 12
+  GroupFontStyle bold
+  ParticipantBorderColor #212121
+  ParticipantBackgroundColor #FAFAFA
+  ParticipantFontName "Liberation Sans"
+  ParticipantFontSize 12
+  ParticipantFontStyle bold
+  ActorBorderColor #8B0000
+  ActorBackgroundColor #FFFDF7
+  ActorFontName "Liberation Sans"
+  ActorFontSize 12
+  ActorFontStyle bold
+}
+
+skinparam note {
+  BackgroundColor #FFFDF7
+  BorderColor #D4AF37
+  BorderThickness 1
+  FontName "Liberation Sans"
+  FontSize 11
+  FontColor #212121
+}
+
+autonumber "<b>[00]</b>"
+
+actor "VIP Customer" as Client
+participant "Checkout Screen\n(CheckoutScreen.dart)" as CheckoutUI
+participant "Local Storage\n(SharedPreferences)" as Prefs
+participant "API Service\n(ApiService.dart)" as ApiService
+participant "Order Controller\n(orderController.js)" as OrderCtrl
+participant "Offer Model\n(models/Offer.js)" as OfferModel
+database "MongoDB\n(Orders & Cart)" as DB
+participant "Tracking Screen\n(OrderTrackingScreen.dart)" as TrackUI
+
+== Phase 1: Checkout Submission & Validation ==
+
+Client -> CheckoutUI : Select "Cash on Delivery" & tap "Confirm & Place Order"
+activate CheckoutUI
+
+CheckoutUI -> CheckoutUI : Validate local form:\n- customerName != empty\n- phone != empty\n- address != empty\n- cartItems.isNotEmpty
+CheckoutUI -> CheckoutUI : Set isPlacingOrder = true
+CheckoutUI -> ApiService : placeOrder(\n  customerName, phone, address,\n  paymentMethod, items, couponCode, discountAmount\n)
+activate ApiService
+
+ApiService -> Prefs : getString("token")
+activate Prefs
+Prefs --> ApiService : jwtBearerToken
+deactivate Prefs
+
+ApiService -> OrderCtrl : POST /api/orders\nHeaders: { Authorization: "Bearer <token>" }\nBody: {\n  customerName: "Aadish S.",\n  phone: "+91 98765 43210",\n  address: "Maison Penthouse, Malabar Hill, Mumbai",\n  paymentMethod: "Cash on Delivery",\n  couponCode: "ROYAL10",\n  discountAmount: 12500,\n  items: [{ productId: "PRD-01", name: "Solitaire Ring", price: 125000, quantity: 1 }]\n}
+activate OrderCtrl
+
+== Phase 2: Server-Side Processing & Tracking Initialization ==
+
+OrderCtrl -> OrderCtrl : Extract userId from req.user.id;\nValidate item prices & compute subtotal = ₹1,25,000
+
+opt If couponCode is present in payload
+  OrderCtrl -> DB : Offer.findOne({ code: "ROYAL10", isActive: true })
+  activate DB
+  DB --> OrderCtrl : offerRecord
+  deactivate DB
+  
+  OrderCtrl -> OfferModel : calculateDiscount(subtotal)
+  activate OfferModel
+  OfferModel --> OrderCtrl : finalDiscount = 12500
+  deactivate OfferModel
+  
+  OrderCtrl -> DB : Offer.updateOne({ _id: offer._id }, { $inc: { usedCount: 1 } })
+  activate DB
+  DB --> OrderCtrl : updateConfirmed
+  deactivate DB
+end opt
+
+OrderCtrl -> OrderCtrl : Compute finalPayable = max(0, subtotal - finalDiscount) = ₹1,12,500
+OrderCtrl -> OrderCtrl : Generate Unique Tracking Number:\ntrackingNumber = "ZWR-" + random(100000..999999)\n[e.g., "ZWR-849201"]
+
+OrderCtrl -> OrderCtrl : generateInitialTimeline(placedDate):\n1. Order Placed (Completed = true, Timestamp = now, Location = "ZAWER Online Hub, Mumbai")\n2. Order Confirmed (Completed = false)\n3. Processing (Completed = false)\n4. Shipped (Completed = false)\n5. Out for Delivery (Completed = false)\n6. Delivered (Completed = false)
+
+OrderCtrl -> DB : Order.create({\n  userId, customerName, phone, address, paymentMethod,\n  items, subtotal: 125000, discountAmount: 12500,\n  couponCode: "ROYAL10", totalAmount: 112500,\n  status: "Order Placed", trackingNumber: "ZWR-849201",\n  courierPartner: "Sequel Secure Luxury Logistics",\n  currentLocation: "ZAWER Central Vault Hub, Mumbai",\n  estimatedDelivery: now + 4 days,\n  aiDeliveryInsight: "AI Insight: Your luxury jewellery has been safely queued.",\n  timeline: initialTimeline\n})
+activate DB
+DB --> OrderCtrl : createdOrderDocument
+deactivate DB
+
+OrderCtrl --> ApiService : 201 Created\n{ success: true, message: "Order placed successfully", order: createdOrderDocument }
+deactivate OrderCtrl
+
+ApiService --> CheckoutUI : { statusCode: 201, success: true, order: {...} }
+deactivate ApiService
+
+== Phase 3: Post-Order State Finalization & Cart Clearing ==
+
+CheckoutUI -> Prefs : setString("savedAddress", address)
+activate Prefs
+Prefs --> CheckoutUI : stored
+deactivate Prefs
+
+CheckoutUI -> ApiService : clearCart()
+activate ApiService
+ApiService -> DB : Cart.findOneAndUpdate({ userId }, { $set: { items: [] } })
+activate DB
+DB --> ApiService : cartCleared
+deactivate DB
+ApiService --> CheckoutUI : { success: true, message: "Cart cleared" }
+deactivate ApiService
+
+CheckoutUI -> CheckoutUI : Set isPlacingOrder = false;\ncartItems = []
+
+CheckoutUI -> Client : Render Luxury Confirmation Dialog\n[Displays 'ZWR-849201' Tracking Badge & Est. Delivery]
+
+== Phase 4: Seamless Live Vault Tracking Transition ==
+
+Client -> CheckoutUI : Tap "Track Vault Shipment"
+CheckoutUI -> TrackUI : Navigator.pushReplacement(\n  OrderTrackingScreen(orderId: createdOrder._id)\n)
+deactivate CheckoutUI
+activate TrackUI
+
+TrackUI -> ApiService : getOrderTracking(createdOrder._id)
+activate ApiService
+ApiService -> OrderCtrl : GET /api/orders/:id/tracking
+activate OrderCtrl
+OrderCtrl -> DB : findOrderFlexible(orderId)
+activate DB
+DB --> OrderCtrl : orderRecordWithTimeline
+deactivate DB
+OrderCtrl --> ApiService : 200 OK\n{ success: true, tracking: { trackingNumber, status, courierPartner, timeline, aiDeliveryInsight } }
+deactivate OrderCtrl
+ApiService --> TrackUI : { statusCode: 200, success: true, tracking: {...} }
+deactivate ApiService
+
+TrackUI -> TrackUI : Initialize glowing pulse animation &\nrender 6-stage interactive timeline stepper
+TrackUI -> Client : Present Live Vault Status, Armored Vehicle Manifest,\nBIS Hallmarking Stage & AI Concierge Insights
+deactivate TrackUI
+
+@enduml

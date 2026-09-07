@@ -1,0 +1,128 @@
+@startuml
+skinparam style strictuml
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName "Liberation Sans"
+skinparam defaultFontSize 12
+skinparam defaultFontColor #212121
+skinparam arrowColor #212121
+skinparam arrowThickness 1.2
+
+skinparam sequence {
+  LifeLineBorderColor #8B0000
+  LifeLineBackgroundColor #FFFDF7
+  GroupBorderColor #8B0000
+  GroupBackgroundColor #FAFAFA
+  GroupFontColor #8B0000
+  GroupFontSize 12
+  GroupFontStyle bold
+  ParticipantBorderColor #212121
+  ParticipantBackgroundColor #FAFAFA
+  ParticipantFontName "Liberation Sans"
+  ParticipantFontSize 12
+  ParticipantFontStyle bold
+  ActorBorderColor #8B0000
+  ActorBackgroundColor #FFFDF7
+  ActorFontName "Liberation Sans"
+  ActorFontSize 12
+  ActorFontStyle bold
+}
+
+skinparam note {
+  BackgroundColor #FFFDF7
+  BorderColor #D4AF37
+  BorderThickness 1
+  FontName "Liberation Sans"
+  FontSize 11
+  FontColor #212121
+}
+
+autonumber "<b>[00]</b>"
+
+actor "VIP Customer" as Client
+participant "Cart Screen\n(CartScreen.dart)" as CartUI
+participant "Checkout Screen\n(CheckoutScreen.dart)" as CheckoutUI
+participant "API Service\n(ApiService.dart)" as ApiService
+participant "Cart Controller\n(cartController.js)" as CartCtrl
+participant "Offer Controller\n(offerController.js)" as OfferCtrl
+database "MongoDB\n(Cart & Offers)" as DB
+
+== Phase 1: Cart Modification & Subtotal Recalculation ==
+
+Client -> CartUI : Tap '+' on Handcrafted Solitaire Ring (Qty: 1 -> 2)
+activate CartUI
+CartUI -> ApiService : updateCartQuantity(productId: "PRD-01", quantity: 2)
+activate ApiService
+
+ApiService -> CartCtrl : PUT /api/cart/PRD-01\nHeaders: { Authorization: "Bearer <token>" }\nBody: { "quantity": 2 }
+activate CartCtrl
+
+CartCtrl -> DB : Cart.findOne({ userId: req.user.id })
+activate DB
+DB --> CartCtrl : cartDocument (found)
+CartCtrl -> CartCtrl : Locate item in cart.items &\nupdate item.quantity = 2
+CartCtrl -> DB : cart.save()
+DB --> CartCtrl : updatedCart
+deactivate DB
+
+CartCtrl --> ApiService : 200 OK\n{ success: true, message: "Cart quantity updated", cart }
+deactivate CartCtrl
+
+ApiService --> CartUI : { statusCode: 200, success: true, cart }
+deactivate ApiService
+
+CartUI -> CartUI : Recalculate Subtotal:\nsubtotal = sum(item.price * item.quantity)\n[e.g., 2 x ₹62,500 = ₹1,25,000]
+CartUI -> Client : Update Bag view with new item total & subtotal (₹1,25,000)
+
+Client -> CartUI : Tap "Proceed to Luxury Checkout"
+CartUI -> CheckoutUI : Navigate to CheckoutScreen\n(Pass cartItems & subtotal: ₹1,25,000)
+deactivate CartUI
+activate CheckoutUI
+
+== Phase 2: Dynamic Privilege Coupon Validation ==
+
+Client -> CheckoutUI : Enter Privilege Code 'PRIVILEGE20' & tap 'Apply'
+CheckoutUI -> CheckoutUI : Set isValidatingCoupon = true;\nUnfocus keyboard
+CheckoutUI -> ApiService : validateCoupon(code: "PRIVILEGE20", subtotal: 125000)
+activate ApiService
+
+ApiService -> OfferCtrl : POST /api/offers/validate-coupon\nBody: { "couponCode": "PRIVILEGE20", "subtotal": 125000 }
+activate OfferCtrl
+
+OfferCtrl -> DB : Offer.findOne({ code: "PRIVILEGE20" })
+activate DB
+DB --> OfferCtrl : offerDoc {\n  code: "PRIVILEGE20",\n  discountType: "percentage",\n  discountValue: 20,\n  maxDiscount: 15000,\n  minOrderAmount: 50000,\n  isActive: true,\n  expiryDate: 2026-12-31,\n  usedCount: 42,\n  usageLimit: 500\n}
+deactivate DB
+
+note over OfferCtrl
+  **7-Step Rule Validation Engine**:
+  1. Record Exists? -> OK
+  2. isActive == true? -> OK
+  3. now <= expiryDate? -> OK
+  4. now >= startDate? -> OK
+  5. usedCount < usageLimit? (42 < 500) -> OK
+  6. subtotal >= minOrderAmount? (125000 >= 50000) -> OK
+  7. Category Restriction? ("All") -> OK
+end note
+
+OfferCtrl -> OfferCtrl : Calculate Discount:\nrawDiscount = (125000 * 20) / 100 = 25000\nmaxDiscount cap = 15000\ndiscountAmount = min(25000, 15000) = 15000\nfinalAmount = max(0, 125000 - 15000) = 110000
+
+OfferCtrl --> ApiService : 200 OK\n{\n  success: true,\n  message: "Privilege code applied! You saved ₹15,000",\n  coupon: {\n    code: "PRIVILEGE20",\n    discountAmount: 15000,\n    subtotal: 125000,\n    finalAmount: 110000,\n    savings: 15000\n  }\n}
+deactivate OfferCtrl
+
+ApiService --> CheckoutUI : { statusCode: 200, success: true, coupon: {...} }
+deactivate ApiService
+
+CheckoutUI -> CheckoutUI : Trigger HapticFeedback.heavyImpact();\nappliedCouponCode = "PRIVILEGE20";\nappliedDiscount = 15000.0;\ngrandTotal = subtotal - appliedDiscount (₹110,000)
+
+CheckoutUI -> Client : Display Gold Savings Chip ("Saved ₹15,000") &\nupdate Payable Grand Total to ₹1,10,000
+
+== Phase 3: Coupon Removal / Reversion ==
+
+opt Client chooses to remove coupon
+  Client -> CheckoutUI : Tap "Remove Code" icon
+  CheckoutUI -> CheckoutUI : Trigger HapticFeedback.lightImpact();\nappliedCouponCode = null;\nappliedDiscount = 0.0;\ncouponController.clear();\ngrandTotal = subtotal (₹1,25,000)
+  CheckoutUI -> Client : Revert to original Grand Total (₹1,25,000)
+end opt
+deactivate CheckoutUI
+
+@enduml

@@ -1,0 +1,168 @@
+@startuml
+skinparam style strictuml
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName "Liberation Sans"
+skinparam defaultFontSize 12
+skinparam defaultFontColor #212121
+skinparam arrowColor #212121
+skinparam arrowThickness 1.2
+
+skinparam actor {
+  BackgroundColor #FFFDF7
+  BorderColor #8B0000
+  BorderThickness 1.5
+  FontName "Liberation Sans"
+  FontSize 13
+  FontStyle bold
+  FontColor #111111
+}
+
+skinparam usecase {
+  BackgroundColor #FAFAFA
+  BorderColor #212121
+  BorderThickness 1.2
+  FontName "Liberation Sans"
+  FontSize 12
+  FontColor #111111
+  ArrowColor #212121
+}
+
+skinparam package {
+  BackgroundColor #FFFFFF
+  BorderColor #8B0000
+  BorderThickness 1.5
+  FontName "Liberation Sans"
+  FontSize 14
+  FontStyle bold
+  FontColor #8B0000
+}
+
+skinparam note {
+  BackgroundColor #FFFDF7
+  BorderColor #D4AF37
+  BorderThickness 1
+  FontName "Liberation Sans"
+  FontSize 11
+  FontColor #212121
+}
+
+left to right direction
+
+actor "Guest User\n(Visitor)" as Guest
+actor "Registered Customer\n(VIP Client)" as Customer
+actor "Luxury Concierge /\nStore Admin" as Admin
+actor "Sequel Secure\nLogistics Partner" as Sequel
+
+Customer -up-|> Guest
+
+rectangle "ZAWER Luxury Jewellery Platform" {
+
+  package "Catalog & Discovery" {
+    usecase "UC-01: Browse Handcrafted Collections\n(Rings, Necklaces, Earrings, Bracelets)" as UC_Browse
+    usecase "UC-02: Search & Filter by Purity\n(18K / 22K Gold, Diamonds, Solitaires)" as UC_Filter
+    usecase "UC-03: View Jewellery Specs & 360 Gallery\n(Weight, Carat, BIS Hallmark Info)" as UC_ViewProduct
+    usecase "UC-04: View Active Privilege Offers" as UC_ViewOffers
+  }
+
+  package "Client Authentication & Identity" {
+    usecase "UC-05: Register Client Account" as UC_Register
+    usecase "UC-06: Authenticate & Obtain JWT" as UC_Login
+    usecase "UC-07: Forgot Password via OTP Verification" as UC_ForgotPass
+    usecase "UC-08: Manage Client Profile & Saved Address" as UC_Profile
+  }
+
+  package "Curated Bag & Wishlist" {
+    usecase "UC-09: Manage Wishlist Items\n(Add, Remove, View)" as UC_Wishlist
+    usecase "UC-10: Manage Cart Items & Quantities" as UC_Cart
+    usecase "UC-11: Apply Privilege Coupon Code\n(Validation, Expiry, Min Order Check)" as UC_Coupon
+  }
+
+  package "Luxury Order Placement & Checkout" {
+    usecase "UC-12: Complete Luxury Checkout\n(Address, Cash on Delivery / Card)" as UC_Checkout
+    usecase "UC-13: Place Handcrafted Jewellery Order" as UC_PlaceOrder
+    usecase "UC-14: Cancel Order & Trigger Refund Queue" as UC_CancelOrder
+  }
+
+  package "Vault Fulfillment & Hallmarking Administration" {
+    usecase "UC-15: Manage Jewellery Catalog & Pricing" as UC_AdminProducts
+    usecase "UC-16: Configure Privilege Offers & Campaigns" as UC_AdminOffers
+    usecase "UC-17: 24-Point Hallmarking & Gemstone Inspection\n(BIS Allocation, Prong Check, Ultrasonic Polish)" as UC_Hallmarking
+    usecase "UC-18: Advance Order Lifecycle Status\n(Placed -> Confirmed -> Processing -> Dispatched)" as UC_UpdateStatus
+  }
+
+  package "Secure Logistics & White-Glove Hand-Delivery" {
+    usecase "UC-19: Handover to Tamper-Evident Armored Casing" as UC_Packaging
+    usecase "UC-20: Armored Transit & GPS Fleet Tracking" as UC_GPS
+    usecase "UC-21: White-Glove Hand-Delivery Verification\n(Govt ID Check, Seal Inspection, Presentation Box)" as UC_DeliveryVerification
+  }
+
+  package "Post-Purchase & Real-Time Tracking" {
+    usecase "UC-22: Track Handcrafted Jewellery\n(6-Stage Timeline & Live Vault Status)" as UC_TrackOrder
+    usecase "UC-23: View AI Delivery Insights" as UC_AIInsights
+    usecase "UC-24: Submit Certified Client Review & Rating" as UC_Review
+  }
+}
+
+' Guest Associations
+Guest --> UC_Browse
+Guest --> UC_Filter
+Guest --> UC_ViewProduct
+Guest --> UC_ViewOffers
+Guest --> UC_Register
+Guest --> UC_Login
+Guest --> UC_ForgotPass
+
+' Customer Associations
+Customer --> UC_Profile
+Customer --> UC_Wishlist
+Customer --> UC_Cart
+Customer --> UC_Coupon
+Customer --> UC_Checkout
+Customer --> UC_PlaceOrder
+Customer --> UC_CancelOrder
+Customer --> UC_TrackOrder
+Customer --> UC_Review
+
+' Admin Associations
+Admin --> UC_AdminProducts
+Admin --> UC_AdminOffers
+Admin --> UC_Hallmarking
+Admin --> UC_UpdateStatus
+Admin --> UC_Packaging
+Admin --> UC_CancelOrder
+
+' Sequel Logistics Associations
+Sequel --> UC_Packaging
+Sequel --> UC_GPS
+Sequel --> UC_DeliveryVerification
+Sequel --> UC_UpdateStatus
+
+' Relationships: Includes & Extends
+UC_PlaceOrder ..> UC_Cart : <<include>>
+UC_PlaceOrder ..> UC_Checkout : <<include>>
+UC_PlaceOrder ..> UC_Coupon : <<extend>>
+UC_PlaceOrder ..> UC_TrackOrder : <<include>>
+
+UC_TrackOrder ..> UC_AIInsights : <<include>>
+UC_TrackOrder ..> UC_GPS : <<extend>>
+
+UC_UpdateStatus ..> UC_Hallmarking : <<include>>
+UC_DeliveryVerification ..> UC_UpdateStatus : <<include>>
+UC_Review ..> UC_ViewProduct : <<extend>>
+
+note right of UC_Hallmarking
+  Conducted by ZAWER Master Artisans:
+  1. Micro-prong setting verification
+  2. Bureau of Indian Standards (BIS) hallmark stamp
+  3. Diamond optical symmetry & grading
+  4. Ultrasonic cleaning & anti-tarnish velvet casing
+end note
+
+note bottom of UC_DeliveryVerification
+  White-Glove Protocol:
+  - Strict Government Photo ID verification
+  - Dual tamper-evident seal integrity inspection
+  - Velvet jewelry box handover
+end note
+
+@enduml

@@ -1,0 +1,197 @@
+@startuml 05_entity_relationship_diagram
+skinparam style strictuml
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName "Liberation Sans"
+skinparam defaultFontSize 12
+skinparam defaultFontColor #212121
+skinparam arrowColor #212121
+skinparam arrowThickness 1.2
+skinparam roundcorner 4
+skinparam shadowing false
+
+skinparam entity {
+  BackgroundColor #F8F9FA
+  BorderColor #212121
+  BorderThickness 1.2
+  HeaderBackgroundColor #E9ECEF
+  FontName "Liberation Sans"
+  FontSize 12
+  FontColor #212121
+}
+
+skinparam note {
+  BackgroundColor #FFFDF7
+  BorderColor #BDBDBD
+  BorderThickness 1
+  FontName "Liberation Sans"
+  FontSize 11
+  FontColor #212121
+}
+
+entity "users" as users {
+  * _id : ObjectId <<PK>>
+  --
+  * name : String
+  * email : String <<UK, indexed>>
+  phone : String
+  * password : String (bcrypt hashed)
+  otpCode : String
+  otpExpiry : Date
+  * createdAt : Date
+  * updatedAt : Date
+}
+
+entity "products" as products {
+  * _id : ObjectId <<PK>>
+  --
+  * id : String <<UK, indexed>>
+  * name : String
+  * category : String
+  * description : String
+  * price : Number
+  originalPrice : Number
+  discountPercentage : Number
+  isSpecialOffer : Boolean
+  offerTag : String
+  rating : Number
+  images : Array<String>
+  * createdAt : Date
+  * updatedAt : Date
+}
+
+entity "product_reviews\n(Embedded in products)" as reviews {
+  * _id : ObjectId <<PK>>
+  --
+  * userId : String <<FK>>
+  * userName : String
+  * rating : Number (1..5)
+  * comment : String
+  * date : Date
+}
+
+entity "orders" as orders {
+  * _id : ObjectId <<PK>>
+  --
+  * userId : String <<FK>>
+  * customerName : String
+  * phone : String
+  * address : String
+  paymentMethod : String
+  subtotal : Number
+  discountAmount : Number
+  couponCode : String <<FK>>
+  * totalAmount : Number
+  status : String (OrderStatus Enum)
+  * trackingNumber : String <<UK, indexed>>
+  courierPartner : String
+  currentLocation : String
+  estimatedDelivery : Date
+  aiDeliveryInsight : String
+  * createdAt : Date
+  * updatedAt : Date
+}
+
+entity "order_items\n(Embedded in orders)" as order_items {
+  * productId : String <<FK>>
+  --
+  * name : String
+  image : String
+  * price : Number
+  * quantity : Number
+}
+
+entity "order_timeline_steps\n(Embedded in orders)" as timeline_steps {
+  * status : String
+  --
+  * title : String
+  description : String
+  location : String
+  timestamp : Date
+  isCompleted : Boolean
+}
+
+entity "carts" as carts {
+  * _id : ObjectId <<PK>>
+  --
+  * userId : String <<FK, UK, indexed>>
+  * createdAt : Date
+  * updatedAt : Date
+}
+
+entity "cart_items\n(Embedded in carts)" as cart_items {
+  * productId : String <<FK>>
+  --
+  * quantity : Number
+}
+
+entity "wishlists" as wishlists {
+  * _id : ObjectId <<PK>>
+  --
+  * userId : String <<FK, UK, indexed>>
+  * createdAt : Date
+  * updatedAt : Date
+}
+
+entity "wishlist_items\n(Embedded in wishlists)" as wishlist_items {
+  * productId : String <<FK>>
+}
+
+entity "offers" as offers {
+  * _id : ObjectId <<PK>>
+  --
+  * code : String <<UK, uppercase, indexed>>
+  * title : String
+  * description : String
+  * discountType : String ("percentage" | "flat")
+  * discountValue : Number
+  maxDiscount : Number
+  minOrderAmount : Number
+  applicableCategory : String
+  startDate : Date
+  * expiryDate : Date
+  usageLimit : Number
+  usedCount : Number
+  isActive : Boolean
+  tag : String
+  bannerImage : String
+  terms : Array<String>
+  * createdAt : Date
+  * updatedAt : Date
+}
+
+' User relationships
+users ||--o| carts : "owns (1:0..1)"
+users ||--o| wishlists : "maintains (1:0..1)"
+users ||--o{ orders : "places (1:0..N)"
+users ||--o{ reviews : "authors (1:0..N)"
+
+' Product embeddings and references
+products ||--o{ reviews : "embeds [0..N]"
+products ||..o{ order_items : "referenced by productId"
+products ||..o{ cart_items : "referenced by productId"
+products ||..o{ wishlist_items : "referenced by productId"
+
+' Cart & Wishlist embeddings
+carts ||--o{ cart_items : "embeds [0..N]"
+wishlists ||--o{ wishlist_items : "embeds [0..N]"
+
+' Order embeddings and offer application
+orders ||--|{ order_items : "embeds [1..N]"
+orders ||--|{ timeline_steps : "embeds [1..6]"
+offers ||..o{ orders : "applied to (0..1:0..N)"
+
+note top of orders
+  <b>Order Pipeline States:</b>
+  "Order Placed" -> "Order Confirmed" -> "Processing" ->
+  "Shipped" -> "Out for Delivery" -> "Delivered" (or "Cancelled")
+  Courier Partner: Sequel Secure Luxury Logistics
+end note
+
+note bottom of offers
+  <b>Discount Engine Rules:</b>
+  - Percentage: subtotal * (discountValue/100), capped at maxDiscount
+  - Flat: min(discountValue, subtotal)
+  - Pre-requisites: isActive=true, now <= expiryDate, subtotal >= minOrderAmount
+end note
+
+@enduml

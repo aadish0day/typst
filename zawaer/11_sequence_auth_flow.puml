@@ -1,0 +1,169 @@
+@startuml
+skinparam style strictuml
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName "Liberation Sans"
+skinparam defaultFontSize 12
+skinparam defaultFontColor #212121
+skinparam arrowColor #212121
+skinparam arrowThickness 1.2
+
+skinparam sequence {
+  LifeLineBorderColor #8B0000
+  LifeLineBackgroundColor #FFFDF7
+  GroupBorderColor #8B0000
+  GroupBackgroundColor #FAFAFA
+  GroupFontColor #8B0000
+  GroupFontSize 12
+  GroupFontStyle bold
+  ParticipantBorderColor #212121
+  ParticipantBackgroundColor #FAFAFA
+  ParticipantFontName "Liberation Sans"
+  ParticipantFontSize 12
+  ParticipantFontStyle bold
+  ActorBorderColor #8B0000
+  ActorBackgroundColor #FFFDF7
+  ActorFontName "Liberation Sans"
+  ActorFontSize 12
+  ActorFontStyle bold
+}
+
+skinparam note {
+  BackgroundColor #FFFDF7
+  BorderColor #D4AF37
+  BorderThickness 1
+  FontName "Liberation Sans"
+  FontSize 11
+  FontColor #212121
+}
+
+autonumber "<b>[00]</b>"
+
+actor "Client / VIP User" as User
+participant "Flutter UI\n(Auth Screens)" as Flutter
+participant "Local Storage\n(SharedPreferences)" as Prefs
+participant "API Service\n(ApiService.dart)" as ApiService
+participant "Express Controller\n(authController.js)" as AuthController
+participant "Password Engine\n(bcryptjs)" as Bcrypt
+participant "JWT Provider\n(jsonwebtoken)" as JWT
+database "MongoDB\n(Users Collection)" as DB
+
+== Phase 1: VIP Client Account Registration ==
+
+User -> Flutter : Enter Name, Email, Phone, and Password
+activate Flutter
+Flutter -> Flutter : Validate inputs (email syntax, password >= 6 chars)
+Flutter -> ApiService : registerUser(name, email, phone, password)
+activate ApiService
+
+ApiService -> AuthController : POST /api/auth/register\n{ name, email, phone, password }
+activate AuthController
+
+AuthController -> DB : User.findOne({ email: email.toLowerCase() })
+activate DB
+DB --> AuthController : null (User does not exist)
+deactivate DB
+
+AuthController -> Bcrypt : hash(password, saltRounds=10)
+activate Bcrypt
+Bcrypt --> AuthController : hashedPassword
+deactivate Bcrypt
+
+AuthController -> DB : User.create({ name, email, phone, password: hashedPassword })
+activate DB
+DB --> AuthController : savedUser document (_id, createdAt)
+deactivate DB
+
+AuthController --> ApiService : 201 Created\n{ success: true, message: "User registered successfully", user: {...} }
+deactivate AuthController
+
+ApiService --> Flutter : { statusCode: 201, success: true, user: {...} }
+deactivate ApiService
+
+Flutter -> User : Display "Account Created Successfully" &\nnavigate to LoginScreen
+deactivate Flutter
+
+== Phase 2: Client Authentication & 7-Day JWT Issuance ==
+
+User -> Flutter : Enter Email, Password & select "Remember Me"
+activate Flutter
+Flutter -> Flutter : Set isLoading = true
+Flutter -> ApiService : loginUser(email, password)
+activate ApiService
+
+ApiService -> AuthController : POST /api/auth/login\n{ email, password }
+activate AuthController
+
+AuthController -> DB : User.findOne({ email: email.toLowerCase() })
+activate DB
+DB --> AuthController : userDoc (with hashedPassword)
+deactivate DB
+
+AuthController -> Bcrypt : compare(password, userDoc.password)
+activate Bcrypt
+Bcrypt --> AuthController : true (Password Match)
+deactivate Bcrypt
+
+AuthController -> JWT : sign({ id: userDoc._id, email }, JWT_SECRET, { expiresIn: "7d" })
+activate JWT
+JWT --> AuthController : signedJwtTokenString
+deactivate JWT
+
+AuthController --> ApiService : 200 OK\n{ success: true, token, user: { id, name, email, phone } }
+deactivate AuthController
+
+ApiService --> Flutter : { statusCode: 200, success: true, token, user }
+deactivate ApiService
+
+Flutter -> Prefs : setString("token", token)
+activate Prefs
+Prefs --> Flutter : stored
+Flutter -> Prefs : setString("userId", user.id)
+Prefs --> Flutter : stored
+Flutter -> Prefs : setString("userName", user.name)
+Prefs --> Flutter : stored
+Flutter -> Prefs : setString("userEmail", user.email)
+Prefs --> Flutter : stored
+Flutter -> Prefs : setString("userPhone", user.phone)
+Prefs --> Flutter : stored
+Flutter -> Prefs : setBool("rememberMe", true)
+Prefs --> Flutter : stored
+deactivate Prefs
+
+Flutter -> User : Render SnackBar("Login successful!") &\nnavigate to BottomNavScreen (/bottomNav)
+deactivate Flutter
+
+== Phase 3: Authenticated Request with Bearer Token ==
+
+User -> Flutter : View VIP Profile / Saved Address
+activate Flutter
+Flutter -> ApiService : getProfile()
+activate ApiService
+
+ApiService -> Prefs : getString("token")
+activate Prefs
+Prefs --> ApiService : jwtToken
+deactivate Prefs
+
+ApiService -> AuthController : GET /api/auth/profile\nHeaders: { Authorization: "Bearer <jwtToken>" }
+activate AuthController
+
+note over AuthController
+  authMiddleware validates Bearer token:
+  jwt.verify(token, JWT_SECRET) -> decodes userId
+end note
+
+AuthController -> DB : User.findById(req.user.id).select("-password")
+activate DB
+DB --> AuthController : userProfileDoc
+deactivate DB
+
+AuthController --> ApiService : 200 OK\n{ success: true, user: { id, name, email, phone } }
+deactivate AuthController
+
+ApiService --> Flutter : { statusCode: 200, success: true, user }
+deactivate ApiService
+
+Flutter -> User : Render VIP profile details & personalized luxury concierge
+deactivate Flutter
+
+@enduml

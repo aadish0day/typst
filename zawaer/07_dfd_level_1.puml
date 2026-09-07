@@ -1,0 +1,102 @@
+@startuml
+skinparam style strictuml
+left to right direction
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName "Liberation Sans"
+skinparam defaultFontSize 11
+skinparam defaultFontStyle bold
+skinparam titleFontSize 16
+skinparam titleFontStyle bold
+
+skinparam ArrowColor #212121
+skinparam ArrowThickness 1.8
+skinparam ArrowFontSize 10
+skinparam ArrowFontStyle bold
+
+skinparam RectangleBorderColor #212121
+skinparam RectangleBorderThickness 2.0
+skinparam RectangleBackgroundColor #FFFFFF
+skinparam RectangleFontSize 11
+skinparam RectangleFontStyle bold
+
+skinparam DatabaseBorderColor #212121
+skinparam DatabaseBorderThickness 2.0
+skinparam DatabaseBackgroundColor #F8F9FA
+skinparam DatabaseFontSize 11
+skinparam DatabaseFontStyle bold
+
+title ZAWER Jewellery Platform - Functional Decomposition DFD (Level 1)
+
+' External Entities
+rectangle "**Customer**\n(Mobile App Client / Patron)\n[zawer_jewellery_app]" as Customer <<External Entity>> #FFFFFF
+rectangle "**Payment Gateway**\n(Online Banking / Razorpay / UPI)\n[Payment Settlement Partner]" as PaymentGateway <<External Entity>> #FFFFFF
+rectangle "**Logistics Partner**\n(Sequel Secure Luxury Logistics)\n[Armored Transit & GPS Tracking]" as LogisticsPartner <<External Entity>> #FFFFFF
+
+' Core Processes (6 Core Processes)
+rectangle "1.0\n**Identity & Access**\n**Management**\n(authController.js)" as P1 <<Process>> #FDFDFD
+rectangle "2.0\n**Jewellery Catalog**\n**& Search**\n(productController.js)" as P2 <<Process>> #FDFDFD
+rectangle "3.0\n**Cart & Wishlist**\n**Synchronization**\n(cart/wishlistController)" as P3 <<Process>> #FDFDFD
+rectangle "4.0\n**Privilege Offers &**\n**Dynamic Pricing**\n(offerController.js)" as P4 <<Process>> #FDFDFD
+rectangle "5.0\n**Checkout & Order**\n**Processing**\n(orderController.js)" as P5 <<Process>> #FDFDFD
+rectangle "6.0\n**Vault Logistics &**\n**Milestone Tracking**\n(orderController.js)" as P6 <<Process>> #FDFDFD
+
+' 6 Datastores
+database "D1: Users\n(MongoDB: users)" as D1
+database "D2: Products\n(MongoDB: products)" as D2
+database "D3: Carts\n(MongoDB: carts)" as D3
+database "D4: Wishlists\n(MongoDB: wishlists)" as D4
+database "D5: Offers\n(MongoDB: offers)" as D5
+database "D6: Orders\n(MongoDB: orders)" as D6
+
+' ==========================================
+' PROCESS 1.0: Identity & Access Management
+' ==========================================
+Customer --> P1 : 1.1 Credentials (Email, Phone,\nPassword, OTP, Profile Updates)
+P1 --> Customer : 1.2 JWT Bearer Token, Auth State,\nUser Profile Record
+P1 <--> D1 : 1.3 Read/Verify Password Hash,\nStore User, OTP & Session
+
+' ==========================================
+' PROCESS 2.0: Jewellery Catalog & Search
+' ==========================================
+Customer --> P2 : 2.1 Search Query, Category Filter,\nProduct ID, Review & Rating
+P2 --> Customer : 2.2 Curated Products, BIS Hallmark Specs,\nHigh-Res Media, Customer Reviews
+P2 <--> D2 : 2.3 Query Inventory, Filter by Category,\nAppend Reviews & Update Rating
+
+' ==========================================
+' PROCESS 3.0: Cart & Wishlist Synchronization
+' ==========================================
+Customer --> P3 : 3.1 Add/Remove Items, Quantity Changes,\nWishlist Toggle Requests
+P3 --> Customer : 3.2 Synchronized Cart Items,\nPrice Totals, Wishlist Status
+P3 --> D2 : 3.3 Verify Price, Metal Specs & Availability
+P3 <--> D3 : 3.4 Store / Update / Clear\nUser Cart Items (productId, qty)
+P3 <--> D4 : 3.5 Store / Remove\nWishlist Items (productId)
+
+' ==========================================
+' PROCESS 4.0: Privilege Offers & Dynamic Pricing
+' ==========================================
+Customer --> P4 : 4.1 Coupon Code (ROYAL20, etc.),\nPromotions Inquiry
+P4 --> Customer : 4.2 Validated Discount Amount,\nTiered Savings, Offer Banners
+P4 <--> D5 : 4.3 Fetch Active Promos, Check Expiry,\nVerify Min Amount, Increment usedCount
+P4 --> D2 : 4.4 Fetch Discounted Products\n& Special Offer Products
+
+' ==========================================
+' PROCESS 5.0: Checkout & Order Processing
+' ==========================================
+Customer --> P5 : 5.1 Delivery Address, Phone, Payment\nMethod, Coupon & Order Submission
+P5 --> Customer : 5.2 Order Confirmation, Invoice Receipt,\nTracking Number (ZWR-XXXXXX)
+P5 --> P3 : 5.3 Fetch Cart Items &\nClear Cart upon Order Success
+P5 --> P4 : 5.4 Fetch Validated Discount\n& Apply Net Deduction
+P5 --> D6 : 5.5 Store New Order (Items, Totals,\nStatus: 'Order Placed', ZWR-XXXXXX)
+P5 --> PaymentGateway : 5.6 Payment Authorization Request\n(Order ID, Payable Valuation)
+PaymentGateway --> P5 : 5.7 Payment Authorization Token,\nSettlement Confirmation / Failure
+
+' ==========================================
+' PROCESS 6.0: Vault Logistics & Milestone Tracking
+' ==========================================
+Customer --> P6 : 6.1 Tracking Query (Order ID /\nTracking Number: ZWR-XXXXXX)
+P6 --> Customer : 6.2 6 Tracking Stages, Timestamps,\nCourier Info, AI Delivery Insight
+P6 <--> D6 : 6.3 Read Order Status & Timeline;\nUpdate Tracking Stages & Insights
+P6 --> LogisticsPartner : 6.4 Consignment Dispatch Request,\nArmored Transit Waybill & Address
+LogisticsPartner --> P6 : 6.5 Waybill Status, GPS Scans,\nMilestone Proof of Handover
+
+@enduml

@@ -1,0 +1,132 @@
+@startuml
+skinparam style strictuml
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName "Liberation Sans"
+skinparam defaultFontSize 12
+skinparam defaultFontColor #212121
+skinparam arrowColor #212121
+skinparam arrowThickness 1.2
+
+skinparam state {
+  BackgroundColor #FAFAFA
+  BorderColor #212121
+  BorderThickness 1.2
+  FontName "Liberation Sans"
+  FontSize 12
+  FontStyle bold
+  FontColor #111111
+  StartColor #8B0000
+  EndColor #8B0000
+}
+
+skinparam note {
+  BackgroundColor #FFFDF7
+  BorderColor #D4AF37
+  BorderThickness 1
+  FontName "Liberation Sans"
+  FontSize 11
+  FontColor #212121
+}
+
+[*] --> OrderPlaced : **POST /api/orders**\n[valid customer name, phone, address & non-empty items]\n/ generateTrackingNumber("ZWR-XXXXXX"); initTimeline();
+
+state "Order Placed" as OrderPlaced {
+  OrderPlaced : **Entry** / Set status = "Order Placed"
+  OrderPlaced : **Entry** / Compute subtotal & apply privilege coupon discount
+  OrderPlaced : **Entry** / Initialize 6-stage tracking timeline (Stage 1 completed)
+  OrderPlaced : **Location** / "ZAWER Online Hub, Mumbai"
+  OrderPlaced : **AI Insight** / "Your luxury jewellery has been safely queued."
+}
+
+state "Order Confirmed" as OrderConfirmed {
+  OrderConfirmed : **Entry** / Set status = "Order Confirmed"
+  OrderConfirmed : **Action** / Allocate physical piece from ZAWER central vault
+  OrderConfirmed : **Action** / Generate Certificate of Authenticity & BIS registration
+  OrderConfirmed : **Location** / "ZAWER Central Verification Center"
+  OrderConfirmed : **AI Insight** / "Bureau of Indian Standards (BIS) hallmark and cert allocated."
+}
+
+state "Processing & Hallmarking" as Processing {
+  Processing : **Entry** / Set status = "Processing"
+  Processing : **Action** / Conduct 24-point prong & gemstone setting inspection
+  Processing : **Action** / Laser engrave BIS purity stamp (18K / 22K)
+  Processing : **Action** / Ultrasonic bath cleaning & micro-luster polishing
+  Processing : **Action** / Pack in anti-tarnish velvet casing & serialized tamper pouch
+  Processing : **Location** / "ZAWER Diamond Studio & Vault"
+  Processing : **AI Insight** / "Master artisans completing ultrasonic polishing and velvet casing."
+}
+
+state "Shipped & Dispatched" as Shipped {
+  Shipped : **Entry** / Set status = "Shipped"
+  Shipped : **Action** / Handover to Sequel Secure Luxury Logistics
+  Shipped : **Action** / Activate satellite GPS telemetry & armored vehicle transit
+  Shipped : **Location** / "In Transit - Sequel Armored Division"
+  Shipped : **AI Insight** / "Travelling under 100% insured armored transit with route optimization."
+}
+
+state "Out for Delivery" as OutForDelivery {
+  OutForDelivery : **Entry** / Set status = "Out for Delivery"
+  OutForDelivery : **Action** / Transfer to local sector express delivery hub
+  OutForDelivery : **Action** / Dispatch dedicated white-glove luxury delivery executive
+  OutForDelivery : **Action** / Alert client: "Prepare government photo ID for verification"
+  OutForDelivery : **Location** / "Local Express Delivery Hub, <Sector>"
+  OutForDelivery : **AI Insight** / "Delivery associate in local sector. Please keep valid ID ready."
+}
+
+state "Delivered" as Delivered {
+  Delivered : **Entry** / Set status = "Delivered"
+  Delivered : **Action** / Inspect serialized tamper seal in client's presence
+  Delivered : **Action** / Hand over velvet presentation box & collect payment/signature
+  Delivered : **Location** / "Customer Destination Address"
+  Delivered : **AI Insight** / "Delivery completed. Store in anti-tarnish velvet box for lasting brilliance."
+}
+
+state "Cancelled" as Cancelled {
+  Cancelled : **Entry** / Set status = "Cancelled"
+  Cancelled : **Action** / Release allocated piece back to high-security vault inventory
+  Cancelled : **Action** / Queue payment for immediate automated refund
+  Cancelled : **Location** / "Order Cancelled - Refund Initiated"
+  Cancelled : **AI Insight** / "Order was cancelled. Payment queued for immediate refund."
+}
+
+' Normal Lifecycle Transitions
+OrderPlaced --> OrderConfirmed : **CONFIRM_ORDER**\n[payment pre-auth valid && vault item allocated]\n/ updateTimeline(Stage 2); logAudit();
+
+OrderConfirmed --> Processing : **START_ARTISAN_PROCESSING**\n[master jeweller assigned]\n/ updateTimeline(Stage 3); dispatchToAssayLab();
+
+Processing --> Shipped : **DISPATCH_SECURE_TRANSIT**\n[24-point inspection passed && tamper seal intact]\n/ updateTimeline(Stage 4); generateArmoredManifest();
+
+Shipped --> OutForDelivery : **ARRIVE_SECTOR_HUB**\n[destination express hub check-in verified]\n/ updateTimeline(Stage 5); assignWhiteGloveAgent();
+
+OutForDelivery --> Delivered : **COMPLETE_HAND_DELIVERY**\n[valid govt ID verified && client approves tamper seal]\n/ updateTimeline(Stage 6); emitDeliveryConfirmation();
+
+Delivered --> [*]
+
+' Cancellation Transitions
+OrderPlaced --> Cancelled : **CANCEL_ORDER**\n[client cancellation requested before confirmation]\n/ initRefundQueue();
+
+OrderConfirmed --> Cancelled : **CANCEL_ORDER**\n[cancellation approved prior to artisan processing]\n/ initRefundQueue(); releaseVaultLock();
+
+Processing --> Cancelled : **ABORT_ORDER**\n[severe gemological assay defect or client emergency hold]\n/ triggerImmediateManagerEscalation();
+
+Cancelled --> [*]
+
+note right of Processing
+  **24-Point Inspection Criteria**:
+  1. Micro-prong setting rigidity
+  2. Diamond table & pavilion symmetry
+  3. 18K/22K karatage density assay
+  4. BIS laser hallmark clarity
+  5. Rhodium / gold finish luster
+  6. Ultrasonic residue removal
+end note
+
+note right of Shipped
+  **Sequel Armored Protocol**:
+  - Dual-custody armored vehicle
+  - Satellite tamper sensor monitoring
+  - Serialized security barcode
+  - 100% full-value insurance
+end note
+
+@enduml

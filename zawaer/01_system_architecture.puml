@@ -1,0 +1,174 @@
+@startuml 01_system_architecture
+skinparam style strictuml
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName "Liberation Sans"
+skinparam defaultFontSize 12
+skinparam defaultFontColor #212121
+skinparam arrowColor #212121
+skinparam arrowThickness 1.2
+skinparam roundcorner 4
+skinparam shadowing false
+
+skinparam package {
+  BackgroundColor #FFFFFF
+  BorderColor #343A40
+  BorderThickness 1.5
+  FontName "Liberation Sans"
+  FontSize 13
+  FontStyle bold
+  FontColor #212121
+}
+
+skinparam node {
+  BackgroundColor #F8F9FA
+  BorderColor #495057
+  BorderThickness 1.3
+  HeaderBackgroundColor #E9ECEF
+  FontName "Liberation Sans"
+  FontSize 12
+  FontColor #212121
+}
+
+skinparam component {
+  BackgroundColor #F8F9FA
+  BorderColor #212121
+  BorderThickness 1.2
+  FontName "Liberation Sans"
+  FontSize 12
+  FontColor #212121
+}
+
+skinparam database {
+  BackgroundColor #F8F9FA
+  BorderColor #212121
+  BorderThickness 1.2
+  FontName "Liberation Sans"
+  FontSize 12
+  FontColor #212121
+}
+
+skinparam note {
+  BackgroundColor #FFFDF7
+  BorderColor #BDBDBD
+  BorderThickness 1
+  FontName "Liberation Sans"
+  FontSize 11
+  FontColor #212121
+}
+
+top to bottom direction
+
+package "Tier 1: Presentation Tier (Client Layer)" as T1 {
+  node "Flutter Mobile & Web Client Application\n(Android / iOS / Web Client Engine)" as ClientApp {
+    component "UI Screen & Presentation Layer\n- SplashScreen & Auth Screens (Login / Register / OTP)\n- Catalog, ProductDetails & Reviews Screen\n- Cart, Wishlist & Checkout Screens\n- Orders & OrderTrackingScreen (Live Timeline)\n- OffersScreen & Privilege Coupon Calculator" as UIScreens
+    component "Client State & Utility Layer\n- ThemeController (ValueNotifier / Dark Mode)\n- Local Secure Storage (SharedPreferences)\n- Currency & Date Formatters (Intl)" as ClientState
+    component "Client Networking Client\n- ApiService (3-Attempt Retry Logic)\n- HTTP REST Protocol Handler\n- Bearer Token Auth Injector" as ClientService
+
+    UIScreens --> ClientState : reads state & triggers
+    UIScreens --> ClientService : dispatches operations
+  }
+}
+
+package "Network Boundary & Ingress Tier" as Ingress {
+  component "Reverse Proxy / API Gateway\n- Docker Bridge Network Port Binding (Port 5000)\n- SSL / TLS Protocol Termination\n- CORS Whitelist & Origin Enforcement\n- Request Routing & Gateway Rate Limiting" as Gateway
+}
+
+package "Tier 2: Application Tier (Containerized Backend - zawer_backend)" as T2 {
+  node "Docker Container (node:20-alpine)\nHost Port 5000 : Container Port 5000\nExecution User: node (Non-root)" as NodeContainer {
+
+    component "HTTP Server & Express Application\n(server.js & app.js)" as ExpressApp
+
+    package "Middleware Pipeline" as MW {
+      component "CORS Handler\n(cors)" as CorsMW
+      component "JSON Body Parser\n(express.json)" as BodyMW
+      component "JWT Authentication\n(authMiddleware.js)" as AuthMW
+    }
+
+    package "RESTful Route Dispatchers" as Routes {
+      component "/api/auth\n(authRoutes)" as R_Auth
+      component "/api/products\n(productRoutes)" as R_Prod
+      component "/api/cart\n(cartRoutes)" as R_Cart
+      component "/api/wishlist\n(wishlistRoutes)" as R_Wish
+      component "/api/orders\n(orderRoutes)" as R_Order
+      component "/api/offers\n(offerRoutes)" as R_Offer
+    }
+
+    package "Business Logic Controllers" as Controllers {
+      component "authController\n- registerUser / loginUser\n- getProfile / updateProfile\n- forgotPassword / resetPassword" as C_Auth
+      component "productController\n- getProducts / getProductById\n- searchProducts (RegEx)\n- addProductReview / getProductReviews" as C_Prod
+      component "cartController\n- getCart / addToCart\n- updateCartQuantity\n- removeFromCart / clearCart" as C_Cart
+      component "wishlistController\n- getWishlist\n- addToWishlist\n- removeFromWishlist" as C_Wish
+      component "orderController\n- placeOrder (with Coupon Deduction)\n- getMyOrders / getOrderById\n- getOrderTracking (Flexible Search)\n- updateOrderStatus (6-Stage Pipeline)" as C_Order
+      component "offerController\n- getAllOffers (Countdown & Validity)\n- getDiscountedProducts\n- validateCoupon (Category / Caps / Subtotal)\n- getOfferByCode" as C_Offer
+    }
+
+    package "Object-Document Mapping (ODM) Tier" as ODM {
+      component "Mongoose Connection & Pool\n(config/db.js - mongoose.connect)" as DBConn
+      component "Mongoose Models & Schemas\n- User (Bcrypt Password, OTP Expiry)\n- Product (Reviews, Offer Tag, Pricing)\n- Order (Items, Status, Tracking, Armored Timeline)\n- Cart (Embedded CartItems)\n- Wishlist (Product References)\n- Offer (Virtuals: isExpired, calculateDiscount)" as Models
+    }
+
+    ExpressApp --> CorsMW
+    CorsMW --> BodyMW
+    BodyMW --> Routes
+
+    Routes --> AuthMW : secures protected endpoints
+    AuthMW --> Controllers
+
+    R_Auth --> C_Auth
+    R_Prod --> C_Prod
+    R_Cart --> C_Cart
+    R_Wish --> C_Wish
+    R_Order --> C_Order
+    R_Offer --> C_Offer
+
+    Controllers --> Models
+    Models --> DBConn
+  }
+}
+
+package "Tier 3: Persistence Tier (Data Layer)" as T3 {
+  database "MongoDB 7.0 Cluster / Atlas\n(Container: zawer_mongo / Cloud DB)\nPort: 27017\nVolume: mongo_data" as MongoDatabase {
+    folder "Database: zawaer / test" {
+      database "users collection" as Col_Users
+      database "products collection" as Col_Products
+      database "orders collection" as Col_Orders
+      database "carts collection" as Col_Carts
+      database "wishlists collection" as Col_Wishlists
+      database "offers collection" as Col_Offers
+    }
+  }
+}
+
+package "External Services & Partner Ecosystem" as T4 {
+  node "Sequel Secure Luxury Logistics\n(Armored Courier Fleet)" as SequelLogistics {
+    component "High-Security Transit Hub\n- Tamper-Evident Bagging\n- GPS Armored Vehicle Tracking\n- Hand-Delivery Protocol Verification" as LogisticsAPI
+  }
+
+  node "BIS Hallmarking Registry\n(Bureau of Indian Standards)" as BISAuthority {
+    component "Authenticity & Purity Certification\n- 18K / 22K Hallmarking ID\n- Micro-prong Setting Verification" as BISService
+  }
+}
+
+ClientService --> Gateway : HTTPS / JSON REST API Requests\n(Bearer JWT Authorization)
+Gateway --> ExpressApp : Reverse Proxied HTTP / TCP (Port 5000)
+DBConn --> MongoDatabase : MongoDB Wire Protocol / BSON\n(mongodb:// URI:27017)
+
+C_Order ..> LogisticsAPI : assigns tracking number (ZWR-XXXXXX) &\nsynchronizes armored transit stages
+C_Order ..> BISService : allocates BIS hallmark certificate to order
+
+note right of C_Order
+  <b>Sequel Secure Logistics & AI Tracking:</b>
+  - Automated 6-stage timeline progression
+  - GPS hub milestones & tamper-evident casing
+  - Dynamic AI Delivery Insight generation
+end note
+
+note bottom of Models
+  <b>Schema Integrity & Security:</b>
+  - Salted Bcrypt (10 rounds) passwords
+  - Ephemeral 10-minute OTP codes
+  - Embedded review & timeline sub-documents
+  - Coupon usage increment & validation rules
+end note
+
+@enduml
