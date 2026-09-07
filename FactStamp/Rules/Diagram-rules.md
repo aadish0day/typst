@@ -341,11 +341,11 @@ title FactStamp - Component Diagram
 component Frontend
 component API
 database Firestore
-component GeminiVision
+component WasmOCR
 
 Frontend --> API : REST
+Frontend --> WasmOCR : In-Browser OCR
 API --> Firestore
-API --> GeminiVision : OCR
 @enduml
 ```
 
@@ -391,6 +391,7 @@ title FactStamp - Deployment Diagram
 
 node "Client Device" {
   [Browser]
+  [WasmOCR]
 }
 
 node "Vercel" {
@@ -400,12 +401,11 @@ node "Vercel" {
 
 node "Google Cloud" {
   database Firestore
-  [GeminiVision]
 }
 
 [Browser] --> [Frontend] : HTTPS
+[Browser] --> [WasmOCR] : In-browser OCR
 [ServerlessFn] --> Firestore
-[ServerlessFn] --> [GeminiVision]
 @enduml
 ```
 

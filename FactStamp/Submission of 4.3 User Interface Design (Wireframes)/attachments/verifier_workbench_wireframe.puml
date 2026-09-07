@@ -1,0 +1,33 @@
+@startuml
+skinparam style strictuml
+skinparam monochrome true
+skinparam defaultFontName "Liberation Sans"
+skinparam defaultFontSize 13
+skinparam defaultFontStyle bold
+skinparam titleFontSize 22
+skinparam titleFontStyle bold
+
+skinparam backgroundColor white
+skinparam RectangleBorderColor black
+skinparam RectangleBorderThickness 2.0
+skinparam RectangleBackgroundColor #F8F9FA
+skinparam RectangleFontSize 13
+skinparam RectangleFontStyle bold
+
+title FactStamp - Community Verifier Queue & Workbench Wireframe
+
+rectangle "Desktop / Tablet Verification Portal (1200px Grid)" as Portal {
+  rectangle "Header: FactStamp Logo | Verify Queue | Analytics | [Avatar: Aadish] [Reputation: 85] [Notifications (3)]" as TopNav
+  
+  rectangle "Filter & Sort Controls Toolbar\n[ Category: All | Health | Political | Financial | Religious | Other ]\n[ Sort: Closest to Resolving (Urgent) v ]   [ Search Claim Keywords... ]" as Toolbar
+  
+  rectangle "Queue Item 1 (Urgent: 2/3 Votes Recorded)\n[HEALTH BADGE]   Case #C_SEED_12   *Consensus closes in: 4h 12m*\n\"Drinking boiled ginger water with lemon twice daily cures Type 2 Diabetes...\"\nConsensus Stepper: [===] [===] [---] (2 / 3 Votes Recorded - 1 Vote Needed)\nParticipating Verifiers: Dr. Mehta (Rep: 90), R. Sharma (Rep: 75)\n[ Open Verification Workbench Button ]" as ClaimCard1
+  
+  rectangle "Verification Workbench Modal / Detail View\n------------------------------------------------------------\nClaim Body: Full text & attached screenshot preview\nSelf-Verification Check: Passed (Submitter: @citizen_402 != Current User)\n\n1. Select Truth Verdict:\n   ( ) TRUE      (o) FALSE      ( ) MISLEADING      ( ) UNVERIFIABLE\n\n2. Authoritative Source URL:\n   [ https://who.int/news-room/fact-sheets/detail/diabetes ]\n   -> Domain Evaluation: [ TIER 1: HIGH QUALITY (Score: 100) ]\n\n3. Evidentiary Rationale (>= 50 chars, >= 8 words):\n   [ Clinical guidelines from WHO confirm that diabetes management requires... ]\n   Character Count: 142 / 3000 chars  |  Word Count: 18 words (Valid)\n\n[ Cancel ]                                          [ Confirm & Submit Verdict ]" as WorkbenchModal
+}
+
+TopNav -[hidden]down-> Toolbar
+Toolbar -[hidden]down-> ClaimCard1
+ClaimCard1 -[hidden]down-> WorkbenchModal
+
+@enduml

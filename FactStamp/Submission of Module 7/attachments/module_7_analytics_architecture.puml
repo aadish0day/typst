@@ -1,0 +1,75 @@
+@startuml
+skinparam style strictuml
+skinparam monochrome true
+skinparam defaultFontName "Liberation Sans"
+skinparam defaultFontSize 13
+skinparam defaultFontStyle bold
+skinparam titleFontSize 18
+skinparam titleFontStyle bold
+
+skinparam backgroundColor white
+skinparam ArrowColor black
+skinparam ArrowThickness 2.2
+skinparam ArrowFontSize 12
+skinparam ArrowFontStyle bold
+
+skinparam PackageBorderColor black
+skinparam PackageBorderThickness 2.0
+skinparam PackageBackgroundColor #FFFFFF
+
+skinparam ComponentBorderColor black
+skinparam ComponentBorderThickness 2.0
+skinparam ComponentBackgroundColor #F8F9FA
+
+skinparam DatabaseBorderColor black
+skinparam DatabaseBorderThickness 2.0
+skinparam DatabaseBackgroundColor #F0F4F8
+
+title Module 7: Trending Misinformation Analytics Dashboard Architecture
+
+database "Google Cloud Firestore\n(/claims & /users)" as DB
+
+package "Client-Side In-Memory Analytical Engine" {
+  [Real-Time Claims Stream Listener\n(ClaimsContext onSnapshot)] as STREAM
+  [Dynamic Temporal Window Slicer\n(src/lib/weeklyReport.ts: 7-Day Window)] as SLICER
+  
+  package "Aggregator Pipelines" {
+    [Category Tally Pipeline\n(Health, Politics, Finance, Religion, Other)] as CAT_TALLY
+    [Virality & Engagement Ranker\n(Top Debunked Claims Ledger)] as RANKER
+    [Verifier Equity Calculator\n(Accuracy % & Reputation Streaks)] as LEADER
+    [Velocity & Throughput Meter\n(Mean Quorum Turnaround Hours)] as VELOCITY
+  }
+}
+
+package "Reactive Visualization Presentation Layer" {
+  [Area & Donut Charts\n(src/components/DashboardChart.tsx)] as CHARTS
+  [Micro-Counter Tickers\n(src/components/AnimatedCounter.tsx)] as COUNTERS
+  [Interactive Data Grids\n(Filterable Tables with OKLCH Theme)] as TABLES
+}
+
+package "Public Intelligence & Research Deliverables" {
+  [7-Day Misinformation Radar] as RADAR
+  [Top Debunked Claims Feed] as DEBUNK_FEED
+  [Community Verifier Leaderboard] as LEADER_BOARD
+  [Platform Throughput Metrics] as STATS
+}
+
+DB --> STREAM : Live Document Updates
+STREAM --> SLICER : Full In-Memory Cache (< 10ms)
+
+SLICER --> CAT_TALLY : Filter T_created >= (Now - 7 Days)
+SLICER --> RANKER : Filter Status == 'verified'
+SLICER --> LEADER : Group by verifierId
+SLICER --> VELOCITY : (T_consensus - T_created)
+
+CAT_TALLY --> CHARTS : Multi-Series Category Vectors
+RANKER --> TABLES : Sorted High-Engagement Claims
+LEADER --> TABLES : Top 10 Ranked Verifiers
+VELOCITY --> COUNTERS : Real-Time Average Turnaround
+
+CHARTS --> RADAR : Visual Temporal Heatmap
+TABLES --> DEBUNK_FEED : Public Debunk Registry
+TABLES --> LEADER_BOARD : Community Honor Roll
+COUNTERS --> STATS : Executive KPI Cards
+
+@enduml

@@ -1,0 +1,70 @@
+@startuml
+skinparam style strictuml
+skinparam monochrome true
+skinparam defaultFontName "Liberation Sans"
+skinparam defaultFontSize 14
+skinparam defaultFontStyle bold
+skinparam titleFontSize 22
+skinparam titleFontStyle bold
+
+skinparam backgroundColor white
+skinparam ArrowColor black
+skinparam ArrowThickness 2.0
+skinparam ArrowFontSize 13
+skinparam ArrowFontStyle bold
+
+skinparam ActivityBorderColor black
+skinparam ActivityBorderThickness 2.0
+skinparam ActivityBackgroundColor #F8F9FA
+skinparam ActivityFontSize 14
+skinparam ActivityFontStyle bold
+
+title FactStamp - Module 5: Weighted Consensus & Confidence Architecture
+
+start
+:Quorum Reached in Module 4 (N >= 3 Verifications Recorded);
+:Ingest Verification Vector: V = { v_1, v_2, ..., v_N };
+
+fork
+  :Component 1: Agreement Ratio (A, 40% Weight);
+  :Tally Verdict Counts: { TRUE, FALSE, MISLEADING, UNVERIFIABLE };
+  :Resolve Majority Verdict: V_maj = argmax(count);
+  :Compute Agreement Ratio: A = (max_count / N) * 100;
+  :Weighted Score A_w = 0.40 * A;
+fork again
+  :Component 2: Verifier Reputation (R, 30% Weight);
+  :Fetch Snapshot Reputations: { r_1, r_2, ..., r_N };
+  :Compute Mean Reputation: R = (1 / N) * sum(r_i);
+  :Weighted Score R_w = 0.30 * R;
+fork again
+  :Component 3: Source Domain Quality (S, 30% Weight);
+  :Parse Domain Hostnames from Evidentiary URLs;
+  :Map Authority Tiers:
+  - Tier 1 (Govt / WHO / Gazette): S_i = 100
+  - Tier 2 (Established Press): S_i = 70
+  - Tier 3 (Blogs / Unverified): S_i = 30;
+  :Compute Mean Source Score: S = (1 / N) * sum(s_i);
+  :Weighted Score S_w = 0.30 * S;
+end fork
+
+:Composite Confidence Calculation:
+C_raw = round(A_w + R_w + S_w);
+:Boundary Clamping: C = min(100, max(0, C_raw));
+
+:Update Firestore Claim Document:
+- claim.status = 'verified'
+- claim.verdict = V_maj
+- claim.confidenceScore = C
+- claim.verifiedAt = timestamp;
+
+:Execute Reputation Settlement Protocol:
+- If verifier verdict matches V_maj: delta_R = +2
+- If verifier verdict dissents from V_maj: delta_R = -1
+- Clamp updated score: R_new = min(100, max(0, R_old + delta_R));
+
+:Dispatch Real-Time Notifications to Submitter & Verifiers;
+:Unlock Module 6 High-Fidelity Fact Card Generator (1080x1080 PNG);
+
+stop
+
+@enduml

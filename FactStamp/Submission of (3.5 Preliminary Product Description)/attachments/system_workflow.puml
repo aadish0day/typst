@@ -1,0 +1,73 @@
+@startuml
+skinparam style strictuml
+skinparam monochrome true
+skinparam defaultFontName "Liberation Sans"
+skinparam defaultFontSize 18
+skinparam defaultFontStyle bold
+skinparam titleFontSize 24
+skinparam titleFontStyle bold
+
+skinparam backgroundColor white
+skinparam ArrowColor black
+skinparam ArrowThickness 2.5
+skinparam ArrowFontSize 15
+skinparam ArrowFontStyle bold
+
+skinparam ComponentBorderColor black
+skinparam ComponentBorderThickness 2.5
+skinparam ComponentBackgroundColor #F8F9FA
+skinparam ComponentFontSize 17
+skinparam ComponentFontStyle bold
+
+skinparam PackageBorderColor black
+skinparam PackageBorderThickness 2.5
+skinparam PackageFontSize 19
+skinparam PackageFontStyle bold
+
+skinparam DatabaseBorderColor black
+skinparam DatabaseBorderThickness 2.5
+skinparam DatabaseBackgroundColor #F8F9FA
+skinparam DatabaseFontSize 18
+skinparam DatabaseFontStyle bold
+
+title FactStamp - End-to-End Architectural Workflow
+
+package "1. Ingestion Layer (Client UI)" {
+  [WhatsApp Text Forward / Screenshot] as INGEST
+  [Client-Side Image Compression & Automated OCR] as OCR
+  INGEST -down-> OCR : Extract Plaintext Forward
+}
+
+package "2. Intelligence & Deduplication Layer" {
+  [Jaccard Similarity Duplicate Detector\n(Threshold J >= 0.75)] as DEDUP
+  [Instant Certified Verdict Redirect\n(Existing Resolved Claim)] as INSTANT
+  OCR -down-> DEDUP : Submit Normalized Text
+  DEDUP -right-> INSTANT : Match Found (J >= 0.75)
+}
+
+package "3. Persistent Storage (Cloud Firestore)" {
+  database "Firestore NoSQL Database\n(claims, verifications, users, alerts)" as DB
+  DEDUP -down-> DB : New Unique Claim (J < 0.75)
+}
+
+package "4. Community Quorum Verification Layer" {
+  [Public Verification Queue (Quorum N >= 3)] as QUEUE
+  [Independent Verifiers (V1, V2, V3)\nSubmit Vote + Source URL + Reason] as VERIFIERS
+  DB -down-> QUEUE : Enqueue Unverified Record
+  QUEUE -down-> VERIFIERS : Assign for Independent Review
+}
+
+package "5. Consensus & Confidence Engine" {
+  [Multi-Factor Weighted Consensus Calculator\nC = 0.40*A + 0.30*R + 0.30*S] as ENGINE
+  [Certified Verdict Classification\n(TRUE / FALSE / MISLEADING / UNVERIFIABLE)] as VERDICT
+  VERIFIERS -down-> ENGINE : Aggregate 3 Verifications
+  ENGINE -down-> VERDICT : Compute Final Verdict & Score
+}
+
+package "6. Generation & Counter-Spread" {
+  [Client-Side Card Generator (html-to-image)\n1080x1080px WhatsApp Fact-Check Card] as CARD
+  [Share Back into Originating WhatsApp Group\n(Reversing Misinformation Flow)] as SHARE
+  VERDICT -down-> CARD : Render Visual Fact-Check Stamp
+  CARD -down-> SHARE : User Downloads & Forwards PNG
+}
+@enduml

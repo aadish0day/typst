@@ -1,0 +1,107 @@
+@startuml
+skinparam style strictuml
+skinparam monochrome true
+skinparam defaultFontName "Liberation Sans"
+skinparam defaultFontSize 14
+skinparam defaultFontStyle bold
+skinparam titleFontSize 20
+skinparam titleFontStyle bold
+
+skinparam backgroundColor white
+skinparam ArrowColor black
+skinparam ArrowThickness 2.5
+skinparam ArrowFontSize 12
+skinparam ArrowFontStyle bold
+
+skinparam ActivityBorderColor black
+skinparam ActivityBorderThickness 2.5
+skinparam ActivityBackgroundColor #F8F9FA
+skinparam ActivityFontSize 14
+skinparam ActivityFontStyle bold
+
+skinparam ActivityDiamondBorderColor black
+skinparam ActivityDiamondBorderThickness 2.5
+skinparam ActivityDiamondBackgroundColor #FFFFFF
+skinparam ActivityDiamondFontSize 13
+skinparam ActivityDiamondFontStyle bold
+
+title FactStamp - Dynamic Activity Diagram (End-to-End Workflow)
+
+|#White|Public Submitter|
+|#FAFAFA|Ingestion & OCR Gateway|
+|#White|Duplicate Engine & DB|
+|#FAFAFA|Community Verifier Network|
+|#White|Consensus & Export Engine|
+
+|Public Submitter|
+start
+:Encounter Suspicious Forward in WhatsApp;
+:Navigate to FactStamp (/submit);
+
+if (Media Type?) then ([Screenshot Image])
+  |Ingestion & OCR Gateway|
+  :Inspect Magic Bytes (JPEG/PNG/WebP);
+  :Downscale on Canvas (<= 1280px, < 700KB);
+  :Execute OCR Text Extraction;
+  :Normalize Extracted Plaintext;
+else ([Raw Text])
+  |Ingestion & OCR Gateway|
+  :Sanitize Text (Strip Script & HTML Tags);
+  :Normalize Whitespace & Lowercase;
+endif
+
+|Duplicate Engine & DB|
+:Compute Jaccard Similarity (J);\nTokenize & Filter Short Words;
+
+if (Similarity Score?) then ([J >= 0.75 (Duplicate)])
+  :Map to Existing Canonical Claim;
+  |Consensus & Export Engine|
+  :Fetch Existing Verified Fact Card;
+  |Public Submitter|
+  :View Instant Certified Verdict;
+  :Download Fact Card PNG;
+  stop
+else ([J < 0.75 (Novel Claim)])
+  |Duplicate Engine & DB|
+  :Persist New Claim (status: 'unverified');
+  :Index in Verification Queue (quorumCount = 0);
+endif
+
+|Community Verifier Network|
+:Browse Pending Queue by Category;
+:Select Unverified Claim Dossier;
+:Investigate Sovereign Sources (PIB, RBI, WHO);
+
+repeat
+  :Select Verdict (TRUE / FALSE / MISLEADING);
+  :Attach Authoritative Source URL;
+  :Provide Evidence Rationale (>= 50 chars);
+
+  |Duplicate Engine & DB|
+  :Enforce Self-Verification Lock;
+  :Record Verification Document;
+  :Atomically Increment quorumCount;
+repeat while (quorumCount < 3?) is ([N < 3: Await Reviews])
+->[N >= 3: Quorum Achieved];
+
+|Consensus & Export Engine|
+:Execute Weighted Consensus Algorithm;
+:Calculate Agreement Ratio (A) [40%];
+:Calculate Mean Verifier Reputation (R) [30%];
+:Calculate Mean Source Quality (S) [30%];
+:Compute Composite Confidence C = 0.40A + 0.30R + 0.30S;
+
+if (Consensus Confirmed?) then ([C >= 70%])
+  :Update Status to 'verified';
+  :Award Reputation (+2 / -1 points);
+  :Generate 1080x1080 Fact Card PNG;
+  |Public Submitter|
+  :Download Shareable Fact Card;
+  :Forward Fact Card Back into WhatsApp;
+else ([C < 70% or 7-Day Expiry])
+  :Update Status to 'contested';
+  :Flag for Administrative Moderation Audit;
+endif
+
+stop
+@enduml

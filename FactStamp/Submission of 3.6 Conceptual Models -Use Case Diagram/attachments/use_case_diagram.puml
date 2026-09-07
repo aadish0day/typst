@@ -1,0 +1,81 @@
+@startuml
+skinparam style strictuml
+skinparam monochrome true
+skinparam defaultFontName "Liberation Sans"
+skinparam defaultFontSize 16
+skinparam defaultFontStyle bold
+skinparam titleFontSize 22
+skinparam titleFontStyle bold
+
+skinparam backgroundColor white
+skinparam ArrowColor black
+skinparam ArrowThickness 2.5
+skinparam ArrowFontSize 13
+skinparam ArrowFontStyle bold
+
+skinparam UsecaseBorderColor black
+skinparam UsecaseBorderThickness 2.5
+skinparam UsecaseBackgroundColor #F8F9FA
+skinparam UsecaseFontSize 15
+skinparam UsecaseFontStyle bold
+
+skinparam ActorBorderColor black
+skinparam ActorBorderThickness 2.5
+skinparam ActorBackgroundColor #FFFFFF
+skinparam ActorFontSize 16
+skinparam ActorFontStyle bold
+
+skinparam RectangleBorderColor black
+skinparam RectangleBorderThickness 2.5
+skinparam RectangleBackgroundColor transparent
+skinparam RectangleFontSize 18
+skinparam RectangleFontStyle bold
+
+title FactStamp - Comprehensive UML Use Case Diagram
+
+actor "Public Submitter\n(WhatsApp User)" as Submitter
+actor "Community Verifier\n(Accredited Reviewer)" as Verifier
+actor "Automated Engine\n(Background System)" as Engine <<System>>
+actor "Platform Admin\n(Governance & Moderation)" as Admin
+
+rectangle "FactStamp Verification System Boundary" {
+  usecase "UC1: Submit WhatsApp Forward\n(Text or Screenshot)" as UC1
+  usecase "UC2: Extract Screenshot Text via OCR" as UC2
+  usecase "UC3: Detect Duplicate Claim\n(Jaccard Similarity >= 0.75)" as UC3
+  usecase "UC4: Browse Pending Quorum Queue\n(Category Filter & Search)" as UC4
+  usecase "UC5: Submit Verification Vote\n(Verdict + Citation URL + Rationale)" as UC5
+  usecase "UC6: Calculate Weighted Quorum Consensus\n(Tri-Partite Confidence Scoring)" as UC6
+  usecase "UC7: Generate & Download\n1080x1080 Fact-Check PNG Card" as UC7
+  usecase "UC8: View Misinformation Dashboard\n(Radar Trends & Verifier Leaderboard)" as UC8
+  usecase "UC9: Audit Contested Decisions\n& Sybil Anomaly Telemetry" as UC9
+}
+
+Submitter --> UC1
+Submitter --> UC7
+Submitter --> UC8
+
+UC1 ..> UC3 : <<include>>
+UC1 ..> UC2 : <<extend>> (image upload)
+
+Verifier --> UC4
+Verifier --> UC5
+Verifier --> UC7
+Verifier --> UC8
+
+UC5 ..> UC6 : <<trigger>> (upon N=3)
+
+Engine --> UC2
+Engine --> UC3
+Engine --> UC6
+
+Admin --> UC8
+Admin --> UC9
+
+UC1 -[hidden]down-> UC3
+UC3 -[hidden]down-> UC4
+UC4 -[hidden]down-> UC5
+UC5 -[hidden]down-> UC6
+UC6 -[hidden]down-> UC7
+UC7 -[hidden]down-> UC8
+UC8 -[hidden]down-> UC9
+@enduml

@@ -24,6 +24,12 @@ Below is the complete, official mapping of all required diagrams, their syllabus
 
 ---
 
+> [!NOTE]
+> **Architectural Pipeline Specification (Sequence, Package, Deployment, Component Diagrams):**
+> Optical Character Recognition (OCR) is executed strictly client-side via in-browser WebAssembly (Tesseract.js worker) rather than external cloud APIs (e.g. Gemini Vision). This architectural decision guarantees offline capability, zero cloud API operational costs, and complete user data privacy. All diagrams (Sequence, Package, Deployment, Component) consistently model this client-side WebAssembly Tesseract.js pipeline.
+
+---
+
 ## Entity-Relationship (E-R) Diagram
 
 The **Entity-Relationship Diagram** is required under **Chapter 3.6 (Conceptual Models)** as a conceptual data model, and under **Chapter 4.2 (Data Design: Database & Schema Design)** as the formal relational schema design.

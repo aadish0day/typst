@@ -1,0 +1,42 @@
+@startuml
+skinparam style strictuml
+skinparam monochrome true
+skinparam defaultFontName "Liberation Sans"
+skinparam defaultFontSize 14
+skinparam defaultFontStyle bold
+skinparam titleFontSize 22
+skinparam titleFontStyle bold
+
+skinparam backgroundColor white
+skinparam RectangleBorderColor black
+skinparam RectangleBorderThickness 2.0
+skinparam RectangleBackgroundColor #F8F9FA
+skinparam RectangleFontSize 14
+skinparam RectangleFontStyle bold
+
+title FactStamp - Shareable Fact-Check Card Layout Wireframe (1080x1080px)
+
+rectangle "Fact-Check Card Root Container (Aspect Ratio 1:1, Saffron Border)" as Card {
+  rectangle "Header Band: [SHIELD ICON] FACTSTAMP VERIFIED  |  CASE #C_SEED_12  |  04 SEP 2026" as Header
+  
+  rectangle "Claim Under Review Container (Warm Tinted Surface #F6F1EA)\n\"Drinking boiled ginger water with lemon twice daily permanently cures\nType 2 Diabetes within 14 days... [Forwarded Many Times]\"" as ClaimBox
+  
+  rectangle "Signature Rubber-Stamp Verdict Badge (~6 deg Tilt)\n[ X ] VERDICT: FALSE\n(Crimson Double-Encoded Border #DC2626, Chromatic Halo)" as VerdictStamp
+  
+  rectangle "Confidence & Quorum Metric Matrix\nCONFIDENCE SCORE: 94% [===================----] (3 / 3 Independent Verifiers)\nAgreement Ratio: 100%  |  Avg Verifier Rep: 82  |  Source Authority: Tier 1 (100)" as Metrics
+  
+  rectangle "Consensus Evidentiary Summary\n\"No clinical or peer-reviewed evidence demonstrates that boiled ginger water\nreverses pancreatic beta-cell degradation. The Ministry of Health and WHO\ncaution against discontinuing prescribed insulin therapy.\"" as Summary
+  
+  rectangle "Authoritative Primary Source Citations\n[who.int/diabetes]   [mohfw.gov.in/alerts]   [icmr.gov.in/guidelines]" as Sources
+  
+  rectangle "Footer Zone: Verify Viral Forwards at https://factstamp.vercel.app" as Footer
+}
+
+Header -[hidden]down-> ClaimBox
+ClaimBox -[hidden]down-> VerdictStamp
+VerdictStamp -[hidden]down-> Metrics
+Metrics -[hidden]down-> Summary
+Summary -[hidden]down-> Sources
+Sources -[hidden]down-> Footer
+
+@enduml

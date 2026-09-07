@@ -1,0 +1,41 @@
+@startuml
+skinparam style strictuml
+skinparam monochrome true
+skinparam defaultFontName "Liberation Sans"
+skinparam defaultFontSize 13
+skinparam defaultFontStyle bold
+skinparam titleFontSize 16
+skinparam titleFontStyle bold
+skinparam backgroundColor white
+
+skinparam ActivityBorderColor black
+skinparam ActivityBorderThickness 1.5
+skinparam ActivityBackgroundColor #F8F9FA
+skinparam ActivityFontSize 12
+skinparam ActivityFontStyle normal
+
+skinparam ArrowColor black
+skinparam ArrowThickness 1.5
+
+title Dissertation Chapter Roadmap & Structural Progression
+
+start
+
+:<b>CHAPTER 1: INTRODUCTION</b>\nProblem Context, Dark Social, 8 Objectives, Scope & Empirical Achievements;
+
+:<b>CHAPTER 2: SURVEY OF TECHNOLOGIES</b>\nComparative Architecture Analysis, OCR Engines, Consensus Models & Tech Matrix;
+
+:<b>CHAPTER 3: REQUIREMENTS AND ANALYSIS</b>\nIEEE Std 830-1998 SRS, PERT/GANTT Scheduling & 16 Conceptual Models;
+
+:<b>CHAPTER 4: SYSTEM DESIGN</b>\n8 Subsystems, Cloud Firestore Schemas, Jaccard & Multi-Factor Consensus Design;
+
+:<b>CHAPTER 5: IMPLEMENTATION AND TESTING</b>\nAgile Scrum Sprints, WASM OCR, SVG foreignObject, Testing Matrices & Code Efficiency;
+
+:<b>CHAPTER 6: RESULTS AND DISCUSSION</b>\nEmpirical Benchmarks, Stress Testing Reports & 8-Screen Step-by-Step User Manual;
+
+:<b>CHAPTER 7: CONCLUSIONS</b>\nSignificance, System Limitations, Future Scope Roadmap & IFCN Federation;
+
+:<b>REFERENCES AND GLOSSARY</b>\n34 IEEE-Formatted Citations, Full Domain Acronyms & Technical Definitions;
+
+stop
+@enduml

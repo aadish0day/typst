@@ -1,0 +1,82 @@
+@startuml
+skinparam style strictuml
+skinparam monochrome true
+skinparam defaultFontName "Liberation Sans"
+skinparam defaultFontSize 14
+skinparam defaultFontStyle bold
+skinparam titleFontSize 20
+skinparam titleFontStyle bold
+
+skinparam backgroundColor white
+skinparam ArrowColor black
+skinparam ArrowThickness 2.5
+skinparam ArrowFontSize 13
+skinparam ArrowFontStyle bold
+
+skinparam ActivityBorderColor black
+skinparam ActivityBorderThickness 2.5
+skinparam ActivityBackgroundColor #F8F9FA
+skinparam ActivityFontSize 14
+skinparam ActivityFontStyle bold
+
+skinparam ActivityDiamondBorderColor black
+skinparam ActivityDiamondBorderThickness 2.5
+skinparam ActivityDiamondBackgroundColor #FFFFFF
+skinparam ActivityDiamondFontSize 13
+skinparam ActivityDiamondFontStyle bold
+
+title Module 2: Multimodal Claim Ingestion & Preprocessing Pipeline
+
+start
+
+:Receive Suspicious Forward in WhatsApp;
+
+:Open FactStamp Submit Portal;
+
+if (Submission Modality?) then (Plaintext Tab)
+  :Enter Forwarded Text;
+  :Execute XSS Sanitization\n(Strip tags, event handlers, null bytes);
+  if (Text Length Between 20 and 500 Chars?) then (yes)
+    :Proceed to Duplicate Check;
+  else (no)
+    :Display Validation Error Toast;
+    stop
+  endif
+else (Screenshot Tab)
+  :Upload Screenshot (Drag-and-Drop / File Picker);
+  
+  :Execute Triple-Layer Security Validation;
+  note right
+    1. Extension check (.jpg, .png, .webp, .gif)
+    2. MIME type verification
+    3. Magic byte inspection (e.g., 0xFF 0xD8 0xFF)
+    4. Size constraint (<= 5 MB)
+  end note
+  
+  if (File Valid?) then (yes)
+    :Load Image into In-Memory Canvas;
+    :Calculate Dimension Scale (Max 1280px);
+    :Execute Iterative Quality Step-Down\n(Start Q=0.72, Step -0.08, Min Q=0.40);
+    :Ensure Encoded Payload < 700 KB;
+    :Generate Base64 Data URL;
+    :Extract Text via Tesseract.js (WASM);
+  else (no)
+    :Reject File & Display Toast Error;
+    stop
+  endif
+endif
+
+:Trigger Real-Time Jaccard Duplicate Check;
+
+if (Duplicate Match J >= 0.75?) then (Duplicate Found)
+  :Display Duplicate Warning Banner;
+  :Route User to Certified Verdict;
+  stop
+else (Unique Claim)
+  :Dispatch Normalized Payload to Firestore;
+  :Create Document in /claims Collection;
+  :Display Success Modal & Redirect;
+endif
+
+stop
+@enduml

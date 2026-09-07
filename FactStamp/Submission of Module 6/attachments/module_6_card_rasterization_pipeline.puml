@@ -1,0 +1,84 @@
+@startuml
+skinparam style strictuml
+skinparam monochrome true
+skinparam defaultFontName "Liberation Sans"
+skinparam defaultFontSize 14
+skinparam defaultFontStyle bold
+skinparam titleFontSize 20
+skinparam titleFontStyle bold
+
+skinparam backgroundColor white
+skinparam ArrowColor black
+skinparam ArrowThickness 2.5
+skinparam ArrowFontSize 13
+skinparam ArrowFontStyle bold
+
+skinparam ActivityBorderColor black
+skinparam ActivityBorderThickness 2.5
+skinparam ActivityBackgroundColor #F8F9FA
+skinparam ActivityFontSize 14
+skinparam ActivityFontStyle bold
+
+skinparam ActivityDiamondBorderColor black
+skinparam ActivityDiamondBorderThickness 2.5
+skinparam ActivityDiamondBackgroundColor #FFFFFF
+skinparam ActivityDiamondFontSize 13
+skinparam ActivityDiamondFontStyle bold
+
+title Module 6: High-Fidelity Fact-Check Card Browser-Native SVG Rasterization Pipeline
+
+start
+
+:Verified Claim Dossier Resolved;
+note right
+  - Unique Case ID (e.g. #FS-202608-0104)
+  - Majority Verdict (TRUE/FALSE/MISLEADING)
+  - Weighted Confidence Score (C: 0 - 100%)
+  - Quorum Count (N >= 3 Verifiers)
+  - Top Cited Evidence Domains
+end note
+
+:Mount FactCheckCard.tsx Component (540x540px DOM);
+note right
+  - Saffron Sleek Brand Header
+  - Truncated Claim Text (<= 150 chars)
+  - Chromatic Rubber-Stamp Verdict Badge
+  - Circular SVG Trust Meter
+  - Permanent Dossier Verification URL
+end note
+
+:User Clicks "Download WhatsApp Card";
+
+:Invoke html-to-image Engine with Options;
+note right
+  - pixelRatio: 2 (2x Super-Sampling)
+  - cacheBust: true
+  - backgroundColor: #FFFBF5
+end note
+
+:Deep-Clone Target DOM Node Tree;
+
+:Wrap Cloned HTML into SVG <foreignObject> Container;
+
+:Inline External Web Fonts & Brand Assets as Base64 Data URLs;
+
+:Dispatch SVG Document to Browser Native C++ Rendering Engine;
+note right
+  - Blink / Skia (Chromium)
+  - WebKit / CoreGraphics (Safari)
+  - Gecko / WebRender (Firefox)
+  - Native CSS Color Level 4 (OKLCH/OKLAB) Support
+end note
+
+:Rasterize SVG onto High-Resolution HTML5 Canvas (1080x1080px);
+
+:Execute Canvas.toDataURL('image/png') / toBlob();
+
+:Generate Download Anchor & Trigger Client-Side File Save;
+note right
+  - File: factstamp-[claim-id].png
+  - High-DPI WhatsApp-Ready Visual Counter-Measure
+end note
+
+stop
+@enduml

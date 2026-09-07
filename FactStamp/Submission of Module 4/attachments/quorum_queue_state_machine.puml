@@ -1,0 +1,61 @@
+@startuml
+skinparam style strictuml
+skinparam monochrome true
+skinparam defaultFontName "Liberation Sans"
+skinparam defaultFontSize 14
+skinparam defaultFontStyle bold
+skinparam titleFontSize 22
+skinparam titleFontStyle bold
+
+skinparam backgroundColor white
+skinparam ArrowColor black
+skinparam ArrowThickness 2.0
+skinparam ArrowFontSize 13
+skinparam ArrowFontStyle bold
+
+skinparam StateBorderColor black
+skinparam StateBorderThickness 2.0
+skinparam StateBackgroundColor #F8F9FA
+skinparam StateFontSize 15
+skinparam StateFontStyle bold
+
+title FactStamp - Module 4: Quorum Queue State Machine
+
+[*] --> PENDING : Claim Enqueued\n(Unique J < 0.75)
+
+state PENDING {
+  state "Zero Verifications (0 / 3)\n[Active Queue]" as S0
+  state "One Verification (1 / 3)\n[Active Queue]" as S1
+  state "Two Verifications (2 / 3)\n[Urgent: 1 Vote Needed]" as S2
+  
+  [*] --> S0
+  S0 --> S1 : Verifier 1 Casts Verdict\n(Valid URL + Reason >= 50 chars)
+  S1 --> S2 : Verifier 2 Casts Verdict\n(Distinct Verifier != Submitter)
+}
+
+PENDING --> VERIFIED : Verifier 3 Casts Verdict\n(Quorum N >= 3 Reached)
+PENDING --> CONTESTED : 7-Day Deadline Expired\n(N < 3 Verifications)
+
+state VERIFIED {
+  state "1. Aggregate Verdict Tally" as V1
+  state "2. Calculate Weighted Confidence Score\nC = round(0.40*A + 0.30*R + 0.30*S)" as V2
+  state "3. Dynamic Reputation Settlement\n(+2 Consensus Match / -1 Dissent)" as V3
+  state "4. Publish Verified Dossier & Enable Fact Card Export" as V4
+  
+  [*] --> V1
+  V1 --> V2
+  V2 --> V3
+  V3 --> V4
+  V4 --> [*]
+}
+
+state CONTESTED {
+  state "Seal Dossier with Status 'CONTESTED'\nPreserve Partial Audit Record" as C1
+  [*] --> C1
+  C1 --> [*]
+}
+
+VERIFIED --> [*]
+CONTESTED --> [*]
+
+@enduml

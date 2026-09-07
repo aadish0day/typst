@@ -1,0 +1,73 @@
+@startuml
+skinparam style strictuml
+skinparam monochrome true
+skinparam defaultFontName "Liberation Sans"
+skinparam defaultFontSize 15
+skinparam defaultFontStyle bold
+skinparam titleFontSize 22
+skinparam titleFontStyle bold
+
+skinparam backgroundColor white
+skinparam ArrowColor black
+skinparam ArrowThickness 2.0
+skinparam ArrowFontSize 13
+skinparam ArrowFontStyle bold
+
+skinparam ComponentBorderColor black
+skinparam ComponentBorderThickness 2.0
+skinparam ComponentBackgroundColor #F8F9FA
+skinparam ComponentFontSize 15
+skinparam ComponentFontStyle bold
+
+skinparam PackageBorderColor black
+skinparam PackageBorderThickness 2.0
+skinparam PackageBackgroundColor transparent
+skinparam PackageFontSize 16
+skinparam PackageFontStyle bold
+
+skinparam DatabaseBorderColor black
+skinparam DatabaseBorderThickness 2.0
+skinparam DatabaseBackgroundColor #F8F9FA
+skinparam DatabaseFontSize 16
+skinparam DatabaseFontStyle bold
+
+title FactStamp - Eight Basic Modules Architectural Interconnection
+
+package "1. Ingestion & Preprocessing Subsystems" {
+  [Module 2: Multimodal Ingestion & OCR Pipeline\n(Screenshot Canvas Downscaling & Text Extraction)] as M2
+  [Module 3: Jaccard Duplicate Detection Engine\n(Word-Level Token Inversion & Similarity Gate)] as M3
+}
+
+package "2. Decentralized Quorum & Security Subsystems" {
+  [Module 1: Authentication & Verifier Profiles\n(Firebase Auth, RS256 JWT, Reputation Accounting)] as M1
+  [Module 4: Decentralized Quorum Queue\n(3-Verifier Quorum, Evidence & Citation Mandate)] as M4
+  [Module 5: Weighted Consensus & Confidence Engine\n(40A + 30R + 30S Formula, Verdict Calculation)] as M5
+  [Module 8: Security & Anti-Sybil Defense\n(Self-Verification Lock, Brute-Force Throttling)] as M8
+}
+
+package "3. Dissemination & Analytics Subsystems" {
+  [Module 6: High-Fidelity Fact Card Generator\n(SVG ForeignObject Rasterization, 1080x1080 PNG)] as M6
+  [Module 7: Trending Misinformation Analytics\n(7-Day Rolling Radar & Category Aggregation)] as M7
+}
+
+database "Google Cloud Firestore (NoSQL Document Store)" {
+  [Claims, Users, Notifications, Reports Collections] as DB
+}
+
+M2 --> M3 : Extracted Text / Forward Body
+M3 --> M4 : Novel Claims (J < 0.75)
+M3 --> M6 : Duplicate Match (J >= 0.75) Direct Link
+M1 --> M4 : Authenticated Verifier Context
+M8 ..> M4 : Enforces Self-Verification Lock (P_self)
+M4 --> M5 : Quorum Assembled (N >= 3)
+M8 ..> M5 : Validates Evidentiary Domain Authority
+M5 --> M6 : Finalized Truth Dossier
+M5 --> M7 : Aggregate Metric Streaming
+M5 --> M1 : Reputation Deltas (+2 / -1)
+
+M2 --> DB : Write Draft Ingestion Payload
+M4 --> DB : Read/Write Verification Arrays
+M5 --> DB : Commit Consensus State & Metrics
+M7 --> DB : Query 7-Day Window Analytics
+
+@enduml

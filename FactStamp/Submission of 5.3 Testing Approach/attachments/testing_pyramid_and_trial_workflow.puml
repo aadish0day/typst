@@ -1,0 +1,61 @@
+@startuml
+skinparam style strictuml
+skinparam monochrome true
+skinparam defaultFontName "Liberation Sans"
+skinparam defaultFontSize 13
+skinparam defaultFontStyle bold
+skinparam titleFontSize 18
+skinparam titleFontStyle bold
+
+skinparam backgroundColor white
+skinparam ArrowColor black
+skinparam ArrowThickness 2.2
+skinparam ArrowFontSize 12
+skinparam ArrowFontStyle bold
+
+skinparam PackageBorderColor black
+skinparam PackageBorderThickness 2.0
+skinparam PackageBackgroundColor #FFFFFF
+
+skinparam ComponentBorderColor black
+skinparam ComponentBorderThickness 2.0
+skinparam ComponentBackgroundColor #F8F9FA
+
+title FactStamp: Multi-Tiered Verification & Validation Architecture (5.3)
+
+package "5.3.1 Unit Testing Layer (Isolated Pure Functions)" {
+  [String Sanitizer & XSS Filter\n(security.ts: Tag stripping, null byte removal)] as UT_SEC
+  [Jaccard Similarity Engine\n(duplicateDetection.ts: Inverted token sets)] as UT_JAC
+  [Weighted Consensus Calculator\n(confidenceScore.ts: C = 0.40A + 0.30R + 0.30S)] as UT_CONF
+  [Source Quality Evaluator\n(3-Tier Whitelist: 100 / 70 / 30)] as UT_SRC
+}
+
+package "5.3.2 Integrated Testing Layer (State, BaaS & Emulator)" {
+  [Firebase Local Emulator Suite\n(Firestore:8080, Auth:9099)] as IT_EMU
+  [Real-Time WebSocket Sync\n(ClaimsContext onSnapshot Listeners)] as IT_SYNC
+  [Optimistic UI Updates & Offline Cache\n(localClaimsRef, simulated 2000ms latency)] as IT_OPT
+  [Declarative Security Assertions\n(@firebase/rules-unit-testing: Anti-Sybil Lock)] as IT_RULES
+}
+
+package "5.3.3 Beta Testing Layer (25-User Student Peer Trials)" {
+  [Group A: Citizens / Submitters\n(N=10: Text & Screenshot Ingestion)] as BT_SUBMIT
+  [Group B: Community Verifiers\n(N=12: Workbench Review, Citations & Votes)] as BT_VERIFY
+  [Group C: Moderators / Admins\n(N=3: System Health, Contested Resolution)] as BT_ADMIN
+  
+  [Empirical Metric Capture\n(Turnaround: 18.4h, SUS Usability: 84.2, Card Success: 100%)] as BT_METRICS
+}
+
+UT_SEC --> IT_EMU : Validated Edge Ingestion
+UT_JAC --> IT_SYNC : Verified Duplicate Logic
+UT_CONF --> IT_RULES : Verified Score Invariants
+UT_SRC --> IT_RULES : Verified Domain Tiers
+
+IT_SYNC --> BT_SUBMIT : Synchronized Claim Feed
+IT_OPT --> BT_VERIFY : Latency-Resilient Workbench
+IT_RULES --> BT_ADMIN : Enforced Authorization Constraints
+
+BT_SUBMIT --> BT_METRICS : 68 Ingested Rumors
+BT_VERIFY --> BT_METRICS : 204 Recorded Reviews
+BT_ADMIN --> BT_METRICS : 0 Security Breaches
+
+@enduml

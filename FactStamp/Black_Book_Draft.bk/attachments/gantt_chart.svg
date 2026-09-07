@@ -1,0 +1,133 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 620" width="1000" height="620" style="background-color: #FFFFFF; font-family: &apos;Liberation Sans&apos;, &apos;DejaVu Sans&apos;, Arial, sans-serif;">
+
+<defs>
+  <pattern id="slackPattern" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+    <line x1="0" y1="0" x2="0" y2="6" stroke="#94A3B8" stroke-width="2"/>
+  </pattern>
+</defs>
+
+
+<text x="500" y="32" text-anchor="middle" font-size="17" font-weight="bold" fill="#0F172A">FactStamp — Master Implementation Schedule (GANTT Chart)</text>
+<text x="500" y="52" text-anchor="middle" font-size="11.5" fill="#475569">101-Day Timeline Across 4 Agile Sprints | Critical Path: 11 Tasks (Red) | Float / Slack Indicated</text>
+
+<rect x="250.0" y="90" width="196.1" height="448" fill="#F1F5F9" opacity="0.6"/>
+<text x="348.0" y="82" text-anchor="middle" font-size="10.5" font-weight="bold" fill="#334155">Sprint 1 (Days 1-29)</text>
+<line x1="250.0" y1="68" x2="250.0" y2="538" stroke="#CBD5E1" stroke-width="1.2" stroke-dasharray="3,3"/>
+<rect x="446.1" y="90" width="189.3" height="448" fill="#FFFFFF" opacity="0.6"/>
+<text x="540.8" y="82" text-anchor="middle" font-size="10.5" font-weight="bold" fill="#334155">Sprint 2 (Days 30-57)</text>
+<line x1="446.1" y1="68" x2="446.1" y2="538" stroke="#CBD5E1" stroke-width="1.2" stroke-dasharray="3,3"/>
+<rect x="635.4" y="90" width="182.6" height="448" fill="#F1F5F9" opacity="0.6"/>
+<text x="726.7" y="82" text-anchor="middle" font-size="10.5" font-weight="bold" fill="#334155">Sprint 3 (Days 58-84)</text>
+<line x1="635.4" y1="68" x2="635.4" y2="538" stroke="#CBD5E1" stroke-width="1.2" stroke-dasharray="3,3"/>
+<rect x="818.0" y="90" width="115.0" height="448" fill="#FFFFFF" opacity="0.6"/>
+<text x="875.5" y="82" text-anchor="middle" font-size="10.5" font-weight="bold" fill="#334155">Sprint 4 (Days 85-101)</text>
+<line x1="818.0" y1="68" x2="818.0" y2="538" stroke="#CBD5E1" stroke-width="1.2" stroke-dasharray="3,3"/>
+<line x1="933.0" y1="68" x2="933.0" y2="538" stroke="#DC2626" stroke-width="1.8"/>
+<text x="933.0" y="554" text-anchor="middle" font-size="10" font-weight="bold" fill="#DC2626">Milestone: Day 101</text>
+<line x1="250.0" y1="90" x2="250.0" y2="538" stroke="#E2E8F0" stroke-width="1"/>
+<text x="250.0" y="570" text-anchor="middle" font-size="10" fill="#64748B">Day 0</text>
+<line x1="317.6" y1="90" x2="317.6" y2="538" stroke="#E2E8F0" stroke-width="1"/>
+<text x="317.6" y="570" text-anchor="middle" font-size="10" fill="#64748B">Day 10</text>
+<line x1="385.2" y1="90" x2="385.2" y2="538" stroke="#E2E8F0" stroke-width="1"/>
+<text x="385.2" y="570" text-anchor="middle" font-size="10" fill="#64748B">Day 20</text>
+<line x1="452.9" y1="90" x2="452.9" y2="538" stroke="#E2E8F0" stroke-width="1"/>
+<text x="452.9" y="570" text-anchor="middle" font-size="10" fill="#64748B">Day 30</text>
+<line x1="520.5" y1="90" x2="520.5" y2="538" stroke="#E2E8F0" stroke-width="1"/>
+<text x="520.5" y="570" text-anchor="middle" font-size="10" fill="#64748B">Day 40</text>
+<line x1="588.1" y1="90" x2="588.1" y2="538" stroke="#E2E8F0" stroke-width="1"/>
+<text x="588.1" y="570" text-anchor="middle" font-size="10" fill="#64748B">Day 50</text>
+<line x1="655.7" y1="90" x2="655.7" y2="538" stroke="#E2E8F0" stroke-width="1"/>
+<text x="655.7" y="570" text-anchor="middle" font-size="10" fill="#64748B">Day 60</text>
+<line x1="723.3" y1="90" x2="723.3" y2="538" stroke="#E2E8F0" stroke-width="1"/>
+<text x="723.3" y="570" text-anchor="middle" font-size="10" fill="#64748B">Day 70</text>
+<line x1="791.0" y1="90" x2="791.0" y2="538" stroke="#E2E8F0" stroke-width="1"/>
+<text x="791.0" y="570" text-anchor="middle" font-size="10" fill="#64748B">Day 80</text>
+<line x1="858.6" y1="90" x2="858.6" y2="538" stroke="#E2E8F0" stroke-width="1"/>
+<text x="858.6" y="570" text-anchor="middle" font-size="10" fill="#64748B">Day 90</text>
+<line x1="926.2" y1="90" x2="926.2" y2="538" stroke="#E2E8F0" stroke-width="1"/>
+<text x="926.2" y="570" text-anchor="middle" font-size="10" fill="#64748B">Day 100</text>
+<rect x="10" y="90" width="980" height="32" fill="#F8FAFC" opacity="0.5"/>
+<line x1="10" y1="122" x2="990" y2="122" stroke="#E2E8F0" stroke-width="0.8"/>
+<text x="20" y="110" font-size="10.5" font-weight="bold" fill="#0F172A">T1: Problem Definition &amp; SRS</text>
+<rect x="250.0" y="96" width="54.1" height="20" rx="3" fill="#DC2626" stroke="#000000" stroke-width="0.8"/>
+<text x="277.0" y="110" text-anchor="middle" font-size="9.5" font-weight="bold" fill="#FFFFFF">8d</text>
+<line x1="10" y1="154" x2="990" y2="154" stroke="#E2E8F0" stroke-width="0.8"/>
+<text x="20" y="142" font-size="10.5" font-weight="normal" fill="#334155">T2: Tech Survey &amp; Architecture</text>
+<rect x="304.1" y="128" width="47.3" height="20" rx="3" fill="#2563EB" stroke="#000000" stroke-width="0.8"/>
+<text x="327.8" y="142" text-anchor="middle" font-size="9.5" font-weight="bold" fill="#FFFFFF">7d</text>
+<rect x="351.4" y="128" width="13.5" height="20" rx="2" fill="url(#slackPattern)" stroke="#64748B" stroke-width="0.8" stroke-dasharray="2,2"/>
+<text x="358.2" y="142" text-anchor="middle" font-size="8.5" font-weight="bold" fill="#1E293B">+2d</text>
+<rect x="10" y="154" width="980" height="32" fill="#F8FAFC" opacity="0.5"/>
+<line x1="10" y1="186" x2="990" y2="186" stroke="#E2E8F0" stroke-width="0.8"/>
+<text x="20" y="174" font-size="10.5" font-weight="bold" fill="#0F172A">T3: Architecture &amp; DB Design</text>
+<rect x="304.1" y="160" width="60.9" height="20" rx="3" fill="#DC2626" stroke="#000000" stroke-width="0.8"/>
+<text x="334.5" y="174" text-anchor="middle" font-size="9.5" font-weight="bold" fill="#FFFFFF">9d</text>
+<line x1="10" y1="218" x2="990" y2="218" stroke="#E2E8F0" stroke-width="0.8"/>
+<text x="20" y="206" font-size="10.5" font-weight="normal" fill="#334155">T4: Auth &amp; Verifier Profile</text>
+<rect x="365.0" y="192" width="54.1" height="20" rx="3" fill="#2563EB" stroke="#000000" stroke-width="0.8"/>
+<text x="392.0" y="206" text-anchor="middle" font-size="9.5" font-weight="bold" fill="#FFFFFF">8d</text>
+<rect x="419.0" y="192" width="27.0" height="20" rx="2" fill="url(#slackPattern)" stroke="#64748B" stroke-width="0.8" stroke-dasharray="2,2"/>
+<text x="432.6" y="206" text-anchor="middle" font-size="8.5" font-weight="bold" fill="#1E293B">+4d</text>
+<rect x="10" y="218" width="980" height="32" fill="#F8FAFC" opacity="0.5"/>
+<line x1="10" y1="250" x2="990" y2="250" stroke="#E2E8F0" stroke-width="0.8"/>
+<text x="20" y="238" font-size="10.5" font-weight="bold" fill="#0F172A">T5: Canvas Comp. &amp; WASM OCR</text>
+<rect x="365.0" y="224" width="81.1" height="20" rx="3" fill="#DC2626" stroke="#000000" stroke-width="0.8"/>
+<text x="405.5" y="238" text-anchor="middle" font-size="9.5" font-weight="bold" fill="#FFFFFF">12d</text>
+<line x1="10" y1="282" x2="990" y2="282" stroke="#E2E8F0" stroke-width="0.8"/>
+<text x="20" y="270" font-size="10.5" font-weight="bold" fill="#0F172A">T6: Tokenization &amp; Jaccard Engine</text>
+<rect x="446.1" y="256" width="60.9" height="20" rx="3" fill="#DC2626" stroke="#000000" stroke-width="0.8"/>
+<text x="476.5" y="270" text-anchor="middle" font-size="9.5" font-weight="bold" fill="#FFFFFF">9d</text>
+<rect x="10" y="282" width="980" height="32" fill="#F8FAFC" opacity="0.5"/>
+<line x1="10" y1="314" x2="990" y2="314" stroke="#E2E8F0" stroke-width="0.8"/>
+<text x="20" y="302" font-size="10.5" font-weight="bold" fill="#0F172A">T7: Verification Queue &amp; Sync</text>
+<rect x="507.0" y="288" width="74.4" height="20" rx="3" fill="#DC2626" stroke="#000000" stroke-width="0.8"/>
+<text x="544.1" y="302" text-anchor="middle" font-size="9.5" font-weight="bold" fill="#FFFFFF">11d</text>
+<line x1="10" y1="346" x2="990" y2="346" stroke="#E2E8F0" stroke-width="0.8"/>
+<text x="20" y="334" font-size="10.5" font-weight="bold" fill="#0F172A">T8: Weighted Consensus Engine</text>
+<rect x="581.3" y="320" width="54.1" height="20" rx="3" fill="#DC2626" stroke="#000000" stroke-width="0.8"/>
+<text x="608.4" y="334" text-anchor="middle" font-size="9.5" font-weight="bold" fill="#FFFFFF">8d</text>
+<rect x="10" y="346" width="980" height="32" fill="#F8FAFC" opacity="0.5"/>
+<line x1="10" y1="378" x2="990" y2="378" stroke="#E2E8F0" stroke-width="0.8"/>
+<text x="20" y="366" font-size="10.5" font-weight="bold" fill="#0F172A">T9: Fact Card Gen (SVG Engine)</text>
+<rect x="635.4" y="352" width="67.6" height="20" rx="3" fill="#DC2626" stroke="#000000" stroke-width="0.8"/>
+<text x="669.2" y="366" text-anchor="middle" font-size="9.5" font-weight="bold" fill="#FFFFFF">10d</text>
+<line x1="10" y1="410" x2="990" y2="410" stroke="#E2E8F0" stroke-width="0.8"/>
+<text x="20" y="398" font-size="10.5" font-weight="bold" fill="#0F172A">T10: Analytics Dashboard &amp; Charts</text>
+<rect x="703.0" y="384" width="54.1" height="20" rx="3" fill="#DC2626" stroke="#000000" stroke-width="0.8"/>
+<text x="730.1" y="398" text-anchor="middle" font-size="9.5" font-weight="bold" fill="#FFFFFF">8d</text>
+<rect x="10" y="410" width="980" height="32" fill="#F8FAFC" opacity="0.5"/>
+<line x1="10" y1="442" x2="990" y2="442" stroke="#E2E8F0" stroke-width="0.8"/>
+<text x="20" y="430" font-size="10.5" font-weight="bold" fill="#0F172A">T11: Integration &amp; E2E Testing</text>
+<rect x="757.1" y="416" width="60.9" height="20" rx="3" fill="#DC2626" stroke="#000000" stroke-width="0.8"/>
+<text x="787.6" y="430" text-anchor="middle" font-size="9.5" font-weight="bold" fill="#FFFFFF">9d</text>
+<line x1="10" y1="474" x2="990" y2="474" stroke="#E2E8F0" stroke-width="0.8"/>
+<text x="20" y="462" font-size="10.5" font-weight="normal" fill="#334155">T12: UAT &amp; Civic Verifier Trials</text>
+<rect x="818.0" y="448" width="47.3" height="20" rx="3" fill="#2563EB" stroke="#000000" stroke-width="0.8"/>
+<text x="841.7" y="462" text-anchor="middle" font-size="9.5" font-weight="bold" fill="#FFFFFF">7d</text>
+<rect x="865.3" y="448" width="20.3" height="20" rx="2" fill="url(#slackPattern)" stroke="#64748B" stroke-width="0.8" stroke-dasharray="2,2"/>
+<text x="875.5" y="462" text-anchor="middle" font-size="8.5" font-weight="bold" fill="#1E293B">+3d</text>
+<rect x="10" y="474" width="980" height="32" fill="#F8FAFC" opacity="0.5"/>
+<line x1="10" y1="506" x2="990" y2="506" stroke="#E2E8F0" stroke-width="0.8"/>
+<text x="20" y="494" font-size="10.5" font-weight="bold" fill="#0F172A">T13: Serverless Cloud Deployment</text>
+<rect x="818.0" y="480" width="67.6" height="20" rx="3" fill="#DC2626" stroke="#000000" stroke-width="0.8"/>
+<text x="851.8" y="494" text-anchor="middle" font-size="9.5" font-weight="bold" fill="#FFFFFF">10d</text>
+<line x1="10" y1="538" x2="990" y2="538" stroke="#E2E8F0" stroke-width="0.8"/>
+<text x="20" y="526" font-size="10.5" font-weight="bold" fill="#0F172A">T14: Dissertation &amp; Viva Prep</text>
+<rect x="885.6" y="512" width="47.3" height="20" rx="3" fill="#DC2626" stroke="#000000" stroke-width="0.8"/>
+<text x="909.3" y="526" text-anchor="middle" font-size="9.5" font-weight="bold" fill="#FFFFFF">7d</text>
+
+<g transform="translate(140, 588)">
+  <rect x="0" y="0" width="16" height="12" rx="2" fill="#DC2626" stroke="#000" stroke-width="0.6"/>
+  <text x="24" y="10" font-size="10" font-weight="bold" fill="#0F172A">Critical Path Task (Slack = 0)</text>
+
+  <rect x="230" y="0" width="16" height="12" rx="2" fill="#2563EB" stroke="#000" stroke-width="0.6"/>
+  <text x="254" y="10" font-size="10" font-weight="bold" fill="#0F172A">Non-Critical Task</text>
+
+  <rect x="400" y="0" width="16" height="12" rx="2" fill="url(#slackPattern)" stroke="#64748B" stroke-width="0.6"/>
+  <text x="424" y="10" font-size="10" font-weight="bold" fill="#0F172A">Total Float / Slack</text>
+
+  <line x1="580" y1="0" x2="580" y2="12" stroke="#DC2626" stroke-width="2"/>
+  <text x="592" y="10" font-size="10" font-weight="bold" fill="#0F172A">Project Deadline (Day 101)</text>
+</g>
+
+</svg>

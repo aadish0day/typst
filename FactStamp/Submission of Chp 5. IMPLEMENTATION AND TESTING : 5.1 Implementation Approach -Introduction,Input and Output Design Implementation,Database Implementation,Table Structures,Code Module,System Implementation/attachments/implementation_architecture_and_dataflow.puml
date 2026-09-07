@@ -1,0 +1,78 @@
+@startuml
+skinparam style strictuml
+skinparam monochrome true
+skinparam defaultFontName "Liberation Sans"
+skinparam defaultFontSize 13
+skinparam defaultFontStyle bold
+skinparam titleFontSize 18
+skinparam titleFontStyle bold
+
+skinparam backgroundColor white
+skinparam ArrowColor black
+skinparam ArrowThickness 2.2
+skinparam ArrowFontSize 12
+skinparam ArrowFontStyle bold
+
+skinparam PackageBorderColor black
+skinparam PackageBorderThickness 2.0
+skinparam PackageBackgroundColor #FFFFFF
+
+skinparam ComponentBorderColor black
+skinparam ComponentBorderThickness 2.0
+skinparam ComponentBackgroundColor #F8F9FA
+
+skinparam DatabaseBorderColor black
+skinparam DatabaseBorderThickness 2.0
+skinparam DatabaseBackgroundColor #F0F4F8
+
+title FactStamp: End-to-End System Implementation & Client-First Edge Dataflow
+
+package "Client-Side Edge Execution Layer (Browser Runtime)" {
+  [User Ingestion Interface\n(Text Input & Drag-Drop Screenshot)] as UI_IN
+  
+  package "Edge Preprocessing Subsystems" {
+    [Regex Sanitizer & Tokenizer\n(security.ts, duplicateDetection.ts)] as NLP
+    [HTML5 Canvas Downscaler\n(imageCompression.ts: <= 700 KB)] as COMPRESS
+    [In-Browser OCR Engine\n(Tesseract.js WebAssembly)] as OCR
+  }
+
+  package "Core Reactive Modules & State" {
+    [ClaimsContext State Engine] as CCTX
+    [Jaccard Similarity Engine\n(Threshold J >= 0.75)] as JACCARD
+    [Weighted Consensus Engine\n(C = 0.40A + 0.30R + 0.30S)] as CONSENSUS
+    [html-to-image DOM Rasterizer\n(SVG foreignObject -> 1080x1080 PNG)] as RASTER
+  }
+  
+  [Dissemination & WhatsApp Card Export] as UI_OUT
+}
+
+package "Serverless Cloud BaaS Infrastructure (Zero-Cost Tier)" {
+  database "Google Cloud Firestore\n(NoSQL Cloud Datastore)" as FS {
+    folder "/claims Collection\n(Claim text, base64 image, verdict)" as COL_CLAIMS
+    folder "/users Collection\n(Profiles, reputation scores)" as COL_USERS
+    folder "/notifications Collection\n(Verifier alerts, consensus toasts)" as COL_NOTIFS
+  }
+  
+  [Declarative Security Rules Kernel\n(firestore.rules: RBAC, Anti-Sybil Lock)] as RULES
+  [Firebase Auth\n(RS256 JWT, Google OAuth, Email/Pass)] as AUTH
+}
+
+UI_IN --> NLP : Raw Plaintext Forward
+UI_IN --> COMPRESS : Screenshot File (<= 5MB)
+COMPRESS --> OCR : Downscaled Canvas Buffer
+OCR --> NLP : Extracted Text Strings
+
+NLP --> JACCARD : Inverted Token Sets
+JACCARD --> CCTX : Duplicate Match / Unique Claim
+
+CCTX <--> RULES : Encrypted HTTP/2 & WebSocket
+RULES <--> FS : Atomic Read / Write Invariants
+
+AUTH ..> RULES : Authenticated Token Claims (UID, isAdmin)
+CCTX --> CONSENSUS : 3-Verifier Quorum Resolution
+CONSENSUS --> CCTX : Verified Dossier Status
+CCTX --> RASTER : Mount Verified <FactCheckCard />
+RASTER --> UI_OUT : Download High-DPI PNG Card
+UI_OUT --> [WhatsApp Group Re-Forward] : Counter-Misinformation Dissemination
+
+@enduml

@@ -1,0 +1,50 @@
+@startuml
+skinparam style strictuml
+skinparam monochrome true
+skinparam defaultFontName "Liberation Sans"
+skinparam defaultFontSize 13
+skinparam defaultFontStyle bold
+skinparam titleFontSize 22
+skinparam titleFontStyle bold
+
+skinparam backgroundColor white
+skinparam RectangleBorderColor black
+skinparam RectangleBorderThickness 2.0
+skinparam RectangleBackgroundColor #F8F9FA
+skinparam RectangleFontSize 13
+skinparam RectangleFontStyle bold
+
+title FactStamp - Mobile Forward Ingestion & OCR Submission Wireframe
+
+rectangle "Mobile Screen Frame (375x812px Viewport)" as Screen {
+  rectangle "Top Bar: [Shield] FactStamp  |  [Dark Mode] [Sign In]" as TopBar
+  
+  rectangle "Hero Heading: Verify Suspicious WhatsApp Forwards\nCrowdsourced, cryptographic, evidence-backed fact-checking." as Hero
+  
+  rectangle "Submission Card (Warm Paper Surface, Border 1px)" as SubCard {
+    rectangle "Tab Bar: [ * Plain Text Forward * ]   |   [  Upload Screenshot  ]" as Tabs
+    
+    rectangle "Claim Text Input Area (Textarea, 20-500 characters)\n\"Paste raw forwarded WhatsApp message here...\"" as TextArea
+    
+    rectangle "Dropzone Area (Screenshot Tab alternative)\n[ Upload Icon ] Drag & drop image (JPEG/PNG < 5MB)\nAuto client downscaling (<700KB) + Tesseract WASM OCR" as DropZone
+    
+    rectangle "Category Radio / Pill Selector:\n(o) Health   ( ) Political   ( ) Financial   ( ) Religious   ( ) Other" as CategoryPills
+    
+    rectangle "Inline Duplicate Alert (Conditional Preview):\n\"Duplicate Detected (86% Match) -> View Existing Dossier\"" as DupeBanner
+    
+    rectangle "Primary CTA: [ Submit Claim for Community Review ]" as SubmitBtn
+  }
+  
+  rectangle "Recent Active Ingestion Feed (3 Latest Forwards)" as Feed
+}
+
+TopBar -[hidden]down-> Hero
+Hero -[hidden]down-> SubCard
+Tabs -[hidden]down-> TextArea
+TextArea -[hidden]down-> DropZone
+DropZone -[hidden]down-> CategoryPills
+CategoryPills -[hidden]down-> DupeBanner
+DupeBanner -[hidden]down-> SubmitBtn
+SubCard -[hidden]down-> Feed
+
+@enduml

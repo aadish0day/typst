@@ -1,0 +1,54 @@
+@startuml
+skinparam style strictuml
+skinparam monochrome true
+skinparam defaultFontName "Liberation Sans"
+skinparam defaultFontSize 14
+skinparam defaultFontStyle bold
+skinparam titleFontSize 22
+skinparam titleFontStyle bold
+
+skinparam backgroundColor white
+skinparam ArrowColor black
+skinparam ArrowThickness 2.0
+skinparam ArrowFontSize 13
+skinparam ArrowFontStyle bold
+
+skinparam RectangleBorderColor black
+skinparam RectangleBorderThickness 2.0
+skinparam RectangleBackgroundColor #F8F9FA
+skinparam RectangleFontSize 14
+skinparam RectangleFontStyle bold
+
+title FactStamp - Defense-in-Depth Security & Anti-Sybil Architecture
+
+rectangle "Layer 1: Client & Transport Security" as L1 {
+  rectangle "TLS 1.3 Transport Security\nStrict HTTPS origin binding, HSTS headers" as L1A
+  rectangle "Input Sanitization & XSS Defense\nRegex tag stripping, protocol neutralization (javascript:), JSX auto-encoding" as L1B
+  rectangle "Triple-Layer Upload Inspection\nExtension whitelist, MIME type verification, Binary Magic Byte check" as L1C
+  rectangle "Session & Brute-Force Throttling\n30-minute idle session timeout, 5-attempt exponential lockout" as L1D
+}
+
+rectangle "Layer 2: Identity & Cryptographic Authentication" as L2 {
+  rectangle "Google Identity Services / Firebase Auth\nOIDC Identity Federation & Email/Password hashing" as L2A
+  rectangle "RS256 Asymmetric JWT Tokens\nShort-lived signed user claims & secure refresh rotation" as L2B
+  rectangle "Role-Based Access Control (RBAC)\nStandard Citizen vs. Authenticated Verifier vs. Administrator" as L2C
+}
+
+rectangle "Layer 3: Declarative Database Security (firestore.rules)" as L3 {
+  rectangle "Core Claim Immutability\nidentityUnchanged(): text, category, submitter, deadlines locked" as L3A
+  rectangle "Self-Verification Lock (P_self)\nclaim.submittedBy != request.auth.uid" as L3B
+  rectangle "Single-Vote-Per-User Invariant\nDuplicate votes by same verifier strictly blocked" as L3C
+  rectangle "Trust Attribute Protection\nUsers cannot elevate own reputation or grant admin status" as L3D
+  rectangle "Payload Boundary Ceiling\nEnforces string size bounds (<700KB image, <=2000 chars text)" as L3E
+}
+
+rectangle "Layer 4: Game-Theoretic Incentive & Consensus Security" as L4 {
+  rectangle "Weighted Consensus Algorithm\nConfidence C = 0.40*A + 0.30*R + 0.30*S (Suppresses Sybil sockpuppets)" as L4A
+  rectangle "Dynamic Reputation Settler\n+2 alignment reward, -1 dissent penalty, [0, 100] boundary clamping" as L4B
+}
+
+L1 --> L2 : Authenticated Requests
+L2 --> L3 : Kernel-Level Authorization
+L3 --> L4 : Tamper-Proof Audit Trail
+
+@enduml

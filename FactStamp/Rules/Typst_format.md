@@ -97,8 +97,8 @@ Using `sys.inputs.at("mode", default: "standalone")`, single files adapt automat
 | Component | Individual Submission (`mode=standalone`) | Assembled Blackbook (`mode=blackbook`) |
 |---|---|---|
 | **Title Block** | Auto-rendered simplified title block | Automatically hidden (replaced by full front matter) |
-| **Front Matter** | Omitted | Full Title, Certificate, Declaration, Acknowledgements, Abstract, INDEX |
-| **Page Numbering** | Standalone numbering restarting at `1` | Continuous pagination (`1` to `N`), front matter lower-roman (`i`, `ii`) |
+| **Front Matter** | Omitted | Full 9 preliminary pages (Title, Proforma, Certificate, Declaration, Role & Responsibility, Abstract, Acknowledgement, TOC, TOF/Tables) |
+| **Page Numbering** | Standalone numbering restarting at `1` | Continuous pagination: Cover (none), Preliminary (`ii` to `x`), Body (`1` to `N`) |
 
 ### Dual-Mode Title Header Snippet
 ```typst
@@ -130,158 +130,190 @@ typst compile --input mode=blackbook master_blackbook.typ master_blackbook.pdf
 
 ## 4. Full Front Matter Drop-In Templates (Assembled Blackbook)
 
-Pre-formatted, copy-pasteable Typst blocks for all 5 mandatory front-matter pages. Uses flex vertical spacing (`#v(1fr)`) to ensure single-page containment regardless of title text length.
+Pre-formatted, copy-pasteable Typst blocks for all 9 mandatory preliminary front-matter pages prescribed by `Project_syllabus.md` § 1.1.
 
-### A. Title Page Template
+### Mandatory Preliminary Sequence
+1. **Title / Cover Page** (`numbering: none`)
+2. **Original Copy of the Approved Proforma of the Project Proposal** (`ii`)
+3. **Certificate of Authenticated Work** (`iii`)
+4. **Declaration** (`iv`)
+5. **Role and Responsibility Form** (`v`)
+6. **Abstract with Keywords** (`vi`)
+7. **Acknowledgement** (`vii`)
+8. **Table of Contents** (`viii`–`ix`, enclosed with `#pagebreak()` before and after)
+9. **Table of Figures & List of Tables** (`x`)
+
+### A. Title / Cover Page Template
 ```typst
-#let title-page(
-  title: "FACTSTAMP",
-  subtitle: "A Community-Powered WhatsApp Misinformation Fact-Checker",
-  author: "Aadish",
-  uid: "2023IT001",
-  guide: "Prof. Jane Doe",
-  year: "2025-2026"
-) = [
-  #set page(numbering: none)
-  #align(center)[
-    #v(1fr)
-    #text(size: 18pt, weight: "bold")[#upper(title)]\
-    #v(0.5em)
-    #text(size: 12pt, style: "italic")[ (#subtitle) ]\
-    #v(1.5fr)
-    #text(size: 11pt)[A Project Report Submitted in Partial Fulfilment of the\ Requirements for the Award of Degree of]\
-    #v(0.5em)
-    #text(size: 13pt, weight: "bold")[BACHELOR OF SCIENCE (INFORMATION TECHNOLOGY)]\
-    #v(1.5fr)
-    #text(size: 11pt)[BY]\
-    #v(0.3em)
-    #text(size: 13pt, weight: "bold")[#author]\
-    #text(size: 10pt)[UID: #uid]\
-    #v(1.5fr)
-    #text(size: 11pt)[UNDER THE GUIDANCE OF]\
-    #v(0.3em)
-    #text(size: 12pt, weight: "bold")[#guide]\
-    #v(1.5fr)
-    #text(size: 11pt, weight: "bold")[DEPARTMENT OF INFORMATION TECHNOLOGY]\
-    #text(size: 12pt, weight: "bold")[JAI HIND COLLEGE]\
-    #text(size: 10pt)[(EMPOWERED AUTONOMOUS)]\
-    #text(size: 10pt)[MUMBAI – 400 020]\
-    #v(0.5em)
-    #text(size: 11pt, weight: "bold")[#year]
-    #v(1fr)
+#align(center)[
+  #set par(justify: false, leading: 0.6em)
+  #v(0.05in)
+  #text(size: 17pt, weight: "bold")[
+    FactStamp: A Community-Powered WhatsApp \
+    Misinformation Fact-Checker
   ]
-  #pagebreak()
+  #v(0.18in)
+  #text(size: 13.5pt, weight: "bold")[A Project Report]
+  #v(0.08in)
+  #text(size: 11.5pt)[
+    Submitted in partial fulfillment of the \
+    Requirements for the award of the Degree \
+    of
+  ]
+  #v(0.08in)
+  #text(size: 12.5pt, weight: "bold")[BACHELOR OF SCIENCE (INFORMATION TECHNOLOGY)]
+  #v(0.15in)
+  #text(size: 11.5pt, weight: "bold")[By]
+  #v(0.06in)
+  #text(size: 13.5pt)[Aadish Das]
+  #v(0.03in)
+  #text(size: 12pt)[UID / Roll No. : 2023IT001 / 10]
+  #v(0.15in)
+  #text(size: 11.5pt, weight: "bold")[Under the esteemed guidance of]\
+  #v(3pt)
+  #text(size: 12pt, weight: "bold")[Mr. Wilson Rao and Ms. Bertilla Fernandes]
+  #v(0.14in)
+  #image("assets/college_logo.jpg", width: 2.3cm)
+  #v(0.08in)
+  #text(size: 11.5pt, weight: "bold")[
+    DEPARTMENT \
+    OF \
+    INFORMATION TECHNOLOGY
+  ]
+  #v(0.05in)
+  #text(size: 12.5pt, weight: "bold")[JAI HIND COLLEGE (Empowered Autonomous)]
+  #v(0.05in)
+  #text(size: 11.5pt, weight: "bold")[
+    MUMBAI, 400020 \
+    MAHARASHTRA \
+    2026-27
+  ]
 ]
+#pagebreak()
 ```
 
-### B. Certificate Page & Signature Grid Helper
+### B. Approved Proforma Template
 ```typst
-#let signature-grid(..signatures) = block(width: 100%, breakable: false)[
-  #grid(
-    columns: (1fr, 1fr),
-    row-gutter: 2.5em,
-    column-gutter: 2em,
-    ..signatures.pos().map(sig => align(center + top)[
-      #v(3em) // Wet signature & stamp space
-      #line(length: 85%, stroke: 0.5pt)\
-      #text(weight: "bold")[#sig.name]\
-      #text(size: 9.5pt, style: "italic")[#sig.role]
-    ])
-  )
+#align(center)[
+  #text(size: 13.5pt, weight: "bold")[JAI HIND COLLEGE (Empowered Autonomous)]\
+  #text(size: 10.5pt, style: "italic")[DEPARTMENT OF INFORMATION TECHNOLOGY]\
+  #v(2pt)
+  #text(size: 14.5pt, weight: "bold")[PROFORMA FOR APPROVAL OF PROJECT PROPOSAL]
 ]
 
-#let certificate-page(
-  project-title: "FactStamp",
-  student-name: "Aadish",
-  uid: "2023IT001",
-  guide-name: "Prof. Jane Doe",
-  coord-name: "Prof. John Smith"
-) = [
-  #set page(numbering: none)
-  #align(center)[
-    #text(size: 12pt, weight: "bold")[JAI HIND COLLEGE]\
-    #text(size: 10pt)[(EMPOWERED AUTONOMOUS)]\
-    #text(size: 10pt)[MUMBAI - 400 020]\
-    #v(1cm)
-    #text(size: 14pt, weight: "bold")[#underline[CERTIFICATE]]
+#v(0.1in)
+#table(
+  columns: (1.8in, 1fr),
+  stroke: (x, y) => if y == 0 { (bottom: 1.2pt + black, top: 1.2pt + black) } else { 0.5pt + luma(160) },
+  fill: (x, y) => if y == 0 { rgb("F4F5F7") } else { none },
+  table.header([*Item Parameter*], [*Project Proposal Details*]),
+  [1. Course Code & Title], [JUSIT-DSCPR503 --- Project Dissertation and Implementation],
+  [2. Degree & Semester], [Bachelor of Science (Information Technology) --- Semester V],
+  [3. Academic Year], [2026-27],
+  [4. Name of Student], [*Aadish Das*],
+  [5. UID / Roll Number], [2023IT001 / 10],
+  [6. Title of Project], [*FactStamp: A Community-Powered WhatsApp Misinformation Fact-Checker*],
+  [7. Broad Subject Area], [Decentralized Web Application, Social Computing, Image Rasterization & NLP],
+  [8. Project Nature / Scope], [Design, implementation, empirical verification testing, and academic dissertation],
+  [9. Project Guide(s)], [Mr. Wilson Rao (HOD) \ Ms. Bertilla Fernandes (Assistant Professor)],
+  [10. Technological Stack], [React 18, Vite 5, Tailwind CSS v4, Firestore, Firebase Auth, html-to-image, Recharts],
+  [11. Core Algorithmic Focus], [Jaccard Token Similarity ($J >= 0.75$), Quorum Consensus ($C = 0.40A + 0.30R + 0.30S$)],
+  [12. Status of Proposal], [*APPROVED* (Recommended for Implementation & Dissertation)]
+)
+
+#v(0.2in)
+#grid(
+  columns: (1fr, 1fr),
+  align: (left, right),
+  [
+    #line(length: 4cm, stroke: 0.8pt + black)\
+    #text(size: 10.5pt, weight: "bold")[Signature of Student]
+  ],
+  [
+    #line(length: 4cm, stroke: 0.8pt + black)\
+    #text(size: 10.5pt, weight: "bold")[Signature of Guide(s)]
   ]
-  #v(1.5cm)
-  This is to certify that the project entitled "*#project-title*" is a bonafide work carried out by *#student-name* (UID: #uid) in partial fulfilment of the requirements for the award of the degree of *Bachelor of Science in Information Technology* during the academic year 2025-2026.
-  
-  #v(1fr)
-  #signature-grid(
-    (name: guide-name, role: "Internal Guide"),
-    (name: coord-name, role: "Course Coordinator"),
-    (name: "External Examiner", role: "Date: ____________"),
-    (name: "College Seal", role: "Jai Hind College")
-  )
-  #v(1fr)
-  #pagebreak()
-]
+)
+#v(0.18in)
+#grid(
+  columns: (1fr, 1fr),
+  align: (left, right),
+  [
+    #line(length: 4cm, stroke: 0.8pt + black)\
+    #text(size: 10.5pt, weight: "bold")[Signature of Coordinator]
+  ],
+  [
+    #line(length: 4cm, stroke: 0.8pt + black)\
+    #text(size: 10.5pt, weight: "bold")[Head of Department / College Seal]
+  ]
+)
+#pagebreak()
 ```
 
-### C. Declaration Page Template
+### C. Certificate & Declaration Templates
 ```typst
-#let declaration-page(student-name: "Aadish", project-title: "FactStamp") = [
-  #set page(numbering: none)
-  #align(center)[
-    #text(size: 14pt, weight: "bold")[DECLARATION]
-  ]
-  #v(1.5cm)
-  I hereby declare that the project entitled "*#project-title*" submitted by me to Jai Hind College, Mumbai, in partial fulfilment of the requirements for the award of the degree of Bachelor of Science in Information Technology, is an authentic record of my own work carried out under the guidance of my project guide.
-  
-  The matter embodied in this report has not been submitted by me for the award of any other degree or diploma.
-
-  #v(1fr)
-  #align(right)[
-    #block(width: 6cm)[
-      #v(3em)
-      #line(length: 100%, stroke: 0.5pt)\
-      #align(center)[
-        *#student-name*\
-        (Student Signature)
-      ]
-    ]
-  ]
-  #v(1fr)
-  #pagebreak()
+// Certificate
+#align(center)[
+  #text(size: 14pt, weight: "bold")[JAI HIND COLLEGE]\
+  #text(size: 11pt, style: "italic", weight: "bold")[(Empowered Autonomous)]\
+  #text(size: 11pt)[MUMBAI, 400020 MAHARASHTRA]\
+  #text(size: 13.5pt, weight: "bold")[DEPARTMENT OF INFORMATION TECHNOLOGY]
+  #v(0.15in)
+  #image("assets/college_logo.jpg", width: 1.8cm)
+  #v(0.2in)
+  #text(size: 16pt, weight: "bold")[CERTIFICATE]
 ]
+#v(0.2in)
+This is to certify that the project entitled, *“FactStamp: A Community-Powered WhatsApp Misinformation Fact-Checker”*, is bonafide work of *Aadish Das* bearing UID / Roll No. : *2023IT001 / 10* submitted in partial fulfillment of the requirements for the award of degree of *BACHELOR OF SCIENCE in INFORMATION TECHNOLOGY* from Jai Hind College Empowered Autonomous (University of Mumbai).
+#v(0.5in)
+#grid(columns: (1fr, 1fr), align: (left, right), [*Internal Guide*], [*Coordinator*])
+#v(0.5in)
+#align(center)[*External Examiner*]
+#v(0.5in)
+#grid(columns: (1fr, 1fr), align: (left, right), [*Date:* #datetime.today().display("[day]/[month]/[year]")], [*College Seal*])
+#pagebreak()
+
+// Declaration
+#align(center)[#text(size: 16pt, weight: "bold")[DECLARATION]]
+#v(0.35in)
+I hereby declare that the project entitled, *“FactStamp: A Community-Powered WhatsApp Misinformation Fact-Checker”* done at Jai Hind College (Empowered Autonomous), has not been in any case duplicated to submit to any other university for the award of any degree. To the best of my knowledge other than me, no one has submitted to any other university.
+
+The project is done in partial fulfillment of the requirements for the award of degree of *BACHELOR OF SCIENCE (INFORMATION TECHNOLOGY)* to be submitted as Semester V project as part of our curriculum.
+#v(1.1in)
+#align(right)[
+  #line(length: 4.5cm, stroke: 0.8pt + black)\
+  #text(size: 12pt, weight: "bold")[Name and Signature of the Student]\
+  #text(size: 11pt)[(Aadish Das)]
+]
+#pagebreak()
 ```
 
-### D. Page Numbering State Sequence (Front Matter to Body)
+### D. Page Numbering Transition Sequence (Front Matter to Body)
 ```typst
-// 1. Unnumbered Cover & Certificates
-#title-page()
-#certificate-page()
-#declaration-page()
+// 1. Page 1: Unnumbered Cover Page
+#set page(numbering: none)
+// (Cover page content here...)
 
-// 2. Lower-Roman Numerals for Front Matter
+// 2. Pages 2 to 10: Lower-Roman Numerals for Front Matter
+#pagebreak()
 #set page(numbering: "i")
-#counter(page).update(1)
+#counter(page).update(2)
 
-// Acknowledgements
-#align(center)[#text(size: 14pt, weight: "bold")[ACKNOWLEDGEMENTS]]
-#v(1cm)
-I would like to express my sincere gratitude to my guide...
+// Approved Proforma (Page ii)
+// Certificate (Page iii)
+// Declaration (Page iv)
+// Role & Responsibility Form (Page v)
+// Abstract (Page vi)
+// Acknowledgement (Page vii)
+// Table of Contents (Pages viii-ix)
+// Table of Figures & Tables (Page x)
+
+// 3. Arabic Numerals starting at 1 for Chapter 1 (Main Body)
 #pagebreak()
-
-// Abstract
-#align(center)[#text(size: 14pt, weight: "bold")[ABSTRACT]]
-#v(1cm)
-FactStamp is a community-powered WhatsApp misinformation fact-checker...
-#pagebreak()
-
-// INDEX Table
-#align(center)[#text(size: 14pt, weight: "bold")[INDEX]]
-#v(0.8cm)
-// [#styled-table(...)]
-#pagebreak()
-
-// 3. Arabic Numerals starting at 1 for Body
 #set page(numbering: "1")
 #counter(page).update(1)
 
-// Chapter 1 Starts Here
+// = CHAPTER 1: INTRODUCTION
 ```
 
 ---

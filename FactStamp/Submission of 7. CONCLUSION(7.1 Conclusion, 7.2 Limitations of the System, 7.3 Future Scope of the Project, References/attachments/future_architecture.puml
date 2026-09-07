@@ -1,0 +1,49 @@
+@startuml
+skinparam style strictuml
+skinparam monochrome true
+skinparam defaultFontName "Liberation Sans"
+skinparam defaultFontSize 13
+skinparam defaultFontStyle bold
+skinparam titleFontSize 16
+skinparam titleFontStyle bold
+skinparam backgroundColor white
+
+skinparam ActivityBorderColor black
+skinparam ActivityBorderThickness 1.5
+skinparam ActivityBackgroundColor #F8F9FA
+skinparam ActivityFontSize 12
+skinparam ActivityFontStyle normal
+
+skinparam ArrowColor black
+skinparam ArrowThickness 1.5
+
+title FactStamp Future Multimodal Architecture & Edge AI Pipeline
+
+start
+
+:<b>Multimodal Claim Ingestion</b>\nPlaintext, Screenshot (.jpg/.png), or Voice Note (.opus/.m4a);
+
+if (Claim Media Type?) then (Voice Note)
+  :<b>In-Browser Whisper.wasm</b>\nLocal Speech-to-Text Transcription (Hindi, Marathi, English);
+else if (Screenshot Image) then
+  :<b>Canvas Pre-Compression & Tesseract.js WASM</b>\nOffscreen Client Downscaling & Character Recognition;
+else (Plaintext)
+  :<b>Unicode String Normalization</b>;
+endif
+
+:<b>Client-Side Small Language Model (SLM)</b>\nQuantized SmolLM-135M / Gemma-2B via WebGPU;\n- Atomic Claim Decomposition\n- Urgency Clickbait Stripping\n- Plain-Language Explanation Drafts;
+
+:<b>Dual-Layer Similarity Engine</b>\n1. Lexical Jaccard Similarity (J >= 0.75)\n2. IndicBERT Dense Vector Embeddings (cos >= 0.88);
+
+if (Duplicate or Institutional Match?) then (Yes)
+  :<b>Instant Verdict Certification</b>\nGoogle Fact Check Tools API / Certified Store;
+else (Novel Claim)
+  :<b>Public Quorum Verification Queue</b>\nIndependent Multi-Factor Consensus (N >= 3);
+endif
+
+:<b>Pixel-Perfect 1080x1080px Fact Card</b>\nSVG foreignObject High-DPI Visual Counter-Artifact;
+
+:<b>Omnichannel Re-Distribution</b>\nManual WhatsApp Forwarding & WhatsApp Business API Webhook;
+
+stop
+@enduml

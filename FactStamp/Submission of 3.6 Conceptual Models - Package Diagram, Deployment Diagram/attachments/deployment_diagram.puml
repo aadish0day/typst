@@ -1,0 +1,83 @@
+@startuml
+skinparam style strictuml
+skinparam monochrome true
+skinparam defaultFontName "Liberation Sans"
+skinparam defaultFontSize 14
+skinparam defaultFontStyle bold
+skinparam titleFontSize 20
+skinparam titleFontStyle bold
+
+skinparam backgroundColor white
+skinparam ArrowColor black
+skinparam ArrowThickness 2.5
+skinparam ArrowFontSize 12
+skinparam ArrowFontStyle bold
+
+skinparam NodeBorderColor black
+skinparam NodeBorderThickness 2.5
+skinparam NodeBackgroundColor #F8F9FA
+skinparam NodeFontSize 15
+skinparam NodeFontStyle bold
+
+skinparam ArtifactBorderColor black
+skinparam ArtifactBorderThickness 2.0
+skinparam ArtifactBackgroundColor #FFFFFF
+skinparam ArtifactFontSize 13
+skinparam ArtifactFontStyle bold
+
+skinparam DatabaseBorderColor black
+skinparam DatabaseBorderThickness 2.5
+skinparam DatabaseBackgroundColor #FFFFFF
+skinparam DatabaseFontSize 14
+skinparam DatabaseFontStyle bold
+
+title FactStamp - Physical Hardware & Cloud Deployment Topology
+
+node "Client Device Tier (Citizen / Verifier Hardware)" as ClientTier {
+  artifact "Web Browser (Chrome 100+ / Safari 15.4+)\n[Next.js PWA SPA Runtime]" as BrowserApp
+  artifact "HTML5 Offscreen Canvas\n[Client-Side Image Resizer & Quality Stepper]" as CanvasWorker
+  artifact "WebAssembly OCR Worker\n[Tesseract.js LSTM Engine]" as OcrWorker
+}
+
+node "Edge CDN Infrastructure (Vercel Global Network)" as EdgeTier {
+  artifact "Anycast DNS & TLS 1.3 Termination" as EdgeDNS
+  artifact "Edge Cache (Static SSR/SSG Assets)" as EdgeCache
+}
+
+node "Serverless Compute Tier (Vercel Edge Functions)" as ComputeTier {
+  artifact "Ingestion & Sanitization API (/api/claims)" as IngestFn
+  artifact "Quorum Verification API (/api/verifications)" as VerifyFn
+  artifact "Consensus Webhook (/api/consensus)" as ConsensusFn
+  artifact "Analytics Rollup API (/api/metrics)" as MetricsFn
+}
+
+node "Managed Cloud Database Tier (Google Cloud - Mumbai)" as GCPTier {
+  database "Cloud Firestore (NoSQL Document Store)" as FirestoreDB {
+    [claims collection]
+    [verifications subcollection]
+    [users collection]
+    [duplicateClusters collection]
+  }
+  artifact "Firebase Auth Engine\n[RS256 JWT / OIDC / Google SSO]" as AuthEngine
+  artifact "Firestore Security Rules Engine\n[Declarative RBAC & Self-Vote Locks]" as RulesEngine
+}
+
+node "External Sovereign Services Tier (Sovereign Portals)" as ExternalTier {
+  artifact "Sovereign Verification Portals\n[pib.gov.in / rbi.org.in / who.int]" as SovereignWeb
+}
+
+BrowserApp -down-> EdgeDNS : HTTPS / TLS 1.3
+EdgeDNS -down-> ComputeTier : Serverless Invocation
+BrowserApp ..> CanvasWorker : In-Memory Downscaling
+BrowserApp -down-> OcrWorker : In-Browser Neural OCR
+ComputeTier -down-> FirestoreDB : gRPC / TLS (Data Persistence)
+ComputeTier -down-> AuthEngine : Verify ID Token
+FirestoreDB -right-> RulesEngine : Enforce Security Rules
+BrowserApp ..> SovereignWeb : External Research Link
+
+BrowserApp -[hidden]down-> CanvasWorker
+CanvasWorker -[hidden]down-> OcrWorker
+IngestFn -[hidden]down-> VerifyFn
+VerifyFn -[hidden]down-> ConsensusFn
+ConsensusFn -[hidden]down-> MetricsFn
+@enduml
