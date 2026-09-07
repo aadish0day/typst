@@ -8,14 +8,20 @@ Main Master Hub & Index: **[`INDEX.md`](file:///home/aadish/Documents/typst/Fact
 
 ## Folder Overview
 
+* **[`CLAUDE.md`](file:///home/aadish/Documents/typst/FactStamp/CLAUDE.md)** — AI agent instructions; mandatory reading list before any black book work.
 * **[`INDEX.md`](file:///home/aadish/Documents/typst/FactStamp/INDEX.md)** — Universal Master Project Index & Single Source of Truth.
 * **[`Rules/`](file:///home/aadish/Documents/typst/FactStamp/Rules)** — Core Engineering & Document Rules:
   * [`Rules/Typst_format.md`](file:///home/aadish/Documents/typst/FactStamp/Rules/Typst_format.md) — Document formatting, typography, and page setup rules.
   * [`Rules/Diagram-rules.md`](file:///home/aadish/Documents/typst/FactStamp/Rules/Diagram-rules.md) — Modern sans-serif engineering typography (`Liberation Sans` / `Helvetica-Bold`), PlantUML & Graphviz standards.
+  * [`Rules/Diagrams-Checklist.md`](file:///home/aadish/Documents/typst/FactStamp/Rules/Diagrams-Checklist.md) — Master required-diagrams checklist mapped to syllabus sections.
   * [`Rules/Template-rules.md`](file:///home/aadish/Documents/typst/FactStamp/Rules/Template-rules.md) — Reference template decision matrix (IEEE 830, Scrum, XP, Kanban, FDD).
   * [`Rules/CODE_PATHS_AND_NOTES.md`](file:///home/aadish/Documents/typst/FactStamp/Rules/CODE_PATHS_AND_NOTES.md) — Codebase inventory, component paths, and milestone logs.
-* **[`Project_syllabus.md`](file:///home/aadish/Documents/typst/FactStamp/Project_syllabus.md)** — 7-Chapter dissertation syllabus (Course `JUSIT-DSCPR503`).
+  * [`Rules/Admin-rules.md`](file:///home/aadish/Documents/typst/FactStamp/Rules/Admin-rules.md) — `/admin` moderation console reference.
+  * [`Rules/Module-rules.md`](file:///home/aadish/Documents/typst/FactStamp/Rules/Module-rules.md) — 8 core system modules mapped to source files.
+  * [`Rules/Project_syllabus.md`](file:///home/aadish/Documents/typst/FactStamp/Rules/Project_syllabus.md) — 7-Chapter dissertation syllabus (Course `JUSIT-DSCPR503`).
+* **[`template/`](file:///home/aadish/Documents/typst/FactStamp/template)** — External reference templates (IEEE SRS, Scrum, SDLC, XP, Kanban, FDD).
 * **[`Only_module/`](file:///home/aadish/Documents/typst/FactStamp/Only_module)** — Code screenshot automation scripts (`code-screenshot-v4.sh`, `code-split.sh`).
+* **[`Notes/`](file:///home/aadish/Documents/typst/FactStamp/Notes)** — Scratch/working notes not part of the formal rule set.
 * **Active Chapter Submissions & Compiled Deliverables**:
   * [`Submission of ABSTRACT, 1.4 Achievements, 1.5 Organization of Report/`](file:///home/aadish/Documents/typst/FactStamp/Submission%20of%20ABSTRACT,%201.4%20Achievements,%201.5%20Organization%20of%20Report) — [`abstract_and_report_org.pdf`](file:///home/aadish/Documents/typst/FactStamp/Submission%20of%20ABSTRACT,%201.4%20Achievements,%201.5%20Organization%20of%20Report/abstract_and_report_org.pdf)
   * [`Submission of Final SRS/`](file:///home/aadish/Documents/typst/FactStamp/Submission%20of%20Final%20SRS) — [`final_srs.pdf`](file:///home/aadish/Documents/typst/FactStamp/Submission%20of%20Final%20SRS/final_srs.pdf)

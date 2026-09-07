@@ -73,7 +73,7 @@ For all **Black Book** project reports/dissertations and **Assignments / Submiss
 
 ## 3. Black Book Preliminary Pages (Front-Matter) Sequence
 
-As prescribed by the official University Syllabus (`Project_syllabus.md`, Course `JUSIT-DSCPR503`, Section `1.1 PROJECT REPORT:`), the preliminary pages **MUST** follow this exact chronological sequence:
+As prescribed by the official University Syllabus (`Rules/Project_syllabus.md`, Course `JUSIT-DSCPR503`, Section `1.1 PROJECT REPORT:`), the preliminary pages **MUST** follow this exact chronological sequence:
 
 | Page # | Section Title | Description / Content | Pagination Style |
 | :---: | :--- | :--- | :---: |
@@ -96,7 +96,7 @@ As prescribed by the official University Syllabus (`Project_syllabus.md`, Course
 
 ## 4. Black Book Chapter Structure & Syllabus Organization
 
-The main body of the Black Book dissertation must strictly adhere to the 7-chapter structure from `Project_syllabus.md`:
+The main body of the Black Book dissertation must strictly adhere to the 7-chapter structure from `Rules/Project_syllabus.md`:
 
 - **CHAPTER 1: INTRODUCTION**
   - 1.1 Background

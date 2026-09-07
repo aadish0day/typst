@@ -130,7 +130,7 @@ typst compile --input mode=blackbook master_blackbook.typ master_blackbook.pdf
 
 ## 4. Full Front Matter Drop-In Templates (Assembled Blackbook)
 
-Pre-formatted, copy-pasteable Typst blocks for all 9 mandatory preliminary front-matter pages prescribed by `Project_syllabus.md` § 1.1.
+Pre-formatted, copy-pasteable Typst blocks for all 9 mandatory preliminary front-matter pages prescribed by `Rules/Project_syllabus.md` § 1.1.
 
 ### Mandatory Preliminary Sequence
 1. **Title / Cover Page** (`numbering: none`)

@@ -11,15 +11,21 @@
 ### 📌 Root Workspace Files
 | File Path | Description |
 |---|---|
-| [`/home/aadish/Documents/typst/FactStamp/Project_syllabus.md`](file:///home/aadish/Documents/typst/FactStamp/Project_syllabus.md) | Official dissertation chapter syllabus structure & outline. |
-| [`/home/aadish/Documents/typst/FactStamp/Project_syllabus.pdf`](file:///home/aadish/Documents/typst/FactStamp/Project_syllabus.pdf) | Compiled PDF version of the Project Syllabus. |
-| [`/home/aadish/Documents/typst/FactStamp/CODE_PATHS_AND_NOTES.md`](file:///home/aadish/Documents/typst/FactStamp/CODE_PATHS_AND_NOTES.md) | Central repository file path index and project development notes (this file). |
+| [`/home/aadish/Documents/typst/FactStamp/CLAUDE.md`](file:///home/aadish/Documents/typst/FactStamp/CLAUDE.md) | AI agent instructions; mandatory reading list before any black book work. |
+| [`/home/aadish/Documents/typst/FactStamp/README.md`](file:///home/aadish/Documents/typst/FactStamp/README.md) | Repository folder overview and entry point. |
+| [`/home/aadish/Documents/typst/FactStamp/INDEX.md`](file:///home/aadish/Documents/typst/FactStamp/INDEX.md) | Universal master project index and single source of truth. |
 
 ### 📌 Rules & Standards (`Rules/`)
 | File Path | Description |
 |---|---|
 | [`/home/aadish/Documents/typst/FactStamp/Rules/Diagram-rules.md`](file:///home/aadish/Documents/typst/FactStamp/Rules/Diagram-rules.md) | Diagram tooling standards (PlantUML for UML, Graphviz for DFD, Native Typst for tables). |
+| [`/home/aadish/Documents/typst/FactStamp/Rules/Diagrams-Checklist.md`](file:///home/aadish/Documents/typst/FactStamp/Rules/Diagrams-Checklist.md) | Master required-diagrams checklist mapped to syllabus section & tooling format. |
 | [`/home/aadish/Documents/typst/FactStamp/Rules/Typst_format.md`](file:///home/aadish/Documents/typst/FactStamp/Rules/Typst_format.md) | Master Typst document formatting, page margins, typography, front-matter templates, and dual-mode build flags. |
+| [`/home/aadish/Documents/typst/FactStamp/Rules/Template-rules.md`](file:///home/aadish/Documents/typst/FactStamp/Rules/Template-rules.md) | Decision matrix for selecting `template/*.md` reference templates when writing dissertation chapters. |
+| [`/home/aadish/Documents/typst/FactStamp/Rules/CODE_PATHS_AND_NOTES.md`](file:///home/aadish/Documents/typst/FactStamp/Rules/CODE_PATHS_AND_NOTES.md) | Central repository file path index and project development notes (this file). |
+| [`/home/aadish/Documents/typst/FactStamp/Rules/Admin-rules.md`](file:///home/aadish/Documents/typst/FactStamp/Rules/Admin-rules.md) | Admin console (`/admin`) rules & reference. |
+| [`/home/aadish/Documents/typst/FactStamp/Rules/Module-rules.md`](file:///home/aadish/Documents/typst/FactStamp/Rules/Module-rules.md) | 8 core system modules mapped to source files. |
+| [`/home/aadish/Documents/typst/FactStamp/Rules/Project_syllabus.md`](file:///home/aadish/Documents/typst/FactStamp/Rules/Project_syllabus.md) | Official dissertation chapter syllabus structure & outline. |
 
 ### 📌 Screenshot & Module Workflow (`Only_module/`)
 | File Path | Description |
@@ -37,11 +43,13 @@
 | [`/home/aadish/Documents/Github/FactStamp/src/App.tsx`](file:///home/aadish/Documents/Github/FactStamp/src/App.tsx) | Main React Router application entry point. |
 | [`/home/aadish/Documents/Github/FactStamp/src/main.tsx`](file:///home/aadish/Documents/Github/FactStamp/src/main.tsx) | React DOM root rendering script. |
 | [`/home/aadish/Documents/Github/FactStamp/src/index.css`](file:///home/aadish/Documents/Github/FactStamp/src/index.css) | Global styling and Tailwind / design tokens. |
-| [`/home/aadish/Documents/Github/FactStamp/src/pages/`](file:///home/aadish/Documents/Github/FactStamp/src/pages/) | Main page views: `Home.tsx`, `Dashboard.tsx`, `ClaimDetail.tsx`, `VerifyQueue.tsx`, `Submit.tsx`, `Profile.tsx`, `SignIn.tsx`, `SignUp.tsx`. |
-| [`/home/aadish/Documents/Github/FactStamp/src/components/`](file:///home/aadish/Documents/Github/FactStamp/src/components/) | Key components: `ClaimCard.tsx`, `FactCheckCard.tsx`, `VerdictStamp.tsx`, `DashboardChart.tsx`, `Navbar.tsx`, `Footer.tsx`. |
-| [`/home/aadish/Documents/Github/FactStamp/src/components/ui/`](file:///home/aadish/Documents/Github/FactStamp/src/components/ui/) | UI library: `Button.tsx`, `Input.tsx`, `Modal.tsx`, `Badge.tsx`, `TrustRing.tsx`, `VerdictPill.tsx`, `EmptyState.tsx`, `ErrorState.tsx`. |
+| [`/home/aadish/Documents/Github/FactStamp/src/pages/`](file:///home/aadish/Documents/Github/FactStamp/src/pages/) | Main page views: `Home.tsx`, `Dashboard.tsx`, `ClaimDetail.tsx`, `VerifyQueue.tsx`, `VerifyDetail.tsx`, `Submit.tsx`, `Profile.tsx`, `SignIn.tsx`, `SignUp.tsx`, `Admin.tsx` (staff-only `/admin` console, see [`Admin-rules.md`](file:///home/aadish/Documents/typst/FactStamp/Rules/Admin-rules.md)), `NotFound.tsx`. |
+| [`/home/aadish/Documents/Github/FactStamp/src/components/`](file:///home/aadish/Documents/Github/FactStamp/src/components/) | Key components: `ClaimCard.tsx`, `FactCheckCard.tsx`, `VerdictStamp.tsx`, `DashboardChart.tsx`, `Navbar.tsx`, `Footer.tsx`, `AdminRoute.tsx` (admin auth gate), `AuthLayout.tsx`, `AnimatedCounter.tsx`, `NotificationBell.tsx`, `OnlineStatusBar.tsx`, `ProtectedRoute.tsx`, `Breadcrumbs.tsx`, `ErrorBoundary.tsx`, `Seo.tsx`. |
+| [`/home/aadish/Documents/Github/FactStamp/src/components/ui/`](file:///home/aadish/Documents/Github/FactStamp/src/components/ui/) | UI library: `Button.tsx`, `Input.tsx`, `Modal.tsx`, `Badge.tsx`, `CategoryBadge.tsx`, `VerdictPill.tsx`, `Avatar.tsx`, `SourceQualityDot.tsx`, `EmptyState.tsx`, `ErrorState.tsx`, `Skeletons.tsx`, `ThemeToggle.tsx`, `LoadingButton.tsx`, `PasswordStrength.tsx`, `ShimmerText.tsx`, `Marquee.tsx`, `FlowButton.tsx`, `InteractiveHoverButton.tsx`, `SpotlightCard.tsx`. |
 | [`/home/aadish/Documents/Github/FactStamp/src/contexts/`](file:///home/aadish/Documents/Github/FactStamp/src/contexts/) | State management: `AuthContext.tsx`, `ClaimsContext.tsx`, `NotificationsContext.tsx`, `ThemeContext.tsx`, `UsersContext.tsx`. |
-| [`/home/aadish/Documents/Github/FactStamp/src/lib/`](file:///home/aadish/Documents/Github/FactStamp/src/lib/) | Utility logic: `firebase.ts`, `types.ts`, `confidenceScore.ts`, `duplicateDetection.ts`, `imageCompression.ts`, `apca.ts`, `weeklyReport.ts`. |
+| [`/home/aadish/Documents/Github/FactStamp/src/lib/`](file:///home/aadish/Documents/Github/FactStamp/src/lib/) | Utility logic: `firebase.ts`, `types.ts`, `confidenceScore.ts`, `duplicateDetection.ts`, `imageCompression.ts`, `security.ts` (OWASP-style client hardening, see [`Module-rules.md`](file:///home/aadish/Documents/typst/FactStamp/Rules/Module-rules.md) §3 Module 8), `utils.ts`, `weeklyReport.ts`. |
+| [`/home/aadish/Documents/Github/FactStamp/src/services/`](file:///home/aadish/Documents/Github/FactStamp/src/services/) | `firebaseService.ts` (Firestore CRUD + admin operations), `ocrService.ts` (Tesseract.js OCR + WhatsApp-chrome text cleanup). |
+| [`/home/aadish/Documents/Github/FactStamp/scripts/`](file:///home/aadish/Documents/Github/FactStamp/scripts/) | Node provisioning scripts: `create-admin.mjs`, `create-user.mjs`, `seed-db.mjs`. |
 
 ### 📌 Obsidian Project Notes (`/home/aadish/Documents/Obsidian/`)
 | Directory Path | Description |
@@ -52,7 +60,7 @@
 
 ## 2. Project Syllabus & Report Architecture
 
-The report is structured into 7 main chapters as specified in [`Project_syllabus.md`](file:///home/aadish/Documents/typst/FactStamp/Project_syllabus.md):
+The report is structured into 7 main chapters as specified in [`Rules/Project_syllabus.md`](file:///home/aadish/Documents/typst/FactStamp/Rules/Project_syllabus.md):
 
 * **Front Matter:** Title Page, Approved Proforma, Authenticated Work Certificate, Role & Responsibility Form, Abstract, Acknowledgement, Table of Contents, Table of Figures.
 * **Chapter 1: Introduction** (Background, Objectives, Purpose, Scope, Applicability, Achievements, Organisation of Report)

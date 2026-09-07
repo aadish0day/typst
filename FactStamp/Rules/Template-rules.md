@@ -88,7 +88,7 @@ Step 5: Compile Typst PDF deliverable & Verify formatting rules
 ### Step-by-Step Instructions
 
 1. **Step 1 — Read the Target Template**: Call `view_file` on the corresponding template in `template/<name>.md`. Extract the official headings, table formats, and section numbering.
-2. **Step 2 — Read FactStamp Architecture**: Inspect [`Rules/CODE_PATHS_AND_NOTES.md`](file:///home/aadish/Documents/typst/FactStamp/Rules/CODE_PATHS_AND_NOTES.md) and `src/lib/types.ts` to get FactStamp's actual 7 system modules, Firebase backend architecture, Jaccard similarity math, and `html-to-image` card generator specs.
+2. **Step 2 — Read FactStamp Architecture**: Inspect [`Rules/CODE_PATHS_AND_NOTES.md`](file:///home/aadish/Documents/typst/FactStamp/Rules/CODE_PATHS_AND_NOTES.md), [`Rules/Module-rules.md`](file:///home/aadish/Documents/typst/FactStamp/Rules/Module-rules.md) (FactStamp's actual 8 system modules mapped to source files), [`Rules/Admin-rules.md`](file:///home/aadish/Documents/typst/FactStamp/Rules/Admin-rules.md) (the `/admin` moderation console), and `src/lib/types.ts` to get Firebase backend architecture, Jaccard similarity math, and `html-to-image` card generator specs.
 3. **Step 3 — Fuse Template Structure with FactStamp Specifics**: Replace generic placeholders (`<Project>`, `<author>`, `<Feature 1>`) with actual FactStamp facts:
    - System Features 1–7 (Auth, Ingestion/OCR, Duplicate Detection, Quorum Queue, Consensus Engine, PNG Card Generator, Analytics Dashboard).
    - Weighted Confidence Formula: $\text{Confidence} = (A \times 40\%) + (R \times 30\%) + (S \times 30\%)$.
