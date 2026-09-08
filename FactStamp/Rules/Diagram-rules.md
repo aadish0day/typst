@@ -1,28 +1,30 @@
 # Diagram Tooling Rules — FactStamp Docs
 
-Hybrid architecture, decided after peer review: **PlantUML for UML diagrams, Graphviz for topological flow graphs, native Typst for linear/tabular content.** Three tools now, not two — each used where it's actually the right fit, not where it's merely possible.
+Hybrid architecture, decided after peer review: **PlantUML for UML diagram types, Graphviz for graph-oriented diagrams (topology, dependency, directed-flow, relationship graphs), native Typst for linear/tabular content.** Three tools now, not two — each used where it's actually the right fit, not where it's merely possible.
 
 ## Master Required Diagrams Checklist
 
-| # | Diagram Name | Syllabus Section | Primary Tool / Format |
-|---|---|---|---|
-| 1 | PERT Chart | Ch 3.3 (Planning & Scheduling) | Typst / Mermaid / Graphviz |
-| 2 | GANTT Chart | Ch 3.3 (Planning & Scheduling) | Typst / Mermaid / Image |
-| 3 | Data Flow Diagram (DFD) — Level 0 (Context) | Ch 3.6 (Conceptual Models) | Graphviz (.dot → .svg) |
-| 4 | Data Flow Diagram (DFD) — Level 1 | Ch 3.6 (Conceptual Models) | Graphviz (.dot → .svg) |
-| 5 | Data Flow Diagram (DFD) — Level 2 | Ch 3.6 (Conceptual Models) | Graphviz (.dot → .svg) |
-| 6 | Use Case Diagram | Ch 3.6 (Conceptual Models) | PlantUML (.puml → .svg) |
-| 7 | Activity Diagram | Ch 3.6 (Conceptual Models) | PlantUML (.puml → .svg) |
-| 8 | State Diagram (State Machine) | Ch 3.6 (Conceptual Models) | PlantUML (.puml → .svg) |
-| 9 | Sequence Diagram | Ch 3.6 (Conceptual Models) | Typst Fletcher / PlantUML |
-| 10 | Class Diagram | Ch 3.6 (Conceptual Models) | PlantUML (.puml → .svg) |
-| 11 | Object Diagram | Ch 3.6 (Conceptual Models) | PlantUML (.puml → .svg) |
-| 12 | Package Diagram | Ch 3.6 (Conceptual Models) | PlantUML (.puml → .svg) |
-| 13 | Deployment Diagram | Ch 3.6 (Conceptual Models) | PlantUML (.puml → .svg) |
-| 14 | Component Diagram | Ch 3.6 (Conceptual Models) | PlantUML (.puml → .svg) |
-| 15 | Entity-Relationship (E-R) Diagram | Ch 3.6 (Conceptual Models) & Ch 4.2 (Data Design) | PlantUML (.puml → .svg) |
-| 16 | UI Wireframes & Screen Layouts | Ch 4.3 & Ch 6.1 (UI & Manual) | SVG / High-Res Mockups |
-| 17 | Overall System Architecture Diagram | Ch 5.1 (Implementation Approach) | PlantUML / Mermaid / SVG |
+| # | Diagram Name | Syllabus Section | Tool Actually Used | Status (aspect W/H) |
+|---|---|---|---|---|
+| 1 | PERT Chart | Ch 3.3 (Planning & Scheduling) | Graphviz (`.dot` → `.svg`) | Built — `pert_chart.svg` (0.66, portrait) |
+| 2 | GANTT Chart | Ch 3.3 (Planning & Scheduling) | PlantUML `@startgantt` (`.puml` → `.svg`) | Built — `gantt_chart.svg` (2.05, landscape but legible unrotated) |
+| 3 | Data Flow Diagram (DFD) — Level 0 (Context) | Ch 3.6 (Conceptual Models) | Graphviz (`.dot` → `.svg`) | Built — `dfd_level_0.svg` (0.85) |
+| 4 | Data Flow Diagram (DFD) — Level 1 | Ch 3.6 (Conceptual Models) | Graphviz (`.dot` → `.svg`) | Built — `dfd_level_1.svg` (0.69) |
+| 5 | Data Flow Diagram (DFD) — Level 2 | Ch 3.6 (Conceptual Models) | Graphviz (`.dot` → `.svg`) | Built — `dfd_level_2.svg` (0.66) |
+| 6 | Use Case Diagram | Ch 3.6 (Conceptual Models) | PlantUML (`.puml` → `.svg`) | Built — `use_case_diagram.svg` (0.46) |
+| 7 | Activity Diagram | Ch 3.6 (Conceptual Models) | PlantUML (`.puml` → `.svg`) | Built — `activity_diagram.svg` (0.34) |
+| 8 | State Diagram (State Machine) | Ch 3.6 (Conceptual Models) | PlantUML (`.puml` → `.svg`) | Built — `state_diagram.svg` (0.98) |
+| 9 | Sequence Diagram | Ch 3.6 (Conceptual Models) | PlantUML (`.puml` → `.svg`) | Built — `sequence_diagram.svg` (0.47) |
+| 10 | Class Diagram | Ch 3.6 (Conceptual Models) | PlantUML (`.puml` → `.svg`) | Built — `class_diagram.svg` (0.48) |
+| 11 | Object Diagram | Ch 3.6 (Conceptual Models) | PlantUML (`.puml` → `.svg`) | Built — `object_diagram.svg` (0.73) |
+| 12 | Package Diagram | Ch 3.6 (Conceptual Models) | PlantUML (`.puml` → `.svg`) | Built — `package_diagram.svg` (0.77) |
+| 13 | Deployment Diagram | Ch 3.6 (Conceptual Models) | PlantUML (`.puml` → `.svg`) | Built — `deployment_diagram.svg` (0.83) |
+| 14 | Component Diagram | Ch 3.6 (Conceptual Models) | PlantUML (`.puml` → `.svg`) | Built — `component_diagram.svg` (0.60) |
+| 15 | Entity-Relationship (E-R) Diagram | Ch 3.6 (Conceptual Models) & Ch 4.2 (Data Design) | PlantUML (`.puml` → `.svg`) | Built — `er_diagram.svg` (0.45) |
+| 16 | UI Wireframes & Screen Layouts | Ch 4.3 & Ch 6.1 (UI & Manual) | SVG / high-res mockups | **Outstanding** — needs the running UI |
+| 17 | Overall System Architecture Diagram | Ch 5.1 (Implementation Approach) | PlantUML (`.puml` → `.svg`) | Built — `system_architecture.svg` (1.04) |
+
+All 16 built diagrams live in the relevant chapter's `attachments/` folder alongside their `.puml`/`.dot` source, and are embedded with `#align(center)[#image("attachments/<name>.svg", …)]` (see Workflow, below). Aspect ratio is width ÷ height; A4's text block is ≈ 0.667, so anything below that is comfortably portrait. Only the Gantt exceeds 1.0, and it was verified legible on the page without rotation.
 
 ## Rule 1 — PlantUML (`.puml` → `svg` → `#image()`) for UML diagrams
 
@@ -41,21 +43,30 @@ Anything that IS formally a UML diagram type gets PlantUML's native UML DSL inst
 
 **Rule of thumb:** if the diagram type has an official UML notation, it's PlantUML — full stop, regardless of node count.
 
-## Rule 2 — Graphviz (`dot` → `svg` → `#image()`) for topological flow graphs only
+## Rule 2 — Graphviz (`dot` → `svg` → `#image()`) for graph-oriented diagrams
 
-Reserved now for diagrams that are **not** UML — pure node/edge topology where auto-routing is what matters, not standard notation.
+Use Graphviz/DOT primarily for **graph-oriented diagrams** such as topology, dependency, directed-flow, and relationship graphs. PlantUML does not provide native DFD notation, so DFDs may be represented using appropriate PlantUML constructs or Graphviz/DOT when needed.
 
-| Diagram type | Why Graphviz still wins here |
+| Diagram type | Why Graphviz fits here |
 |---|---|
-| DFDs (Level 0/1/2, Context Diagram) | Not a UML type — pure data-flow topology. Graphviz's auto-layout is still the right tool; PlantUML has no native DFD notation. |
+| DFDs (Level 0/1/2, Context Diagram) | Not a UML type — pure data-flow topology. PlantUML has no native DFD notation, so either approximate it with PlantUML constructs or (preferred) use Graphviz, which gives direct control over the required shapes: circle = process, cylinder/open rectangle = data store, box = external entity. |
+| PERT / precedence networks | A directed acyclic precedence graph. Node/edge topology with auto-routing is exactly what `dot` is for. |
+| Dependency graphs, generic flowcharts | Any non-UML node/edge graph with no standard UML equivalent. |
 
-If you ever have a genuinely non-UML topological graph (dependency graphs, generic flowcharts with no UML equivalent), it goes here too. Everything UML moved to Rule 1.
+Everything that **is** a UML type stays on Rule 1 (PlantUML).
+
+**Practical note on layout control.** The reason to reach for Graphviz on a graph-shaped diagram is that it exposes layout primitives PlantUML deliberately hides — and on this project those were load-bearing, not theoretical:
+
+- DFD Level 1 first compiled landscape (2892 × 1700) because `{ rank=same; ... }` does not bind a node that has no *constrained* in-edge. Fixed in the source with an explicit invisible spine (`style=invis` edges) plus `constraint=false` on the store-side hops, giving 1676 × 2448 portrait.
+- The PERT chart's END milestone used `shape=ellipse, peripheries=2` instead of `doublecircle`, which was forcing ~215 pt of dead height.
+
+Neither fix is expressible in PlantUML. Note also that PlantUML itself shells out to Graphviz for most non-sequence diagram types (`plantuml -testdot` confirms the dependency), so choosing PlantUML does not remove `dot` from the toolchain — it just puts a layer over it.
 
 ## Rule 3 — Native Typst (or `fletcher`) for linear/tabular content
 
 | Case | Why native is right here |
 |---|---|
-| Sequence diagrams | Fletcher (or hand-drawn) gives 100% font-consistency with the rest of the document and searchable PDF text — timing/lifelines were never a great fit for either dot or PlantUML's auto-layout anyway |
+| Sequence diagrams | Fletcher (or hand-drawn) gives 100% font-consistency with the rest of the document and searchable PDF text. **Note:** PlantUML is equally acceptable here and is what this project actually used — PlantUML draws sequence diagrams natively rather than via Graphviz auto-layout, so lifeline/timing layout is well handled, and it keeps the sequence diagram consistent with the other 11 PlantUML diagrams. Either tool is fine; pick one and stay consistent. |
 | Event Tables | Tabular data, not a diagram — `#table()`, see Rule 4 |
 | Small 2–3 box inline callouts | Too trivial to justify an external compile step |
 
@@ -117,11 +128,12 @@ Keep `.puml`/`.dot` sources + their compiled `.svg` inside the submission's `att
 ## Quick decision check
 
 1. Is it an Event Table? → Native Typst `#table()`.
-2. Is it a Sequence Diagram or ≤3-box callout? → Native Typst / fletcher.
-3. Is it a DFD or Context Diagram? → Graphviz, `rankdir=TB`.
-4. Is it any other UML type (ER, Class, Object, Component, Package, Deployment, Use Case, State)? → PlantUML, top-to-bottom (default).
-5. Does the diagram naturally have many same-rank nodes or long horizontal chains that would crowd or overlap if forced vertical? → Build it in its natural horizontal layout and rotate the SVG instead — see Rule 5a. Otherwise → build vertical directly (Rule 5).
-6. Compiled `.svg` still comes out wider than tall despite building vertical? → Fix the source restructuring, don't just shrink `width:` in Typst — see Rule 5.
+2. Is it a Sequence Diagram or ≤3-box callout? → Native Typst / fletcher (PlantUML is also acceptable for Sequence — see Rule 3).
+3. Is it a DFD or Context Diagram? → Graphviz with explicit `rankdir=TB` (preferred, for shape control); PlantUML constructs are permitted if you prefer a single toolchain — see Rule 2.
+4. Is it another graph-oriented diagram with no UML equivalent (PERT/precedence network, dependency graph, generic flowchart)? → Graphviz, explicit `rankdir=TB`.
+5. Is it any other UML type (ER, Class, Object, Component, Package, Deployment, Use Case, State)? → PlantUML, top-to-bottom (default).
+6. Does the diagram naturally have many same-rank nodes or long horizontal chains that would crowd or overlap if forced vertical? → Build it in its natural horizontal layout and rotate the SVG instead — see Rule 5a. Otherwise → build vertical directly (Rule 5).
+7. Compiled `.svg` still comes out wider than tall despite building vertical? → Fix the source restructuring, don't just shrink `width:` in Typst — see Rule 5.
 
 ---
 

@@ -2,26 +2,25 @@
 
 Below is the complete, official mapping of all required diagrams, their syllabus section (Course `JUSIT-DSCPR503`), and recommended tooling formats.
 
-| # | Diagram Name | Syllabus Section | Primary Tool / Format |
-|---|---|---|---|
-| 1 | PERT Chart | Ch 3.3 (Planning & Scheduling) | Typst / Mermaid / Graphviz |
-| 2 | GANTT Chart | Ch 3.3 (Planning & Scheduling) | Typst / Mermaid / Image |
-| 3 | Data Flow Diagram (DFD) — Level 0 (Context) | Ch 3.6 (Conceptual Models) | Graphviz (.dot → .svg) |
-| 4 | Data Flow Diagram (DFD) — Level 1 | Ch 3.6 (Conceptual Models) | Graphviz (.dot → .svg) |
-| 5 | Data Flow Diagram (DFD) — Level 2 | Ch 3.6 (Conceptual Models) | Graphviz (.dot → .svg) |
-| 6 | Use Case Diagram | Ch 3.6 (Conceptual Models) | PlantUML (.puml → .svg) |
-| 7 | Activity Diagram | Ch 3.6 (Conceptual Models) | PlantUML (.puml → .svg) |
-| 8 | State Diagram (State Machine) | Ch 3.6 (Conceptual Models) | PlantUML (.puml → .svg) |
-| 9 | Sequence Diagram | Ch 3.6 (Conceptual Models) | Typst Fletcher / PlantUML |
-| 10 | Class Diagram | Ch 3.6 (Conceptual Models) | PlantUML (.puml → .svg) |
-| 11 | Object Diagram | Ch 3.6 (Conceptual Models) | PlantUML (.puml → .svg) |
-| 12 | Package Diagram | Ch 3.6 (Conceptual Models) | PlantUML (.puml → .svg) |
-| 13 | Deployment Diagram | Ch 3.6 (Conceptual Models) | PlantUML (.puml → .svg) |
-| 14 | Component Diagram | Ch 3.6 (Conceptual Models) | PlantUML (.puml → .svg) |
-| 15 | **Entity-Relationship (E-R) Diagram** | **Ch 3.6 (Conceptual Models) & Ch 4.2 (Data Design)** | **PlantUML (.puml → .svg)** |
-| 16 | UI Wireframes & Screen Layouts | Ch 4.3 & Ch 6.1 (UI & Manual) | SVG / High-Res Mockups |
-| 17 | Overall System Architecture Diagram | Ch 5.1 (Implementation Approach) | PlantUML / Mermaid / SVG |
-
+| # | Diagram Name | Syllabus Section | Tool Actually Used | Status (aspect W/H) |
+|---|---|---|---|---|
+| 1 | PERT Chart | Ch 3.3 (Planning & Scheduling) | Graphviz (`.dot` → `.svg`) | Built — `pert_chart.svg` (0.66, portrait) |
+| 2 | GANTT Chart | Ch 3.3 (Planning & Scheduling) | PlantUML `@startgantt` (`.puml` → `.svg`) | Built — `gantt_chart.svg` (2.05, landscape but legible unrotated) |
+| 3 | Data Flow Diagram (DFD) — Level 0 (Context) | Ch 3.6 (Conceptual Models) | Graphviz (`.dot` → `.svg`) | Built — `dfd_level_0.svg` (0.85) |
+| 4 | Data Flow Diagram (DFD) — Level 1 | Ch 3.6 (Conceptual Models) | Graphviz (`.dot` → `.svg`) | Built — `dfd_level_1.svg` (0.69) |
+| 5 | Data Flow Diagram (DFD) — Level 2 | Ch 3.6 (Conceptual Models) | Graphviz (`.dot` → `.svg`) | Built — `dfd_level_2.svg` (0.66) |
+| 6 | Use Case Diagram | Ch 3.6 (Conceptual Models) | PlantUML (`.puml` → `.svg`) | Built — `use_case_diagram.svg` (0.46) |
+| 7 | Activity Diagram | Ch 3.6 (Conceptual Models) | PlantUML (`.puml` → `.svg`) | Built — `activity_diagram.svg` (0.34) |
+| 8 | State Diagram (State Machine) | Ch 3.6 (Conceptual Models) | PlantUML (`.puml` → `.svg`) | Built — `state_diagram.svg` (0.98) |
+| 9 | Sequence Diagram | Ch 3.6 (Conceptual Models) | PlantUML (`.puml` → `.svg`) | Built — `sequence_diagram.svg` (0.47) |
+| 10 | Class Diagram | Ch 3.6 (Conceptual Models) | PlantUML (`.puml` → `.svg`) | Built — `class_diagram.svg` (0.48) |
+| 11 | Object Diagram | Ch 3.6 (Conceptual Models) | PlantUML (`.puml` → `.svg`) | Built — `object_diagram.svg` (0.73) |
+| 12 | Package Diagram | Ch 3.6 (Conceptual Models) | PlantUML (`.puml` → `.svg`) | Built — `package_diagram.svg` (0.77) |
+| 13 | Deployment Diagram | Ch 3.6 (Conceptual Models) | PlantUML (`.puml` → `.svg`) | Built — `deployment_diagram.svg` (0.83) |
+| 14 | Component Diagram | Ch 3.6 (Conceptual Models) | PlantUML (`.puml` → `.svg`) | Built — `component_diagram.svg` (0.60) |
+| 15 | **Entity-Relationship (E-R) Diagram** | **Ch 3.6 (Conceptual Models) & Ch 4.2 (Data Design)** | PlantUML (`.puml` → `.svg`) | Built — `er_diagram.svg` (0.45) |
+| 16 | UI Wireframes & Screen Layouts | Ch 4.3 & Ch 6.1 (UI & Manual) | SVG / high-res mockups | **Outstanding** — needs the running UI |
+| 17 | Overall System Architecture Diagram | Ch 5.1 (Implementation Approach) | PlantUML (`.puml` → `.svg`) | Built — `system_architecture.svg` (1.04) |
 ---
 
 > [!NOTE]
