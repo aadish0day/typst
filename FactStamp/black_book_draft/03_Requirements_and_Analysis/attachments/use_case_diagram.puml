@@ -1,0 +1,131 @@
+@startuml
+skinparam style strictuml
+skinparam monochrome true
+skinparam defaultFontName "Liberation Sans"
+skinparam defaultFontSize 20
+skinparam defaultFontStyle bold
+skinparam titleFontSize 26
+skinparam titleFontStyle bold
+
+skinparam backgroundColor white
+skinparam ArrowColor black
+skinparam ArrowThickness 2.5
+skinparam ArrowFontSize 17
+skinparam ArrowFontStyle bold
+
+skinparam UsecaseBorderColor black
+skinparam UsecaseBorderThickness 2.5
+skinparam UsecaseBackgroundColor #F8F9FA
+skinparam UsecaseFontSize 19
+skinparam UsecaseFontStyle bold
+
+skinparam ActorBorderColor black
+skinparam ActorBorderThickness 2.5
+skinparam ActorBackgroundColor #FFFFFF
+skinparam ActorFontSize 20
+skinparam ActorFontStyle bold
+
+skinparam RectangleBorderColor black
+skinparam RectangleBorderThickness 2.5
+skinparam RectangleBackgroundColor transparent
+skinparam RectangleFontSize 20
+skinparam RectangleFontStyle bold
+
+title FactStamp - Use Case Diagram
+
+skinparam nodesep 18
+skinparam ranksep 30
+skinparam PackageBorderColor black
+skinparam PackageBorderThickness 2.5
+skinparam PackageFontSize 19
+skinparam PackageFontStyle bold
+
+actor "Visitor\n(unauthenticated)" as Visitor
+actor "Registered Verifier\n(signed-in user)" as Verifier
+actor "Admin\n(isAdmin = true)" as Admin
+
+Verifier --|> Visitor
+Admin --|> Verifier
+
+rectangle "FactStamp System Boundary" {
+
+  package "A. Public Access (no sign-in)" {
+    usecase "Browse Public\nClaim Feed" as UC1
+    usecase "View Claim Detail\nand Verdict" as UC2
+    usecase "View Misinformation\nAnalytics Dashboard" as UC3
+    usecase "Export Shareable\nFact-Check Card" as UC4
+    usecase "Register / Sign In" as UC5
+  }
+
+  package "B. Submission and Verification" {
+    usecase "Submit Claim" as UC6
+    usecase "Enter Claim Text\n(20-500 characters)" as UC7
+    usecase "Extract Text from\nScreenshot via OCR" as UC8
+    usecase "Run Jaccard Duplicate\nCheck (J >= 0.75 blocks)" as UC9
+    usecase "Browse Verification\nQueue" as UC10
+    usecase "Cast Verdict on Claim" as UC11
+    usecase "Validate Verdict\nExplanation" as UC12
+    usecase "Auto-Derive Source\nQuality from URL" as UC13
+    usecase "Compute Consensus\nand Confidence Score" as UC14
+  }
+
+  package "C. Admin Console (unlisted /admin)" {
+    usecase "Manage Verifier\nDirectory" as UC15
+    usecase "Moderate Claims and\nOverride Verdicts" as UC16
+    usecase "Resolve Incident\nReports" as UC17
+    usecase "View Immutable\nAudit Log" as UC18
+    usecase "Force Consensus\nExpiry Sweep" as UC19
+  }
+}
+
+' --- Force a single top-to-bottom column (A4 portrait) ---
+UC1 -[hidden]down- UC2
+UC2 -[hidden]down- UC3
+UC3 -[hidden]down- UC4
+UC4 -[hidden]down- UC5
+UC5 -[hidden]down- UC6
+UC6 -[hidden]down- UC7
+UC7 -[hidden]down- UC8
+UC8 -[hidden]down- UC9
+UC9 -[hidden]down- UC10
+UC10 -[hidden]down- UC11
+UC11 -[hidden]down- UC12
+UC12 -[hidden]down- UC13
+UC13 -[hidden]down- UC14
+UC14 -[hidden]down- UC15
+UC15 -[hidden]down- UC16
+UC16 -[hidden]down- UC17
+UC17 -[hidden]down- UC18
+UC18 -[hidden]down- UC19
+
+' --- Pin each actor beside its own group so association edges stay short ---
+UC5 -[hidden]down- Verifier
+UC14 -[hidden]down- Admin
+
+' --- Visitor ---
+Visitor --> UC1
+Visitor --> UC2
+Visitor --> UC3
+Visitor --> UC4
+Visitor --> UC5
+
+' --- Registered Verifier ---
+Verifier --> UC6
+Verifier --> UC10
+Verifier --> UC11
+
+UC6 ..> UC7 : <<include>>
+UC6 ..> UC9 : <<include>>
+UC8 ..> UC6 : <<extend>>
+UC11 ..> UC12 : <<include>>
+UC11 ..> UC13 : <<include>>
+UC14 ..> UC11 : <<extend>>
+
+' --- Admin ---
+Admin --> UC15
+Admin --> UC16
+Admin --> UC17
+Admin --> UC18
+Admin --> UC19
+
+@enduml

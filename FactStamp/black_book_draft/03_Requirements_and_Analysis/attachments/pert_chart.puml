@@ -1,0 +1,102 @@
+' FactStamp - PERT Chart (Program Evaluation and Review Technique)
+' Chapter 3.3 - Planning and Scheduling
+' Build:  plantuml -tsvg pert_chart.puml
+'
+' The schedule is a strictly linear chain of eight 2-week sprints executed by a
+' single developer, so EVERY activity lies on the critical path and every
+' activity has zero slack. Critical path length = 8 x 2 wks = 16 weeks.
+'
+' PlantUML has no native PERT notation, so the network is expressed with the
+' primitives it does have: an ellipse for each START/END milestone, a rectangle
+' for each activity node, and labelled arrows for the precedence edges. The
+' whole network is a single vertical chain, per the portrait-page rule.
+
+@startuml
+skinparam style strictuml
+skinparam monochrome true
+skinparam defaultFontName "Liberation Sans"
+skinparam defaultFontSize 20
+skinparam defaultFontStyle bold
+skinparam titleFontSize 26
+skinparam titleFontStyle bold
+skinparam backgroundColor white
+skinparam ArrowColor black
+skinparam ArrowThickness 2.5
+skinparam ArrowFontSize 17
+skinparam ArrowFontStyle bold
+skinparam RectangleBorderColor black
+skinparam RectangleBorderThickness 2.5
+skinparam RectangleBackgroundColor #F8F9FA
+skinparam RectangleFontSize 20
+skinparam RectangleFontStyle bold
+title FactStamp - PERT Chart
+
+' Layout tuning: the chain is 10 nodes deep, so tighten rank spacing to stop the
+' SVG stretching into an unusably thin ribbon on an A4 portrait page.
+skinparam ranksep 22
+skinparam nodesep 22
+
+' Completed activities (S1-S7): solid heavy border, light background.
+skinparam rectangle<<Done>> {
+  BorderStyle solid
+  BorderThickness 2.5
+  BackgroundColor #F8F9FA
+}
+
+' Activity still in flight (S8): heavy DASHED border + darker fill, so the
+' distinction survives both greyscale printing and the monochrome skinparam.
+skinparam rectangle<<Underway>> {
+  BorderStyle dashed
+  BorderThickness 4
+  BackgroundColor #D0D0D0
+}
+
+' START / END milestones: ellipse nodes, heavy border.
+skinparam usecase<<Milestone>> {
+  BorderThickness 4
+  BackgroundColor #FFFFFF
+  FontSize 20
+  FontStyle bold
+}
+
+skinparam legendFontSize 18
+skinparam legendFontStyle bold
+skinparam legendBackgroundColor #F8F9FA
+skinparam legendBorderColor black
+skinparam legendBorderThickness 2.5
+
+' ------------------------------------------------------------------ milestones
+usecase "START\nWeek 0 (01 Jun)" as START <<Milestone>>
+usecase "END\nWeek 16 (30 Sep)" as END <<Milestone>>
+
+' --------------------------------------------------------------------- sprints
+' Label lines: short name / calendar slot + earliest start-finish + slack.
+' Status (Done / Underway) is carried by the stereotype and the border style.
+rectangle "S1: Scaffolding + Auth\nJun wk 1-2 | ES 0 - EF 2  |  Slack 0" as S1 <<Done>>
+rectangle "S2: Ingestion + OCR\nJun wk 3-4 | ES 2 - EF 4  |  Slack 0" as S2 <<Done>>
+rectangle "S3: Duplicate Detection\nJul wk 1-2 | ES 4 - EF 6  |  Slack 0" as S3 <<Done>>
+rectangle "S4: Verification Queue\nJul wk 3-4 | ES 6 - EF 8  |  Slack 0" as S4 <<Done>>
+rectangle "S5: Consensus Engine\nAug wk 1-2 | ES 8 - EF 10  |  Slack 0" as S5 <<Done>>
+rectangle "S6: Cards + Analytics\nAug wk 3-4 | ES 10 - EF 12  |  Slack 0" as S6 <<Done>>
+rectangle "S7: Security + Admin\nSep wk 1-2 | ES 12 - EF 14  |  Slack 0" as S7 <<Done>>
+rectangle "S8: Hardening + Deploy\nSep wk 3-4 | ES 14 - EF 16  |  Slack 0" as S8 <<Underway>>
+
+' ----------------------------------------------------- critical path (all of it)
+' Every edge is on the critical path; there is no non-critical branch to draw.
+START --> S1 : 2 wks
+S1 --> S2 : 2 wks
+S2 --> S3 : 2 wks
+S3 --> S4 : 2 wks
+S4 --> S5 : 2 wks
+S5 --> S6 : 2 wks
+S6 --> S7 : 2 wks
+S7 --> S8 : 2 wks
+S8 --> END : 0 wks
+
+legend bottom
+Critical Path: START -> S1 -> S2 -> S3 -> S4 -> S5 -> S6 -> S7 -> S8 -> END
+Length = 16 weeks | Slack = 0 on every activity
+<<Done>> solid border (S1-S7)  |  <<Underway>> dashed border, shaded (S8)
+end legend
+
+@enduml

@@ -1,0 +1,126 @@
+@startuml
+skinparam style strictuml
+skinparam monochrome true
+skinparam defaultFontName "Liberation Sans"
+skinparam defaultFontSize 20
+skinparam defaultFontStyle bold
+skinparam titleFontSize 26
+skinparam titleFontStyle bold
+
+skinparam backgroundColor white
+skinparam ArrowColor black
+skinparam ArrowThickness 2.5
+skinparam ArrowFontSize 17
+skinparam ArrowFontStyle bold
+
+skinparam RectangleBorderColor black
+skinparam RectangleBorderThickness 2.5
+skinparam RectangleBackgroundColor transparent
+skinparam RectangleFontSize 20
+skinparam RectangleFontStyle bold
+
+skinparam ComponentBorderColor black
+skinparam ComponentBorderThickness 2.5
+skinparam ComponentBackgroundColor #F8F9FA
+skinparam ComponentFontSize 20
+skinparam ComponentFontStyle bold
+
+title FactStamp - Package Diagram
+
+skinparam PackageBorderThickness 2.5
+skinparam PackageFontSize 21
+skinparam ClassFontSize 18
+skinparam ClassAttributeFontSize 17
+skinparam ClassAttributeFontStyle plain
+skinparam ClassBorderThickness 2
+skinparam Ranksep 55
+skinparam Nodesep 40
+
+package "src" as SRC {
+
+  package "pages" as PAGES {
+    class "11 routed views" as PAGESC {
+      Home
+      Submit
+      ClaimDetail
+      VerifyQueue
+      VerifyDetail
+      Dashboard
+      Profile
+      Admin
+      SignIn / SignUp
+      NotFound
+    }
+  }
+
+  package "components" as COMPS {
+    class "presentation layer" as COMPSC {
+      Navbar / Footer
+      ProtectedRoute / AdminRoute
+      ErrorBoundary / Seo
+      ClaimCard / FactCheckCard
+      VerdictStamp
+      DashboardChart
+      NotificationBell
+    }
+    package "components.ui" as UI {
+      class "18 custom primitives\n(no third-party UI kit)" as UIC {
+        Button / LoadingButton
+        Input / Modal
+        Badge / Avatar
+        VerdictPill / CategoryBadge
+        Skeletons / EmptyState
+      }
+    }
+  }
+
+  package "contexts" as CTX {
+    class "React state providers" as CTXC {
+      AuthContext
+      ClaimsContext
+      UsersContext
+      NotificationsContext
+      ThemeContext
+    }
+  }
+
+  package "services" as SVC {
+    class "data access layer" as SVCC {
+      firebaseService
+      ocrService
+    }
+  }
+
+  package "lib" as LIB {
+    class "domain logic + utilities" as LIBC {
+      firebase (SDK init)
+      types
+      security
+      duplicateDetection
+      confidenceScore
+      weeklyReport
+      imageCompression
+      utils
+    }
+  }
+}
+
+package "External npm packages" as EXT {
+  class "browser-side dependencies" as EXTC {
+    firebase v12 (app / auth / firestore)
+    tesseract.js (WASM OCR)
+    html-to-image (PNG export)
+  }
+}
+
+PAGES ..> COMPS : renders
+PAGES ..> CTX : consumes hooks
+COMPS ..> UI : composes
+CTX ..> SVC : reads / writes
+SVC ..> LIB : uses SDK handle
+CTX ..> LIB : scores / validates
+PAGES ..> LIB : detects duplicates
+LIB ..> EXT : initialises SDK
+SVC ..> EXT : runs OCR worker
+
+@enduml

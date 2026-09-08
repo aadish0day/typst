@@ -1,0 +1,119 @@
+@startuml
+skinparam style strictuml
+skinparam monochrome true
+skinparam defaultFontName "Liberation Sans"
+skinparam defaultFontSize 20
+skinparam defaultFontStyle bold
+skinparam titleFontSize 26
+skinparam titleFontStyle bold
+
+skinparam backgroundColor white
+skinparam ArrowColor black
+skinparam ArrowThickness 2.5
+skinparam ArrowFontSize 17
+skinparam ArrowFontStyle bold
+
+skinparam EntityBorderColor black
+skinparam EntityBorderThickness 2.5
+skinparam EntityBackgroundColor #F8F9FA
+skinparam EntityFontSize 22
+skinparam EntityFontStyle bold
+
+skinparam ClassBorderColor black
+skinparam ClassBorderThickness 2.5
+skinparam ClassBackgroundColor #F8F9FA
+skinparam ClassFontSize 22
+skinparam ClassFontStyle bold
+skinparam ClassAttributeFontSize 18
+
+title FactStamp - ER Diagram
+
+entity "USER" as User {
+  * uid : string <<PK>>
+  --
+  * displayName : string (<= 100)
+  * email : string <<unique>>
+  avatarUrl : string
+  * reputation : integer [0..100] = 50
+  * totalVerifications : integer >= 0
+  isAdmin : boolean = false
+  * joinedAt : timestamp (ISO-8601)
+}
+
+entity "CATEGORY_METRIC" as CategoryMetric {
+  * category : enum <<PK>>
+  ..
+  { health, political, religious,
+  financial, other }
+  --
+  * totalClaims : integer
+  * verifiedCount : integer
+  * contestedCount : integer
+  * lastUpdated : timestamp
+}
+
+entity "CLAIM" as Claim {
+  * id : string <<PK>>
+  --
+  * submittedBy : string <<FK USER.uid>>
+  * submittedByName : string (<= 100)
+  * category : enum <<FK CATEGORY_METRIC>>
+  --
+  * text : string (10..2000 chars)
+  imageUrl : string (<= 800 KB)
+  * status : enum { pending, verified }
+  verdict : enum { TRUE, FALSE, MISLEADING,
+  UNVERIFIABLE, CONTESTED }
+  confidenceScore : integer [0..100]
+  agreementRatio : float [0..100]
+  avgVerifierReputation : float [0..100]
+  sourceQualityScore : float [0..100]
+  * verificationCount : integer = 0
+  --
+  * createdAt : timestamp
+  * consensusDeadline : timestamp (+7 days)
+  verifiedAt : timestamp
+  adminFlagged : boolean = false
+  adminFlaggedAt : timestamp
+}
+
+entity "VERIFICATION" as Verification {
+  * id : string <<PK>>
+  ..
+  weak entity: embedded array element
+  inside the parent CLAIM document
+  --
+  * claimId : string <<FK CLAIM.id>>
+  * verifierId : string <<FK USER.uid>>
+  * verifierName : string (<= 100)
+  * verifierReputation : integer [0..100]
+  --
+  * verdict : enum { TRUE, FALSE,
+  MISLEADING, UNVERIFIABLE }
+  * sourceUrl : string (https, <= 500)
+  * sourceQuality : enum { high, medium, low }
+  * explanation : string (50..3000 chars)
+  * createdAt : timestamp
+}
+
+entity "DUPLICATE_CLUSTER" as DuplicateCluster {
+  * id : string <<PK>>
+  ..
+  derived at runtime by the
+  Jaccard duplicate detector
+  --
+  * canonicalClaimId : string <<FK CLAIM.id>>
+  * duplicateText : string (normalized)
+  * jaccardScore : float [0.75..1.00]
+  * detectedAt : timestamp
+}
+
+CategoryMetric ||--o{ Claim : "aggregates (1..N)"
+User ||--o{ Claim : "submits (0..N)"
+Claim ||--o{ Verification : "receives (0..N, quorum >= 3)"
+User ||--o{ Verification : "casts (0..N)"
+Claim ||--o{ DuplicateCluster : "groups (0..N)"
+
+Verification -[hidden]down-> DuplicateCluster
+
+@enduml

@@ -1,0 +1,137 @@
+@startuml
+skinparam style strictuml
+skinparam monochrome true
+skinparam defaultFontName "Liberation Sans"
+skinparam defaultFontSize 20
+skinparam defaultFontStyle bold
+skinparam titleFontSize 26
+skinparam titleFontStyle bold
+
+skinparam backgroundColor white
+skinparam ArrowColor black
+skinparam ArrowThickness 2.5
+skinparam ArrowFontSize 17
+skinparam ArrowFontStyle bold
+
+skinparam EntityBorderColor black
+skinparam EntityBorderThickness 2.5
+skinparam EntityBackgroundColor #F8F9FA
+skinparam EntityFontSize 22
+skinparam EntityFontStyle bold
+
+skinparam ClassBorderColor black
+skinparam ClassBorderThickness 2.5
+skinparam ClassBackgroundColor #F8F9FA
+skinparam ClassFontSize 22
+skinparam ClassFontStyle bold
+skinparam ClassAttributeFontSize 18
+
+title FactStamp - Object Diagram
+
+note as SnapshotNote
+  Runtime snapshot: 2026-03-04T09:15:00Z
+  Claim c_8f21 has 2 of the 3 verifications
+  required for quorum, so status is still
+  "pending" and no verdict is stamped yet.
+end note
+
+object "priya : User" as submitter {
+  uid = "u_a7c3"
+  displayName = "Priya Nair"
+  email = "priya.nair@example.com"
+  reputation = 58
+  totalVerifications = 12
+  joinedAt = "2025-11-02T07:40:11Z"
+  isAdmin = false
+}
+
+object "c_8f21 : Claim" as claim {
+  id = "c_8f21"
+  text = "Drinking hot water with lemon
+  every morning cures Type-2 diabetes
+  within 14 days."
+  category = "health"
+  status = "pending"
+  verdict = undefined
+  confidenceScore = 91
+  agreementRatio = 100.0
+  avgVerifierReputation = 68.5
+  sourceQualityScore = 100.0
+  verificationCount = 2
+  submittedBy = "u_a7c3"
+  submittedByName = "Priya Nair"
+  imageUrl = "https://.../forward_8f21.jpg"
+  createdAt = "2026-03-01T18:22:40Z"
+  consensusDeadline = "2026-03-08T18:22:40Z"
+  verifiedAt = undefined
+  adminFlagged = false
+}
+
+object "v_01 : Verification" as v1 {
+  id = "v_01"
+  claimId = "c_8f21"
+  verdict = "FALSE"
+  sourceUrl = "https://www.who.int/news-room/
+  fact-sheets/detail/diabetes"
+  sourceQuality = "high"
+  explanation = "WHO states Type-2 diabetes
+  has no known cure; management is
+  lifelong and lifestyle based."
+  verifierId = "u_b1d9"
+  verifierName = "Rahul Menon"
+  verifierReputation = 74
+  createdAt = "2026-03-02T10:05:12Z"
+}
+
+object "v_02 : Verification" as v2 {
+  id = "v_02"
+  claimId = "c_8f21"
+  verdict = "FALSE"
+  sourceUrl = "https://www.icmr.gov.in/
+  guidelines/diabetes-management"
+  sourceQuality = "high"
+  explanation = "ICMR clinical guidelines list
+  no dietary regimen that reverses
+  beta-cell dysfunction in 14 days."
+  verifierId = "u_c4e2"
+  verifierName = "Anjali Deshpande"
+  verifierReputation = 63
+  createdAt = "2026-03-03T16:48:55Z"
+}
+
+object "rahul : User" as verifier1 {
+  uid = "u_b1d9"
+  displayName = "Rahul Menon"
+  reputation = 74
+  totalVerifications = 41
+  isAdmin = false
+}
+
+object "anjali : User" as verifier2 {
+  uid = "u_c4e2"
+  displayName = "Anjali Deshpande"
+  reputation = 63
+  totalVerifications = 27
+  isAdmin = false
+}
+
+object "engine : ConfidenceScoreEngine" as engine {
+  agreementRatio = 100.0
+  avgReputation = 68.5
+  sourceQualityScore = 100.0
+  weights = 0.40 / 0.30 / 0.30
+  weighted = 40.00 + 20.55 + 30.00
+  score = round(90.55) = 91
+}
+
+SnapshotNote .. submitter
+submitter --> claim : submitted
+claim *--> "verifications[0]" v1
+claim *--> "verifications[1]" v2
+claim ..> engine : recomputed on\neach verification
+v1 --> verifier1 : castBy
+v2 --> verifier2 : castBy
+
+verifier1 -[hidden]right- verifier2
+
+@enduml

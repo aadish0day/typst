@@ -1,0 +1,124 @@
+' FactStamp — Data Flow Diagram, Level 1
+' Tool: PlantUML   Build: plantuml -tsvg dfd_level_1.puml
+' Decomposes process "0 FactStamp System" from the Level 0 context diagram
+' into processes 1.0 - 7.0 and the five Firestore collections D1 - D5.
+' NOTE: there is deliberately NO "Verifications" data store — verifications are
+' an embedded array field on each claim document in D1 Claims.
+'
+' Rule 2 (Diagram-rules.md): PlantUML has no native DFD notation, so DFD shapes
+' are mapped onto the nearest PlantUML constructs:
+'   process        -> usecase  (ellipse / bubble)
+'   data store     -> database (cylinder)
+'   external entity-> rectangle (box)
+' Rule 5: no "left to right direction" — A4 portrait, reads top-to-bottom.
+'
+' LAYOUT: the Graphviz original needed {rank=same}, style=invis spine edges and
+' constraint=false. The PlantUML equivalents used here are:
+'   -[hidden]->  = invisible spine edge (pins a store to the rank below its peer)
+'   -[norank]->  = constraint=false (a flow that must not stretch the spine)
+' Every rank below is therefore produced by exactly one constrained or hidden
+' in-edge, giving a spine never more than two nodes wide.
+@startuml
+skinparam style strictuml
+skinparam monochrome true
+skinparam defaultFontName "Liberation Sans"
+skinparam defaultFontSize 20
+skinparam defaultFontStyle bold
+skinparam titleFontSize 26
+skinparam titleFontStyle bold
+
+' Rule 5 (portrait): stretch ranks apart, squeeze columns together.
+skinparam ranksep 140
+skinparam nodesep 15
+
+skinparam backgroundColor white
+skinparam ArrowColor black
+skinparam ArrowThickness 2.5
+skinparam ArrowFontSize 17
+skinparam ArrowFontStyle bold
+
+skinparam UsecaseBorderColor black
+skinparam UsecaseBorderThickness 2.5
+skinparam UsecaseBackgroundColor #F8F9FA
+skinparam UsecaseFontSize 19
+skinparam UsecaseFontStyle bold
+
+skinparam RectangleBorderColor black
+skinparam RectangleBorderThickness 2.5
+skinparam RectangleBackgroundColor transparent
+skinparam RectangleFontSize 20
+skinparam RectangleFontStyle bold
+
+skinparam DatabaseBorderColor black
+skinparam DatabaseBackgroundColor #F8F9FA
+skinparam DatabaseFontSize 19
+skinparam DatabaseFontStyle bold
+
+title FactStamp - Data Flow Diagram (Level 1)
+
+' ---------- External entities ----------
+rectangle "Registered\nVerifier" as VER
+
+' ---------- Processes (usecase bubbles) ----------
+usecase "1.0\nSubmit Claim" as P1
+' ---------- Data stores (Firestore collections) ----------
+database "D2  Users" as D2
+usecase "2.0\nDetect Duplicates" as P2
+database "D1  Claims\n(verifications[])" as D1
+usecase "3.0\nManage\nVerification Queue" as P3
+usecase "4.0\nCompute Weighted\nConsensus" as P4
+database "D3  Notifications" as D3
+usecase "5.0\nGenerate\nFact-Check Card" as P5
+usecase "6.0\nProduce Analytics" as P6
+rectangle "Visitor\n(Read-Only)" as VIS
+usecase "7.0\nAdminister\n& Audit" as P7
+database "D4  Reports" as D4
+rectangle "Administrator" as ADM
+database "D5  Audit Logs" as D5
+
+' ---------- Invisible spine: pins every rank so the graph cannot fan out ----------
+VER -[hidden]-> D2
+D3  -[hidden]-> P5
+P5  -[hidden]-> P6
+VIS -[hidden]-> D4
+P7  -[hidden]-> ADM
+
+' ---------- 1.0 Submit Claim ----------
+VER --> P1 : "1. Claim Text /\n    Screenshot"
+D2  -[norank]-> P1 : "2. Verifier\n    Profile"
+P1  -[norank]-> VER : "3. Receipt /\n    Duplicate Warning"
+P1  --> P2 : "4. Normalised Text"
+P1  --> D1 : "5. New Claim\n    Document"
+
+' ---------- 2.0 Detect Duplicates ----------
+D1 -[norank]-> P2 : "6. Claim Corpus"
+P2 -[norank]-> P1 : "7. Jaccard >= 0.75"
+
+' ---------- 3.0 Manage Verification Queue ----------
+D1  --> P3 : "8. Pending Queue"
+VER -[norank]-> P3 : "9. Verdict +\n    Source URL"
+P3  -[norank]-> D1 : "10. Append to\n     verifications[]"
+P3  --> P4 : "11. 3rd Verification /\n     Deadline Expired"
+
+' ---------- 4.0 Compute Weighted Consensus ----------
+D2 -[norank]-> P4 : "12. Reputation\n     Scores"
+P4 -[norank]-> D2 : "13. Reputation Delta"
+P4 -[norank]-> D1 : "14. Verdict + Confidence\n     C = 0.40A + 0.30R + 0.30S\n     (CONTESTED on expiry)"
+P4 --> D3 : "15. Consensus Alert"
+D3 -[norank]-> VER : "16. Verdict\n     Notification"
+
+' ---------- 5.0 / 6.0 Public outputs ----------
+D1 -[norank]-> P5 : "17. Resolved Claim\n     + Confidence"
+D1 -[norank]-> P6 : "18. Claim Statistics"
+P5 --> VIS : "19. Fact-Check Card\n     (1080px PNG)"
+P6 --> VIS : "20. Analytics\n     Dashboard"
+
+' ---------- 7.0 Administer & Audit ----------
+VIS --> P7 : "21. Abuse Report"
+P7  -[norank]-> D4 : "22. Report Record"
+D4  -[norank]-> P7 : "23. Open Reports"
+ADM -[norank]-> P7 : "24. Moderation\n     Action"
+P7  -[norank]-> D1 : "25. Hide / Restore Claim"
+P7  --> D5 : "26. Audit Entry"
+D5  -[norank]-> ADM : "27. Audit Trail"
+@enduml

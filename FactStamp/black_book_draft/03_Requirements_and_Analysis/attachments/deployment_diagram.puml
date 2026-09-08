@@ -1,0 +1,106 @@
+@startuml
+skinparam style strictuml
+skinparam monochrome true
+skinparam defaultFontName "Liberation Sans"
+skinparam defaultFontSize 20
+skinparam defaultFontStyle bold
+skinparam titleFontSize 26
+skinparam titleFontStyle bold
+
+skinparam backgroundColor white
+skinparam ArrowColor black
+skinparam ArrowThickness 2.5
+skinparam ArrowFontSize 17
+skinparam ArrowFontStyle bold
+
+skinparam RectangleBorderColor black
+skinparam RectangleBorderThickness 2.5
+skinparam RectangleBackgroundColor transparent
+skinparam RectangleFontSize 20
+skinparam RectangleFontStyle bold
+
+skinparam ComponentBorderColor black
+skinparam ComponentBorderThickness 2.5
+skinparam ComponentBackgroundColor #F8F9FA
+skinparam ComponentFontSize 20
+skinparam ComponentFontStyle bold
+
+title FactStamp - Deployment Diagram
+
+skinparam NodeBorderThickness 2.5
+skinparam NodeFontSize 20
+skinparam ArtifactBorderThickness 2.5
+skinparam ArtifactFontSize 18
+skinparam DatabaseBorderThickness 2.5
+skinparam DatabaseFontSize 19
+skinparam Ranksep 50
+skinparam Nodesep 40
+
+node "Client Device\n<<desktop / mobile>>" as CLIENT {
+  node "Web Browser\n<<execution environment>>" as BROWSER {
+    artifact "FactStamp SPA bundle\nindex.html + hashed /assets/*.js\n(vendor-react, vendor-firebase,\nvendor-ocr, vendor-charts chunks)" as A_SPA
+    artifact "tesseract.js\nWebAssembly OCR worker" as A_OCR
+    artifact "html-to-image\nPNG card rasteriser" as A_CARD
+    artifact "localStorage\ntheme, session activity,\nlogin rate-limit counters" as A_LS
+
+    A_SPA -[hidden]right- A_OCR
+    A_CARD -[hidden]right- A_LS
+    A_SPA -[hidden]down- A_CARD
+  }
+}
+
+node "GitHub Actions Runner\n<<ubuntu-latest, Node 20>>" as CI {
+  artifact ".github/workflows/ci.yml\ntypecheck -> vite build\n-> docker compose config\n(no test or deploy job)" as A_CI
+}
+
+node "Static Hosting Tier\n<<one of three interchangeable targets>>" as HOST {
+
+  node "Firebase Hosting\nrewrite ** -> /index.html\nCSP, HSTS, X-Frame-Options" as H_FB {
+    artifact "dist/" as A_D1
+  }
+
+  node "Vercel Edge Network\ncleanUrls, SPA rewrite,\nsecurity + cache headers" as H_VC {
+    artifact "dist/" as A_D2
+  }
+
+  node "Docker Host\nport 8080 -> 80 (prod)\nport 5174 -> 5173 (dev)" as H_DK {
+    node "nginx:1.27-alpine container\n<<multi-stage: node:20-slim build>>\ngzip, SPA fallback, HEALTHCHECK" as H_NGX {
+      artifact "/usr/share/nginx/html\n(copied from dist/)" as A_D3
+    }
+  }
+
+  H_FB -[hidden]right- H_VC
+  H_VC -[hidden]right- H_DK
+}
+
+node "Google Cloud Platform\n<<Backend as a Service - no custom server>>" as GCP {
+  node "Firebase Authentication\nidentitytoolkit.googleapis.com\nemail/password + Google OAuth" as GAUTH
+  database "Cloud Firestore\nusers, claims, notifications,\nreports, audit_logs" as GDB
+  artifact "firestore.rules\n<<server-side enforcement>>\nrole, ownership and\nfield-immutability checks" as A_RULES
+  artifact "firestore.indexes.json\ncomposite indexes" as A_IDX
+
+  GAUTH -[hidden]right- GDB
+  A_RULES -[hidden]right- A_IDX
+  GAUTH -[hidden]down- A_RULES
+}
+
+node "Developer Workstation\n<<local development only>>" as DEV {
+  artifact "Firebase Emulator Suite\nAuth 9099 - Firestore 8080\nStorage 9199 - UI 4000" as A_EMU
+  artifact "Vite dev server :5173\nHMR client port 5174" as A_VITE
+
+  A_EMU -[hidden]right- A_VITE
+}
+
+CI --> HOST : deploys dist/
+HOST --> BROWSER : <<HTTPS>>\nSPA shell
+BROWSER --> GAUTH : <<HTTPS>>\nID token
+BROWSER --> GDB : <<HTTPS/WSS>>\nonSnapshot
+GDB ..> A_RULES : checked by
+GCP ..> DEV : substituted\nlocally by
+
+' ---- hidden spine: keeps the four tiers vertically aligned ----
+A_D1 -[hidden]down- A_SPA
+A_CARD -[hidden]down- GAUTH
+A_RULES -[hidden]down- A_EMU
+
+@enduml

@@ -1,0 +1,199 @@
+@startuml
+skinparam style strictuml
+skinparam monochrome true
+skinparam defaultFontName "Liberation Sans"
+skinparam defaultFontSize 20
+skinparam defaultFontStyle bold
+skinparam titleFontSize 26
+skinparam titleFontStyle bold
+
+skinparam backgroundColor white
+skinparam ArrowColor black
+skinparam ArrowThickness 2.5
+skinparam ArrowFontSize 17
+skinparam ArrowFontStyle bold
+
+skinparam EntityBorderColor black
+skinparam EntityBorderThickness 2.5
+skinparam EntityBackgroundColor #F8F9FA
+skinparam EntityFontSize 22
+skinparam EntityFontStyle bold
+
+skinparam ClassBorderColor black
+skinparam ClassBorderThickness 2.5
+skinparam ClassBackgroundColor #F8F9FA
+skinparam ClassFontSize 22
+skinparam ClassFontStyle bold
+skinparam ClassAttributeFontSize 18
+
+title FactStamp - Class Diagram
+
+class ClaimsContext <<orchestrator>> {
+  - claims : Claim[]
+  - isLoading : boolean
+  - CONSENSUS_DEADLINE_DAYS : int = 7
+  --
+  + addClaim(input : AddClaimInput) : Promise<Claim>
+  + addVerification(claimId : string, data : AddVerificationInput) : void
+  + getClaimById(id : string) : Claim?
+  + getPendingClaims() : Claim[]
+  + getVerifiedClaims() : Claim[]
+  + expireOverdueClaims() : void
+  + flagClaim(claimId : string, flagged : boolean) : Promise<void>
+  + adminUpdateClaim(claimId : string, updates : Partial<Claim>) : Promise<void>
+  + deleteVerification(claimId : string, verificationId : string) : Promise<void>
+  - computeUpdatedClaim(claim : Claim, data : AddVerificationInput) : Claim
+}
+
+class DuplicateDetectionEngine <<service>> {
+  - THRESHOLD : float = 0.75
+  --
+  + findDuplicate(text : string, existingClaims : Claim[], threshold : float) : DuplicateMatch?
+  - jaccardSimilarity(a : string, b : string) : float
+  - tokenize(text : string) : Set<string>
+  - normalize(text : string) : string
+}
+
+class ConfidenceScoreEngine <<service>> {
+  - W_AGREEMENT : float = 0.40
+  - W_REPUTATION : float = 0.30
+  - W_SOURCE : float = 0.30
+  --
+  + calculateConfidenceScore(verifications : Verification[]) : ConfidenceResult
+  + determineSourceQuality(url : string) : SourceQuality
+  + sourceQualityToScore(quality : SourceQuality) : int
+  - majorityVerdict(verifications : Verification[]) : Verdict
+}
+
+class FirestoreRepository <<repository>> {
+  + subscribeClaimsRealtime(onData : Callback) : Unsubscribe
+  + createClaim(claim : Claim) : Promise<string>
+  + appendVerification(claimId : string, v : Verification) : Promise<void>
+  + updateUserReputation(uid : string, delta : int) : Promise<void>
+}
+
+class Claim {
+  + id : string
+  + text : string
+  + category : ClaimCategory
+  + status : ClaimStatus
+  + verdict : Verdict?
+  + confidenceScore : int?
+  + agreementRatio : float?
+  + avgVerifierReputation : float?
+  + sourceQualityScore : float?
+  + verificationCount : int
+  + verifications : Verification[]
+  + submittedBy : string
+  + submittedByName : string
+  + imageUrl : string?
+  + createdAt : string
+  + consensusDeadline : string
+  + verifiedAt : string?
+  + adminFlagged : boolean?
+  + adminFlaggedAt : string?
+  --
+  + hasQuorum() : boolean
+  + isOverdue() : boolean
+}
+
+class Verification {
+  + id : string
+  + claimId : string
+  + verdict : Verdict
+  + sourceUrl : string
+  + sourceQuality : SourceQuality
+  + explanation : string
+  + verifierId : string
+  + verifierName : string
+  + verifierReputation : int
+  + createdAt : string
+}
+
+class User {
+  + uid : string
+  + displayName : string
+  + email : string
+  + avatarUrl : string?
+  + reputation : int = 50
+  + totalVerifications : int
+  + joinedAt : string
+  + isAdmin : boolean?
+}
+
+class AdminUser <<role>> {
+  + isAdmin : boolean = true
+  --
+  + flagClaim(claimId : string) : Promise<void>
+  + overrideVerdict(claimId : string, verdict : Verdict) : Promise<void>
+  + resolveReport(reportId : string, action : string) : Promise<void>
+}
+
+class AppNotification {
+  + id : string
+  + userId : string
+  + type : NotificationType
+  + title : string
+  + message : string
+  + claimId : string?
+  + createdAt : string
+  + isRead : boolean
+}
+
+enum Verdict {
+  TRUE
+  FALSE
+  MISLEADING
+  UNVERIFIABLE
+  CONTESTED
+}
+
+enum ClaimStatus {
+  pending
+  verified
+}
+
+enum ClaimCategory {
+  health
+  political
+  religious
+  financial
+  other
+}
+
+enum SourceQuality {
+  high
+  medium
+  low
+}
+
+ClaimsContext ..> DuplicateDetectionEngine : <<use>> on submit
+ClaimsContext ..> ConfidenceScoreEngine : <<use>> on verify
+ClaimsContext ..> FirestoreRepository : <<use>> persist
+ClaimsContext o-- "0..*" Claim : manages
+
+DuplicateDetectionEngine ..> Claim : compares
+ConfidenceScoreEngine ..> Verification : reads
+
+User "1" o-- "0..*" Claim : submits
+User "1" o-- "0..*" Verification : casts
+User "1" o-- "0..*" AppNotification : receives
+AdminUser --|> User
+
+Claim *-- "0..*" Verification : embedded array
+
+Claim ..> ClaimStatus
+Claim ..> ClaimCategory
+Verification ..> Verdict
+Verification ..> SourceQuality
+
+' ── Layout constraints: force a tall, single-column growth (A4 portrait) ──
+DuplicateDetectionEngine -[hidden]down-> ConfidenceScoreEngine
+ConfidenceScoreEngine -[hidden]down-> FirestoreRepository
+FirestoreRepository -[hidden]down-> User
+AdminUser -[hidden]down-> AppNotification
+Verdict -[hidden]down-> ClaimStatus
+ClaimStatus -[hidden]down-> ClaimCategory
+ClaimCategory -[hidden]down-> SourceQuality
+
+@enduml

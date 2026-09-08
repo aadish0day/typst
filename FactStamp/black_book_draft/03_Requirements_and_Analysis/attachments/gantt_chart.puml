@@ -1,0 +1,93 @@
+' FactStamp - Project Gantt Chart
+' Chapter 3.3 - Planning and Scheduling
+' Build:  plantuml -tsvg gantt_chart.puml
+'
+' Eight 2-week Scrum sprints, single developer, strictly sequential.
+' Sprints 1-7 are complete; Sprint 8 is underway.
+'
+' COLOUR POLICY - deliberate, Gantt-only exception to the project-wide
+' "skinparam monochrome true" rule (see Rules/Diagram-rules.md, Rule 6).
+' Colour here encodes information, not decoration:
+'
+'   * One colour family per delivery phase, so the four phases group visually.
+'   * The four families sit on a deliberate LIGHTNESS LADDER (approximate
+'     greyscale luminance in brackets) so the phases stay tellable apart when
+'     the black book is printed in black and white:
+'         Phase 1  Foundation             pale green   #C9E4C5  [~217]
+'         Phase 2  Detection Core         amber        #E0AE45  [~177]
+'         Phase 3  Consensus and Delivery mid blue     #4E93BE  [~131]
+'         Phase 4  Security and Release   indigo       #5B4B85  [~ 86]
+'         Handover milestone              deep crimson #8E1B12  [~ 60]
+'     Roughly 40 luminance steps between neighbours - hue alone is never load
+'     bearing.
+'   * Completed sprints (S1-S7) render as a fully saturated bar; the in-flight
+'     S8 renders 40% filled against white, so "done" vs "in progress" reads
+'     from the fill fraction, which survives greyscale untouched.
+
+@startgantt
+
+skinparam defaultFontName "Liberation Sans"
+skinparam defaultFontSize 18
+skinparam defaultFontStyle bold
+skinparam titleFontSize 24
+skinparam titleFontStyle bold
+skinparam taskBorderThickness 2
+
+title FactStamp - Project Gantt Chart (8 Sprints x 2 Weeks = 16 Weeks)
+
+printscale weekly
+Project starts 2026-06-01
+
+-- Phase 1: Foundation --
+
+[S1: Scaffolding + Auth] lasts 14 days
+[S1: Scaffolding + Auth] is 100% complete
+[S1: Scaffolding + Auth] is colored in #C9E4C5/#3F6B39
+
+[S2: Ingestion + OCR] lasts 14 days
+[S2: Ingestion + OCR] starts at [S1: Scaffolding + Auth]'s end
+[S2: Ingestion + OCR] is 100% complete
+[S2: Ingestion + OCR] is colored in #C9E4C5/#3F6B39
+
+-- Phase 2: Detection Core --
+
+[S3: Duplicate Detection] lasts 14 days
+[S3: Duplicate Detection] starts at [S2: Ingestion + OCR]'s end
+[S3: Duplicate Detection] is 100% complete
+[S3: Duplicate Detection] is colored in #E0AE45/#7A560C
+
+[S4: Verification Queue] lasts 14 days
+[S4: Verification Queue] starts at [S3: Duplicate Detection]'s end
+[S4: Verification Queue] is 100% complete
+[S4: Verification Queue] is colored in #E0AE45/#7A560C
+
+-- Phase 3: Consensus and Delivery --
+
+[S5: Consensus Engine] lasts 14 days
+[S5: Consensus Engine] starts at [S4: Verification Queue]'s end
+[S5: Consensus Engine] is 100% complete
+[S5: Consensus Engine] is colored in #4E93BE/#1B4762
+
+[S6: Cards + Analytics] lasts 14 days
+[S6: Cards + Analytics] starts at [S5: Consensus Engine]'s end
+[S6: Cards + Analytics] is 100% complete
+[S6: Cards + Analytics] is colored in #4E93BE/#1B4762
+
+-- Phase 4: Security and Release --
+
+[S7: Security + Admin] lasts 14 days
+[S7: Security + Admin] starts at [S6: Cards + Analytics]'s end
+[S7: Security + Admin] is 100% complete
+[S7: Security + Admin] is colored in #5B4B85/#2C2444
+
+' S8 is the only sprint still in flight: same Phase 4 indigo, but only 40% of
+' the bar is filled, leaving the remainder white.
+[S8: Hardening + Deploy] lasts 14 days
+[S8: Hardening + Deploy] starts at [S7: Security + Admin]'s end
+[S8: Hardening + Deploy] is 40% complete
+[S8: Hardening + Deploy] is colored in #5B4B85/#2C2444
+
+[Project Handover] happens at [S8: Hardening + Deploy]'s end
+[Project Handover] is colored in #8E1B12/#4A0D08
+
+@endgantt

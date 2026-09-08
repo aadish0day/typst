@@ -1,0 +1,97 @@
+@startuml
+skinparam style strictuml
+skinparam monochrome true
+skinparam defaultFontName "Liberation Sans"
+skinparam defaultFontSize 20
+skinparam defaultFontStyle bold
+skinparam titleFontSize 26
+skinparam titleFontStyle bold
+
+skinparam backgroundColor white
+skinparam ArrowColor black
+skinparam ArrowThickness 2.5
+skinparam ArrowFontSize 17
+skinparam ArrowFontStyle bold
+
+skinparam RectangleBorderColor black
+skinparam RectangleBorderThickness 2.5
+skinparam RectangleBackgroundColor transparent
+skinparam RectangleFontSize 20
+skinparam RectangleFontStyle bold
+
+skinparam ComponentBorderColor black
+skinparam ComponentBorderThickness 2.5
+skinparam ComponentBackgroundColor #F8F9FA
+skinparam ComponentFontSize 20
+skinparam ComponentFontStyle bold
+
+title FactStamp - Component Diagram
+
+skinparam InterfaceBorderThickness 2.5
+skinparam InterfaceFontSize 18
+skinparam PackageFontSize 21
+skinparam PackageBorderThickness 2.5
+skinparam Ranksep 45
+skinparam Nodesep 40
+
+package "Client Tier :: Web Browser (single-page application)" as CLIENT {
+
+  component "App Shell and Router\n<<React 18 + react-router-dom v6>>\nlazy-loaded routes, ErrorBoundary" as SHELL
+
+  component "Page Views\n<<11 routed views>>\nSubmit, VerifyQueue, VerifyDetail,\nClaimDetail, Dashboard, Admin" as VIEWS
+  component "UI Primitive Library\n<<18 custom components>>\nButton, Modal, VerdictPill,\nCategoryBadge, Skeletons" as UIKIT
+
+  interface "IAppState" as I_STATE
+  component "Context Provider Layer\n<<React Context>>\nAuth, Claims, Users,\nNotifications, Theme" as CTX
+
+  interface "IOcrExtraction" as I_OCR
+  interface "IClaimRepository" as I_REPO
+
+  component "ocrService\n<<tesseract.js WASM worker>>\nextractTextFromImage(),\ndetectClaimCategory()" as OCR
+  component "firebaseService\n<<data access>>\nCRUD + onSnapshot\nreal-time subscriptions" as FSVC
+
+  component "Domain Logic Modules (lib)\nduplicateDetection - confidenceScore\nsecurity - weeklyReport - imageCompression" as DOMAIN
+
+  component "Card Rasteriser\n<<html-to-image>>\nFactCheckCard to PNG" as CARD
+
+  component "Firebase Web SDK v12\n<<firebase/app, auth, firestore>>\ninitialised by lib/firebase.ts" as SDK
+}
+
+interface "IAuthentication" as I_AUTH
+interface "IDocumentStore" as I_DB
+
+package "Server Tier :: Google Cloud (Backend as a Service)" as CLOUD {
+  component "Firebase Authentication\nemail/password + Google OAuth,\nID token issuing" as FBAUTH
+  component "Cloud Firestore\nusers, claims, notifications,\nreports, audit_logs" as FSTORE
+  component "Firestore Security Rules\n<<server-side enforcement>>\nrole, ownership and\nfield-immutability checks" as RULES
+}
+
+cloud "tessdata CDN\n(traineddata language files)" as CDN
+
+SHELL --> VIEWS : routes to
+VIEWS ..> UIKIT : composes
+VIEWS ..> I_STATE : requires
+I_STATE -- CTX : provides
+VIEWS ..> I_OCR : requires
+VIEWS ..> CARD : exports PNG
+CTX ..> I_REPO : requires
+CTX ..> DOMAIN : scores / validates
+VIEWS ..> DOMAIN : sanitises input
+I_OCR -- OCR : provides
+I_REPO -- FSVC : provides
+OCR ..> CDN : downloads model
+FSVC --> SDK : uses
+SDK ..> I_AUTH : requires
+SDK ..> I_DB : requires
+I_AUTH -- FBAUTH : provides
+I_DB -- FSTORE : provides
+FSTORE ..> RULES : every read/write\nevaluated against
+FBAUTH --> RULES : supplies request.auth
+
+DOMAIN -[hidden]down- SDK
+OCR -[hidden]down- SDK
+UIKIT -[hidden]right- VIEWS
+OCR -[hidden]right- FSVC
+CARD -[hidden]right- DOMAIN
+
+@enduml

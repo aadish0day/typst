@@ -1,0 +1,108 @@
+' FactStamp — Data Flow Diagram, Level 2
+' Drill-down on Level 1 process "1.0 Submit Claim" (and only that process).
+' Tool: PlantUML   Build: plantuml -tsvg dfd_level_2.puml
+'
+' LEVELLING / BALANCE against parent process 1.0 — the six boundary flows of
+' 1.0 in the Level 1 diagram appear here unchanged:
+'   IN  : Verifier -> 1.0  "Claim Text / Screenshot / Category"      -> 1.1
+'   IN  : D2 Users -> 1.0  "Verifier Profile & Auth Claims"          -> 1.1
+'   IN  : 2.0      -> 1.0  "Duplicate Match Result"                  -> 1.5
+'   OUT : 1.0 -> 2.0       "Normalised Claim Text"                   from 1.4
+'   OUT : 1.0 -> D1 Claims "New Claim Document"                      from 1.7
+'   OUT : 1.0 -> Verifier  "Submission Receipt / Duplicate Warning"  from 1.5 / 1.7
+'
+' Rule 2 (Diagram-rules.md): PlantUML has no native DFD notation, so DFD shapes
+' are mapped onto the nearest PlantUML constructs:
+'   process        -> usecase  (ellipse / bubble)
+'   data store     -> database (cylinder)
+'   external entity-> rectangle (box)
+' Rule 5: no "left to right direction" — A4 portrait, reads top-to-bottom.
+'
+' LAYOUT: the Graphviz original needed {rank=same}, style=invis spine edges and
+' constraint=false. The PlantUML equivalents used here are:
+'   -[hidden]->  = invisible spine edge (pins D2 to the same rank as 1.1)
+'   -[norank]->  = constraint=false (a flow that must not stretch the spine)
+@startuml
+skinparam style strictuml
+skinparam monochrome true
+skinparam defaultFontName "Liberation Sans"
+skinparam defaultFontSize 20
+skinparam defaultFontStyle bold
+skinparam titleFontSize 26
+skinparam titleFontStyle bold
+
+' Rule 5 (portrait): stretch ranks apart, squeeze columns together.
+skinparam ranksep 35
+skinparam nodesep 30
+
+skinparam backgroundColor white
+skinparam ArrowColor black
+skinparam ArrowThickness 2.5
+skinparam ArrowFontSize 17
+skinparam ArrowFontStyle bold
+
+skinparam UsecaseBorderColor black
+skinparam UsecaseBorderThickness 2.5
+skinparam UsecaseBackgroundColor #F8F9FA
+skinparam UsecaseFontSize 19
+skinparam UsecaseFontStyle bold
+
+skinparam RectangleBorderColor black
+skinparam RectangleBorderThickness 2.5
+skinparam RectangleBackgroundColor transparent
+skinparam RectangleFontSize 20
+skinparam RectangleFontStyle bold
+
+skinparam DatabaseBorderColor black
+skinparam DatabaseBackgroundColor #F8F9FA
+skinparam DatabaseFontSize 19
+skinparam DatabaseFontStyle bold
+
+title FactStamp - Data Flow Diagram (Level 2: 1.0 Submit Claim)
+
+' ---------- External entity ----------
+rectangle "Registered\nVerifier" as VER
+
+' ---------- Sub-processes of 1.0 ----------
+usecase "1.1\nValidate Submitter\n& Claim Form" as S11
+' ---------- Data stores ----------
+database "D2  Users" as D2
+usecase "1.2\nCompress Screenshot\nto Base64 Data URI" as S12
+usecase "1.3\nExtract Text\n(Tesseract.js WASM,\n100% Client-Side)" as S13
+usecase "1.4\nNormalise &\nTokenise Claim Text" as S14
+' ---------- Neighbouring Level 1 process, shown only as a boundary ----------
+' #line.dashed marks it as out of scope (PlantUML resets the stroke width when an
+' inline line style is applied, so this box is deliberately drawn thinner).
+rectangle "2.0  Detect Duplicates\n(Level 1 process — out of scope here)" as P20 #line.dashed
+usecase "1.5\nEvaluate Duplicate\nThreshold (>= 0.75)" as S15
+usecase "1.6\nAssemble Claim Record\n(pending, 7-day\nconsensusDeadline)" as S16
+usecase "1.7\nPersist Claim\nDocument" as S17
+database "D1  Claims\n(verifications[] embedded)" as D1
+
+' ---------- Invisible spine: pins D2 to the rank of 1.1 so the graph stays narrow ----------
+VER -[hidden]-> D2
+
+' ---------- Boundary inflows ----------
+VER --> S11 : "1. Claim Text / Screenshot /\n    Category / Source URL"
+D2  -[norank]-> S11 : "2. Verifier Profile\n    & Auth Claims"
+
+' ---------- Internal flows ----------
+S11 --> S12 : "3. Accepted Screenshot File"
+S12 --> S13 : "4. Compressed Base64\n    Data URI"
+S13 --> S14 : "5. OCR-Extracted Text\n    + OCR Confidence"
+S11 -[norank]-> S14 : "6. Typed Claim Text\n    (no-image path)"
+S12 -[norank]-> S16 : "7. screenshotUrl\n    (Base64 field)"
+
+' ---------- Boundary flow out to 2.0 and back ----------
+S14 --> P20 : "8. Normalised Claim Text\n    (lowercased token set)"
+P20 --> S15 : "9. Duplicate Match Result\n    (similarity, matched claim)"
+
+' ---------- Duplicate decision ----------
+S15 -[norank]-> VER : "10. Duplicate Warning +\n     Link to Existing Claim"
+S15 --> S16 : "11. Cleared Unique Claim"
+
+' ---------- Assemble and persist ----------
+S16 --> S17 : "12. Complete Claim Record"
+S17 --> D1 : "13. New Claim Document"
+S17 -[norank]-> VER : "14. Submission Receipt\n     (claimId)"
+@enduml

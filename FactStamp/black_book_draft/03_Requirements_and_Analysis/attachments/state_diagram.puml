@@ -1,0 +1,83 @@
+@startuml
+skinparam style strictuml
+skinparam monochrome true
+skinparam defaultFontName "Liberation Sans"
+skinparam defaultFontSize 20
+skinparam defaultFontStyle bold
+skinparam titleFontSize 26
+skinparam titleFontStyle bold
+
+skinparam backgroundColor white
+skinparam ArrowColor black
+skinparam ArrowThickness 2.5
+skinparam ArrowFontSize 17
+skinparam ArrowFontStyle bold
+
+skinparam UsecaseBorderColor black
+skinparam UsecaseBorderThickness 2.5
+skinparam UsecaseBackgroundColor #F8F9FA
+skinparam UsecaseFontSize 19
+skinparam UsecaseFontStyle bold
+
+skinparam ActorBorderColor black
+skinparam ActorBorderThickness 2.5
+skinparam ActorBackgroundColor #FFFFFF
+skinparam ActorFontSize 20
+skinparam ActorFontStyle bold
+
+skinparam RectangleBorderColor black
+skinparam RectangleBorderThickness 2.5
+skinparam RectangleBackgroundColor transparent
+skinparam RectangleFontSize 20
+skinparam RectangleFontStyle bold
+
+title FactStamp - State Diagram (Claim Lifecycle)
+
+skinparam StateBorderColor black
+skinparam StateBorderThickness 2.5
+skinparam StateBackgroundColor #F8F9FA
+skinparam StateFontSize 21
+skinparam StateFontStyle bold
+skinparam StateAttributeFontSize 17
+skinparam nodesep 40
+skinparam ranksep 55
+
+state "pending" as Pending {
+}
+Pending : status = 'pending'
+Pending : verificationCount < 3
+Pending : consensusDeadline = createdAt + 7 days
+Pending : verdict = provisional running majority
+Pending : --
+Pending : visible in the /verify queue
+
+state "verified" as Verified {
+}
+Verified : status = 'verified'
+Verified : verifiedAt = settlement timestamp
+Verified : verdict in { TRUE, FALSE, MISLEADING,
+Verified : UNVERIFIABLE, CONTESTED }
+Verified : confidenceScore = C
+Verified : --
+Verified : fact-check card is exportable
+
+[*] --> Pending : addClaim()\n[Jaccard duplicate check passed, J < 0.75]\n/ verificationCount = 0;\nconsensusDeadline = now + 7 days
+
+Pending --> Pending : addVerification()\n[verificationCount + 1 < 3\nAND deadline not passed]\n/ append Verification;\nrecompute provisional majority
+
+Pending --> Verified : addVerification()\n[verificationCount reaches 3]\n/ verdict = majority verdict;\nC = (A x 0.40) + (R x 0.30) + (S x 0.30)
+
+Pending --> Verified : expireOverdueClaims()\n[now > consensusDeadline\nAND verificationCount < 3]\n/ verdict = 'CONTESTED'\n(system-assigned)
+
+Verified --> Pending : admin deleteVerification()\n[remaining verifications < 3]\n/ status reverts to 'pending'
+
+Verified --> [*] : claim published on /claim/:claimId\nand counted in the analytics dashboard
+
+note bottom of Verified
+  ClaimStatus has exactly two values:
+  'pending' and 'verified'.
+  CONTESTED is a **verdict**, not a status --
+  an expired claim is still status = 'verified'.
+end note
+
+@enduml
