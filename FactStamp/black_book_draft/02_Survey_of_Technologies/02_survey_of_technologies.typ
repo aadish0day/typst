@@ -99,7 +99,9 @@ Recharts 2.10 generates visual analytics from Firestore collections. Implementat
 
 Incoming WhatsApp forwards frequently arrive as screenshot images rather than plain text, requiring optical text extraction. Three primary implementation pathways were evaluated:
 
-Cloud vision services such as Google Cloud Vision or AWS Textract provide high recognition accuracy over HTTPS, but charge per-request fees and require transmitting user images to external cloud infrastructure. Multimodal language model endpoints can extract text and evaluate claims concurrently, yet they incur recurring token fees, network latency, and privacy risks when processing personal messaging screenshots. By contrast, running Tesseract.js in the browser via WebAssembly executes the complete recognition pipeline locally, avoiding external API calls, bandwidth fees, and cloud data egress.
+- Cloud vision services: Google Cloud Vision and AWS Textract recognize text accurately over HTTPS, but they charge per-request fees and require transmitting user images to external cloud infrastructure.
+- Multimodal language model endpoints: these extract the text and evaluate the claim in a single call. Against that they carry recurring token fees, they add network latency, and using one means sending a personal messaging screenshot to a third party.
+- In-browser Tesseract.js via WebAssembly: runs the complete recognition pipeline locally, avoiding external API calls, bandwidth fees, and cloud data egress.
 
 === In-Browser OCR: Tesseract.js 7.0
 
@@ -119,7 +121,9 @@ Client-side WebAssembly OCR delivers lower raw character accuracy than cloud neu
 
 Exporting styled DOM nodes into downloadable PNG cards can be accomplished through several browser rendering techniques:
 
-Direct drawing via the HTML5 Canvas API provides low-level graphical control, but requires manual calculation of line wrapping, padding, and font metrics. The `html2canvas` library inspects the DOM and reconstructs elements onto an HTML5 canvas using a custom JavaScript CSS parser; however, its parser regularly fails when encountering newer CSS specifications. In contrast, `html-to-image` converts the target DOM element into an SVG `<foreignObject>`, allowing the browser's native rendering engine to paint the markup directly before converting the result into a PNG. This approach relies on browser-native CSS support rather than an incomplete JavaScript parser.
+- Raw HTML5 Canvas API: redraw every visual element onto a `<canvas>` with imperative drawing calls. This gives low-level graphical control, but line wrapping, padding, and font metrics all have to be calculated by hand.
+- `html2canvas`: inspects the DOM and reconstructs the elements onto an HTML5 canvas using a custom JavaScript CSS parser. That parser trails the browser's own and regularly fails on newer CSS specifications.
+- `html-to-image`: converts the target DOM element into an SVG `<foreignObject>` and lets the browser's native rendering engine paint the markup before rasterizing it to a PNG. It relies on browser-native CSS support instead of an incomplete JavaScript parser.
 
 === FactStamp Implementation: `html-to-image`
 
@@ -133,13 +137,10 @@ By wrapping the card markup in an SVG `<foreignObject>`, `html-to-image` delegat
 
 Beyond frontend and database libraries, the consensus model governs how community evaluations settle into definitive claim verdicts. Four operational paradigms were reviewed:
 
-Single-moderator editorial decision: Traditional fact-checking agencies such as Snopes or AltNews employ professional journalists to investigate claims and issue verdicts. While thorough, centralized editorial desks cannot keep pace with the velocity of viral forwards circulating in closed messaging groups.
-
-Simple majority voting: Reviewers cast unweighted votes and the plurality verdict prevails. While intuitive, unweighted voting treats all participants identically regardless of track record, and masks consensus certainty: a 2 to 1 split produces the identical verdict to a 10 to 1 consensus.
-
-Byzantine fault tolerant (BFT) distributed consensus: Protocols like PBFT and Proof-of-Stake establish consensus among untrusted network nodes. However, BFT consensus validates transaction integrity and ordering rather than epistemic truth; it confirms that an assertion was recorded, but offers no metric for evidence validity or verifier credibility.
-
-Weighted quorum consensus: A minimum quorum of reviewers must participate before settling a verdict, after which confidence scoring incorporates verifier accuracy and evidence quality. This model preserves transparent participation while weighting outcomes by demonstrated verifier reliability.
+- Single-moderator editorial decision: Traditional fact-checking agencies such as Snopes or AltNews employ professional journalists to investigate claims and issue verdicts. While thorough, centralized editorial desks cannot keep pace with the velocity of viral forwards circulating in closed messaging groups.
+- Simple majority voting: Reviewers cast unweighted votes and the plurality verdict prevails. While intuitive, unweighted voting treats all participants identically regardless of track record, and masks consensus certainty: a 2 to 1 split produces the identical verdict to a 10 to 1 consensus.
+- Byzantine fault tolerant (BFT) distributed consensus: Protocols like PBFT and Proof-of-Stake establish consensus among untrusted network nodes. However, BFT consensus validates transaction integrity and ordering rather than epistemic truth; it confirms that an assertion was recorded, but offers no metric for evidence validity or verifier credibility.
+- Weighted quorum consensus: A minimum quorum of reviewers must participate before settling a verdict, after which confidence scoring incorporates verifier accuracy and evidence quality. This model preserves transparent participation while weighting outcomes by demonstrated verifier reliability.
 
 === FactStamp Implementation: Weighted Quorum Consensus
 

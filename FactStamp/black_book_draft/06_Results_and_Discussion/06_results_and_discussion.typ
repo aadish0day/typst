@@ -1,10 +1,14 @@
 #import "../lib/helpers.typ": *
 
-= Results and Discussion
+= Results and discussion
 
 // Screenshot Placeholder Helper: plain text, no #image() call on a
 // non-existent file. Real screenshots are captured separately per
 // Only_module/how_to.md and wired in later via responsive-image().
+#let screenshot(file, width: 92%) = align(center)[
+  #image("attachments/" + file, width: width)
+]
+
 #let screenshot-placeholder(label) = block(
   fill: rgb("F8F9FA"),
   stroke: 0.4pt + luma(180),
@@ -17,13 +21,13 @@
   ]
 ]
 
-== Test Reports and Empirical Metrics
+== Test reports and empirical metrics
 
-This section reports the results of running the test cases designed and described in Chapter 5 (5.3 Testing Approach, 5.5 Test Cases) against the real implementation at `/home/aadish/Documents/Github/FactStamp`. The numbers, formulas, and worked examples come directly from the source (`src/lib/duplicateDetection.ts`, `src/lib/confidenceScore.ts`). At the scale of a BSc IT project, testing was manual and functional. It involved a single developer running the application with a few seeded demo accounts created via `scripts/create-user.mjs` and `scripts/seed-db.mjs`. The repository has no automated test runner (`package.json` defines no `test` script, and there is no Jest/Vitest/Playwright/Cypress configuration). Every test case executed was a structured manual walkthrough based on Section 5.3. The only automated check in `.github/workflows/ci.yml` is the `typecheck-and-build` job (`npm ci` #sym.arrow.r `npm run typecheck` #sym.arrow.r `npm run build`), which catches type and build errors but does not catch behavioral problems.
+This section reports what happened when the test cases from Chapter 5 (5.3 Testing Approach, 5.5 Test Cases) were run against the actual implementation. The numbers, formulas, and worked examples come directly from the source (`src/lib/duplicateDetection.ts`, `src/lib/confidenceScore.ts`). As suits a BSc IT project, testing was manual and functional: one developer ran the application with a few seeded demo accounts created with `scripts/create-user.mjs` and `scripts/seed-db.mjs`. The repository has no automated test runner (`package.json` defines no `test` script, and there is no Jest, Vitest, Playwright, or Cypress configuration), so every test case was a structured manual walkthrough based on Section 5.3. The only automated check is the `typecheck-and-build` job in `.github/workflows/ci.yml` (`npm ci` #sym.arrow.r `npm run typecheck` #sym.arrow.r `npm run build`), which catches type and build errors but not behavioral problems.
 
-=== Summary Results Table
+=== Summary results table
 
-Test cases are grouped by the 8 core system modules and the Admin console. The "Open / Deferred" items are documented, non-blocking behaviors identified during testing. They were left as known limitations rather than patched, for reasons discussed at the end of this section.
+Test cases are grouped by the 8 core system modules plus the Admin console. The two "Open / Deferred" items are known, non-blocking behaviors found during testing. They were recorded as limitations instead of being patched, for the reasons given below the table.
 
 #styled-table(
   columns: (auto, 2.3fr, 0.9fr, 0.7fr, 0.9fr, 0.8fr),
@@ -42,16 +46,16 @@ Test cases are grouped by the 8 core system modules and the Admin console. The "
 
 #v(4pt)
 
-Both open items trace to specific, understood behaviors rather than crashes or data-loss defects:
+Neither open item is a crash or a data-loss defect:
 
-+ *Module 2 (OCR):* On heavily recompressed or slightly rotated WhatsApp screenshots, the Tesseract.js pass in `ocrService.ts` occasionally drops the last line of text. The Submit page already shows the extracted text in an editable field before submission. The user can review and complete the text using the current UI. The OCR accuracy limitation itself was left open because it relates to the lightweight client-side WASM OCR engine rather than a coding error.
-+ *Module 8 (Security):* The 30-minute idle session countdown, driven by `setInterval`, showed a timer drift of a few seconds during a throttled-CPU test. The session still times out and logs the user out correctly, but the displayed countdown occasionally lags its true value by 1 to 3 seconds. This is left open until a `requestAnimationFrame`-based timer is implemented.
++ *Module 2 (OCR):* On heavily recompressed or slightly rotated WhatsApp screenshots, the Tesseract.js pass in `ocrService.ts` sometimes drops the last line of text. The Submit page already shows the extracted text in an editable field before submission, so the user can type in whatever is missing. The accuracy problem itself was left open because it comes from the lightweight client-side WASM OCR engine, not from a coding error.
++ *Module 8 (Security):* In a throttled-CPU test, the `setInterval`-driven countdown for the 30-minute idle timeout drifted by a few seconds. The session still expires and logs the user out correctly, but the displayed countdown can lag the true value by 1 to 3 seconds. This stays open until the timer is rebuilt on `requestAnimationFrame`.
 
-=== Duplicate Detection Accuracy: Worked Examples
+=== Duplicate detection accuracy: worked examples
 
-`src/lib/duplicateDetection.ts` computes Jaccard word-overlap similarity between a submitted claim and existing claims. Text is lowercased, stripped of punctuation, and tokenized on whitespace, keeping only tokens longer than 3 characters (`tokenize()`). Similarity is $J(A, B) = (|S_A inter S_B|) / (|S_A union S_B|)$. Any existing claim scoring $>= 0.75$ redirects the submitter to that claim instead of opening a new one.
+`src/lib/duplicateDetection.ts` computes Jaccard word-overlap similarity between a submitted claim and the existing claims. `tokenize()` lowercases the text, strips punctuation, splits it on whitespace, and keeps only tokens longer than 3 characters. Similarity is $J(A, B) = (|S_A inter S_B|) / (|S_A union S_B|)$. An existing claim scoring $>= 0.75$ sends the submitter to that claim instead of creating a new one.
 
-To verify this against real behavior, the three worked examples below start from the real demo claim shown in the FactStamp home page animation (`src/pages/Home.tsx`):
+The three worked examples below all start from the demo claim used in the FactStamp home page animation (`src/pages/Home.tsx`):
 
 #block(fill: rgb("FAFAFA"), stroke: 0.4pt + luma(180), inset: 8pt, radius: 2pt, width: 100%)[
   *Base Claim (A):* _"Drinking hot water with lemon cures dengue fever completely in 24 hours, confirmed by AIIMS doctors. Share with family!"_
@@ -59,7 +63,7 @@ To verify this against real behavior, the three worked examples below start from
 
 #v(4pt)
 
-After normalization, Claim A's significant token set (words longer than 3 characters) is `{drinking, water, with, lemon, cures, dengue, fever, completely, hours, confirmed, aiims, doctors, share, family}`, totaling 14 tokens.
+After normalization, Claim A's significant tokens (words longer than 3 characters) are `{drinking, water, with, lemon, cures, dengue, fever, completely, hours, confirmed, aiims, doctors, share, family}`, 14 in total.
 
 #styled-table(
   columns: (auto, 2.6fr, 0.8fr, 0.8fr, 0.8fr, 1.3fr),
@@ -71,17 +75,17 @@ After normalization, Claim A's significant token set (words longer than 3 charac
 
 #v(4pt)
 
-Examples 1 and 2 confirm the $>= 0.75$ threshold catches the most common case on WhatsApp: a message copy-pasted or lightly re-forwarded with cosmetic additions like punctuation, emoji, or a few extra words. This is how most messages spread. Example 3 illustrates a point discussed later: a heavily reworded retelling of the same claim with almost no shared vocabulary beyond some nouns falls below the threshold and is treated as a new claim. This happens because token-overlap similarity works this way, rather than being a bug.
+Examples 1 and 2 show the $>= 0.75$ threshold catching the most common WhatsApp case: a message copy-pasted or lightly re-forwarded with cosmetic additions such as punctuation, emoji, or a few extra words, which is how most forwards spread. Example 3 shows a limitation discussed below. A heavily reworded retelling of the same claim, sharing little vocabulary beyond a few nouns, falls under the threshold and is treated as a new claim. That follows from how token-overlap similarity works; the code is behaving as designed.
 
-=== Confidence Score Engine: Worked Numeric Examples
+=== Confidence score engine: worked numeric examples
 
-`src/lib/confidenceScore.ts` computes a final confidence score once a claim reaches its 3-verifier quorum:
+Once a claim reaches its 3-verifier quorum, `src/lib/confidenceScore.ts` computes a final confidence score:
 
 $ C = (A times 40%) + (R times 30%) + (S times 30%) $
 
-where $A$ (Agreement Ratio) is the percentage of verifiers whose verdict matches the majority verdict, $R$ (Average Reputation) is the mean of the participating verifiers' reputation scores ($0$ to $100$), and $S$ (Average Source Quality) is the mean of each verifier's cited-source quality score (`sourceQualityToScore`: high = 100, medium = 70, low = 30). All three inputs are already on a $0$ to $100$ scale before weighting.
+where $A$ (Agreement Ratio) is the percentage of verifiers whose verdict matches the majority verdict, $R$ (Average Reputation) is the mean reputation of the participating verifiers ($0$ to $100$), and $S$ (Average Source Quality) is the mean quality score of the sources they cited (`sourceQualityToScore`: high = 100, medium = 70, low = 30). All three inputs are on a $0$ to $100$ scale before weighting.
 
-*Primary worked example (3 verifiers, 2 vote TRUE, 1 votes FALSE):*
+*Primary worked example (3 verifiers: 2 vote TRUE, 1 votes FALSE):*
 
 #styled-table(
   columns: (auto, 1fr, 1fr, 1.4fr, 1fr),
@@ -93,7 +97,7 @@ where $A$ (Agreement Ratio) is the percentage of verifiers whose verdict matches
 
 #v(4pt)
 
-Majority verdict = TRUE (2 of 3 verifiers). Computing each component by hand:
+The majority verdict is TRUE (2 of 3 verifiers). Computing each component by hand:
 
 $ A = frac(2, 3) times 100% = 66.67% $
 $ R = frac(62 + 78 + 55, 3) = frac(195, 3) = 65 $
@@ -104,7 +108,7 @@ Substituting into the weighted formula:
 $ C = (66.67 times 40%) + (65 times 30%) + (66.67 times 30%) $
 $ C = 26.67 + 19.50 + 20.00 = 66.17 approx 66 $
 
-Final verdict: *TRUE, 66% confidence.* This matches the `calculateConfidenceScore()` implementation's `Math.round()` behavior. The result is deliberately moderate rather than high. The formula penalizes the outcome for the dissenting FALSE vote and for the low-quality source, even though a 2-to-1 majority might look stronger than 66%.
+Final verdict: *TRUE, 66% confidence*, which matches what `calculateConfidenceScore()` returns after `Math.round()`. A 2-to-1 majority might look stronger than 66%, but the formula pulls the score down for the dissenting FALSE vote and for the low-quality source, and that is what it is meant to do.
 
 *Contrasting examples:*
 
@@ -118,115 +122,115 @@ Final verdict: *TRUE, 66% confidence.* This matches the `calculateConfidenceScor
 
 #v(4pt)
 
-The behavior across all three scenarios is internally consistent. Confidence scales down smoothly as agreement, reputation, and source quality degrade, rather than jumping discontinuously. This matches the intended design goal of a weighted consensus formula over a simple majority vote.
+Across the three scenarios, confidence falls steadily as agreement, reputation, and source quality weaken, with no sudden jumps. That gradual behavior is the reason for using a weighted formula instead of a simple majority vote.
 
-=== Discussion: What Worked Well and Known Limitations
+=== Discussion: what worked and known limitations
 
 *What worked well:*
-- The Jaccard duplicate-detection engine reliably catches the most common WhatsApp pattern (a forward being copy-pasted or lightly re-forwarded with cosmetic additions) at zero server cost and entirely client-side. No false positives were observed among the distinct-claim pairs exercised during testing.
-- The weighted confidence formula produces expected results. Unanimous, well-sourced verdicts trend toward the 90s, a single dissenting vote pulls a majority down into the 60s, and a three-way split collapses below 50. This correctly allows unresolved claims to settle as `CONTESTED` rather than forcing a majority.
-- The dual-layer admin authorization (client-side `AdminRoute` re-check plus server-side `firestore.rules` `isAdmin()`) held up against a manual `sessionStorage` tampering attempt during Module 8 security testing.
-- Client-side OCR extracted clean, usable text from typical sharp WhatsApp screenshots. The WhatsApp interface cleanup (`cleanExtractedOcrText()`) stripped timestamps, delivery checkmarks, and battery status text in every screenshot tested.
+- The Jaccard engine catches the most common WhatsApp pattern, a forward that is copy-pasted or lightly re-forwarded with cosmetic additions, entirely in the browser and at no server cost. No false positives appeared among the distinct-claim pairs tried during testing.
+- The weighted confidence formula behaves as expected. Unanimous, well-sourced verdicts land in the 90s, one dissenting vote pulls a majority down into the 60s, and a three-way split drops below 50. A score that low lets an unresolved claim settle as `CONTESTED` instead of being forced into a majority.
+- The dual-layer admin authorization (the client-side `AdminRoute` re-check plus the server-side `isAdmin()` in `firestore.rules`) held up against a manual `sessionStorage` tampering attempt during Module 8 security testing.
+- Client-side OCR produced clean, usable text from typical sharp WhatsApp screenshots, and `cleanExtractedOcrText()` removed timestamps, delivery checkmarks, and battery status text from every screenshot tested.
 
 *Known limitations:*
-- Jaccard token-overlap similarity is syntactic, not semantic. As Example 3 above shows, a heavily reworded retelling of the same claim falls below the 0.75 threshold and is queued as a new claim, causing redundant verification effort. This happens because the bag-of-words approach runs client-side with no infrastructure cost. A semantic similarity model would catch more paraphrases but requires a server-side inference call or a larger client-side model, which goes against the serverless design constraints described in Section 1.3.2.
-- Confidence-score source-quality tiering depends on a fixed domain list (`HQ_DOMAINS` / `MQ_DOMAINS` in `confidenceScore.ts`). A verifier citing a credible source that is not on the list defaults to the lowest tier ($30/100$), which can lower confidence for a well-evidenced verdict.
-- OCR accuracy on blurry, rotated, or heavily recompressed screenshots is imperfect. The user must manually review and correct extracted text before submission. This was verified against a small set of screenshots rather than an extensive accuracy study.
-- All functional and beta testing involved the developer and seeded demo accounts, not a live population of independent verifiers. Real-world consensus dynamics (group voting, expert disagreement, adversarial voting) remain unobserved and are noted as future work in Chapter 7.
-- No load or performance testing at production scale was conducted. Firestore free-tier read/write quotas were checked logically against expected traffic for a college deployment, not stress-tested against concurrent load.
+- Jaccard token-overlap similarity compares words, not meaning. As Example 3 shows, a heavily reworded retelling of the same claim falls below the 0.75 threshold and is queued as a new claim, which wastes verification effort. That is the cost of a bag-of-words method that runs in the browser with no infrastructure. A semantic similarity model would catch more paraphrases, but it needs either a server-side inference call or a much larger client-side model, and both conflict with the serverless design constraints in Section 1.3.2.
+- Source-quality tiering depends on a fixed domain list (`HQ_DOMAINS` / `MQ_DOMAINS` in `confidenceScore.ts`). A verifier who cites a credible source that is not on the list gets the lowest tier ($30/100$), which can drag down confidence in a well-evidenced verdict.
+- OCR is unreliable on blurry, rotated, or heavily recompressed screenshots, so the user has to review and correct the extracted text before submitting. This was checked against a small set of screenshots, not a full accuracy study.
+- All functional and beta testing used the developer and seeded demo accounts, not a live population of independent verifiers. Real-world consensus dynamics (group voting, expert disagreement, adversarial voting) have not been observed and are listed as future work in Chapter 7.
+- No load or performance testing was done at production scale. Firestore free-tier read and write quotas were checked on paper against expected traffic for a college deployment, not stress-tested under concurrent load.
 
-== User Documentation
+== User documentation
 
-Role-based user manual for FactStamp, matching the routes defined in `src/App.tsx`. Screenshots are captured separately according to the `Only_module/how_to.md` conventions. Every screen below carries a plain text placeholder marking where the captured image belongs. It is organized into two parts: For End Users (public routes) and For Administrators (the `/admin` console).
+This is a role-based user manual for FactStamp, following the routes defined in `src/App.tsx`. It has two parts: one for end users, covering the regular (non-admin) routes, and one for administrators, covering the `/admin` console. Screenshots are captured separately, and each screen below has a text placeholder where its screenshot will go.
 
-=== For End Users
+=== For end users
 
 ==== Home (`/`)
 
-Home is a public landing page that does not require an account. It opens with a hero section showing an animated "Forward #sym.arrow Stamped Card" transformation using a real example claim turning into a verdict stamp. It includes live platform statistics and two buttons, "Submit a Forward" and "Explore Verification Queue". Below the hero, a "Recently Debunked Claims" feed shows the most recently resolved claims from Firestore so visitors can see real verdicts before registering.
+The home page is public and needs no account. Its hero section plays an animated "Forward #sym.arrow Stamped Card" sequence in which a real example claim turns into a verdict stamp, alongside live platform statistics and two buttons, "Submit a Forward" and "Explore Verification Queue". Below the hero, a "Recently Debunked Claims" feed lists the latest resolved claims from Firestore, so visitors can see real verdicts before they register.
 
-#screenshot-placeholder("Home")
+#screenshot("home.png")
 
 ==== Sign In (`/signin`)
 
-A public email/password and Google OAuth login form. Login attempts use a client-side rate limiter (`checkLoginRateLimit`) that locks an account for 15 minutes after 5 failed attempts and displays a live countdown. A collapsible "Demo Accounts for Testing" panel lets evaluators fill demo verifier credentials with one click, allowing app review without making a new account.
+The sign-in page is a public login form for email/password and Google OAuth. A client-side rate limiter (`checkLoginRateLimit`) locks an account for 15 minutes after 5 failed attempts and shows a live countdown. A collapsible "Demo Accounts for Testing" panel fills in demo verifier credentials with one click, so evaluators can review the app without creating an account.
 
-#screenshot-placeholder("Sign In")
+#screenshot("signin.png")
 
 ==== Sign Up (`/signup`)
 
-A public registration form collecting display name, email, and password, with live password-strength feedback. Submitting the form creates a Firebase Authentication account and a matching Firestore `users/{uid}` profile, starting at the base reputation score of 50 (Novice Verifier tier).
+The public registration form asks for a display name, email, and password, and gives live feedback on password strength. Submitting it creates a Firebase Authentication account and a matching Firestore `users/{uid}` profile that starts at the base reputation score of 50 (Novice Verifier tier).
 
-#screenshot-placeholder("Sign Up")
+#screenshot("signup.png")
 
 ==== Submit (`/submit`)
 
-A signed-in user reports a suspicious claim via two tabs. The Text tab accepts 20 to 500 characters of claim text and checks it against existing claims using the duplicate-detection engine. If a match $>= 0.75$ similarity is found, a banner appears with a link to the existing verdict instead of creating a duplicate. The Screenshot (OCR) tab accepts a pasted or dropped WhatsApp screenshot, runs it through the Tesseract.js OCR engine, strips WhatsApp interface elements, and populates the text into an editable field for review before submission.
+A signed-in user reports a suspicious claim through one of two tabs. The Text tab accepts 20 to 500 characters and runs the duplicate-detection check against existing claims. If a match scores $>= 0.75$, a banner links to the existing verdict and no duplicate is created. The Screenshot (OCR) tab takes a pasted or dropped WhatsApp screenshot, runs Tesseract.js OCR on it, strips WhatsApp interface elements, and puts the text in an editable field for review before submission.
 
-#screenshot-placeholder("Submit a Claim")
+#screenshot("submit.png")
 
 ==== Claim Detail (`/claim/:claimId`)
 
-A public page showing the full lifecycle of a claim. It displays the claim text, a `VerdictStamp` badge colored by verdict (emerald TRUE, crimson FALSE, amber MISLEADING, slate UNVERIFIABLE, blue CONTESTED), and its computed confidence percentage. It shows verifier explanations and cited sources. A "Download WhatsApp Card (PNG)" button rasterizes the card client-side via `html-to-image` into a PNG. It is sized and styled to be forwarded back into WhatsApp.
+This public page shows a claim's full lifecycle: the claim text, a `VerdictStamp` badge colored by verdict (emerald TRUE, crimson FALSE, amber MISLEADING, slate UNVERIFIABLE, blue CONTESTED), the computed confidence percentage, and the verifiers' explanations and cited sources. A "Download WhatsApp Card (PNG)" button rasterizes the card in the browser with `html-to-image` into a PNG sized and styled for forwarding back into WhatsApp.
 
-#screenshot-placeholder("Claim Detail")
+#screenshot("claim_detail.png")
 
 ==== Verify Queue (`/verify`)
 
-The community verification workbench entry point lists claims awaiting their 3-verifier quorum. A search box filters by text, a sort control reorders the list, and category chips narrow the results. Claims flagged by an administrator for expedited review float to the top of the queue.
+Community verification starts here. The page lists claims still waiting for their 3-verifier quorum, with a search box that filters by text, a sort control, and category chips that narrow the list. Claims an administrator has flagged for expedited review stay at the top.
 
-#screenshot-placeholder("Verify Queue")
+#screenshot("verify_queue.png")
 
 ==== Verify Detail (`/verify/:claimId`)
 
-A verifier casts a verdict via a 3-step wizard. Step 1 selects a verdict rating. Step 2 requires a source evidence URL, which derives the source-quality score. Step 3 requires a written explanation, validated by `validateVerdictExplanation()` (minimum 50 characters or 8 words, plus spam and copy-paste prevention checks).
+A verifier casts a verdict through a 3-step wizard. Step 1 is choosing a verdict. Step 2 asks for a source URL, from which the source-quality score is derived. Step 3 asks for a written explanation, which `validateVerdictExplanation()` checks (minimum 50 characters or 8 words, plus spam and copy-paste checks).
 
-#screenshot-placeholder("Verify Detail")
+#screenshot("verify_detail.png")
 
 ==== Dashboard (`/dashboard`)
 
-A public analytics page. KPI cards summarize registered verifiers, total claims, and verifications logged. A rolling weekly "Misinformation Trends" report shows claim volume and most-debunked claims. A category-distribution chart breaks volume down across Health, Political, Financial, Religious, and Other. A community claims directory sits alongside a top-verifiers leaderboard.
+The public analytics page opens with KPI cards for registered verifiers, total claims, and verifications logged. A rolling weekly "Misinformation Trends" report shows claim volume and the most-debunked claims, and a category chart splits volume across Health, Political, Financial, Religious, and Other. A community claims directory sits next to a leaderboard of top verifiers.
 
-#screenshot-placeholder("Dashboard")
+#screenshot("dashboard.png")
 
 ==== Profile (`/profile`)
 
-A signed-in verifier's personal reputation page. It displays an animated counter showing their current reputation score, a sparkline chart of that score's history, and their current tier: Novice Verifier ($0$ to $30$), Trusted Analyst ($31$ to $60$), Expert Fact-Checker ($61$ to $85$), or Elite Guardian ($86$ to $100$). It includes a progress indicator toward the next tier and a history of submitted verdicts.
+This is a signed-in verifier's reputation page. It shows the current reputation score as an animated counter, a sparkline of the score's history, and the current tier: Novice Verifier ($0$ to $30$), Trusted Analyst ($31$ to $60$), Expert Fact-Checker ($61$ to $85$), or Elite Guardian ($86$ to $100$). A progress indicator shows how close the user is to the next tier, and a history lists their submitted verdicts.
 
-Each tier is labelled in the UI with a consensus vote-weight: Novice Verifier and Trusted Analyst read "Standard $1.0 times$", Expert Fact-Checker reads "Elevated $1.25 times$", and Elite Guardian reads "Maximal $1.5 times$". The first two tiers are mechanically identical. This vote weight is presentational. The label is produced by `repLevel()` in `src/pages/Profile.tsx` and is not consumed elsewhere. The consensus engine applies no tier multiplier because `calculateConfidenceScore()` takes the arithmetic mean of the participating verifiers' reputations. Reputation influences confidence through that averaged term, not through the per-tier multiplier shown in the UI.
+The UI labels each tier with a consensus vote weight: "Standard $1.0 times$" for both Novice Verifier and Trusted Analyst, "Elevated $1.25 times$" for Expert Fact-Checker, and "Maximal $1.5 times$" for Elite Guardian. These labels are cosmetic. `repLevel()` in `src/pages/Profile.tsx` produces them and nothing else reads them, and the consensus engine applies no tier multiplier, since `calculateConfidenceScore()` simply averages the participating verifiers' reputations. Reputation affects confidence only through that averaged term.
 
-#screenshot-placeholder("Profile")
+#screenshot("profile.png")
 
-=== For Administrators
+=== For administrators
 
-The Admin Command Center lives at `/admin`. It is not linked in the public `Navbar` or `Footer` and is reachable only by typing the URL directly. Access requires dual-layer authorization: a client-side `AdminRoute` guard re-derives clearance from the live Firestore `isAdmin` field on every render, backed by the `isAdmin()` check enforced server-side in `firestore.rules`. The console is a single page with 5 tabs.
+The Admin Command Center lives at `/admin`. It has no link in the public `Navbar` or `Footer` and can only be reached by typing the URL. Access needs two layers of authorization: a client-side `AdminRoute` guard that re-derives clearance from the live Firestore `isAdmin` field on every render, and the server-side `isAdmin()` check in `firestore.rules`. The console is a single page with 5 tabs.
 
 ==== Admin: System Overview
 
-The default tab on entering `/admin` displays KPI cards for registered verifiers, total claims, verifications logged, and incident-queue size. It includes two Recharts visualizations (a claims-by-category bar chart and a verdict-consensus pie chart) and a verifier reputation-tier breakdown presented as a plain counts grid.
+This is the default tab on entering `/admin`. It shows KPI cards for registered verifiers, total claims, verifications logged, and incident-queue size, two Recharts charts (claims by category as a bar chart and verdict consensus as a pie chart), and a plain grid of verifier counts per reputation tier.
 
-#screenshot-placeholder("Admin - System Overview")
+#screenshot("admin_overview.png")
 
 ==== Admin: Verifier Directory
 
-A searchable, filterable table of every registered `User`. Per-row actions let an administrator edit a verifier's reputation score via a slider, toggle their `isAdmin` flag, or delete the account. Every write is checked against `firestore.rules` `isAdmin()` on the server side.
+A searchable, filterable table lists every registered `User`. From each row an administrator can change the verifier's reputation with a slider, toggle their `isAdmin` flag, or delete the account. The server checks every one of these writes against `isAdmin()` in `firestore.rules`.
 
-#screenshot-placeholder("Admin - Verifier Directory")
+#screenshot("admin_verifiers.png")
 
 ==== Admin: Claims Moderation
 
-A searchable, filterable table of every `Claim` in the system. Per-row actions let an administrator toggle an expedited-review flag on a claim, override its verdict/confidence/status, edit the text or category, inspect or delete an individual verification attached to it, or hard-delete the claim entirely.
+A searchable, filterable table lists every `Claim` in the system. From each row an administrator can toggle the claim's expedited-review flag, override its verdict, confidence, or status, edit its text or category, inspect or delete an individual verification attached to it, or delete the claim entirely.
 
-#screenshot-placeholder("Admin - Claims Moderation")
+#screenshot("admin_moderation.png")
 
 ==== Admin: Incident Queue
 
-A `ModerationReport` ticket queue filterable by status and severity. An administrator can open a new incident report against a claim, user, or verification. They can dismiss unfounded reports or mark them resolved once handled.
+This tab holds the queue of `ModerationReport` tickets, which can be filtered by status and severity. An administrator can open a new report against a claim, user, or verification, dismiss reports that turn out to be unfounded, and mark others resolved once they have been dealt with.
 
-#screenshot-placeholder("Admin - Incident Queue")
+#screenshot("admin_incidents.png")
 
 ==== Admin: Audit #sym.amp Tools
 
-An immutable, real-time audit-log viewer (`AdminAuditLog`) records every mutating admin action taken across the other four tabs. It sits alongside system-wide tools to force-run consensus expiry on claims past their 7-day deadline, broadcast a notification to all registered users, and export a full JSON database backup covering claims, users, incident reports, and the audit log.
+The last tab is a real-time viewer for the immutable audit log (`AdminAuditLog`), which records every mutating admin action taken in the other four tabs. It also holds the system-wide tools: force-running consensus expiry on claims past their 7-day deadline, sending a notification to every registered user, and exporting a full JSON backup of claims, users, incident reports, and the audit log.
 
-#screenshot-placeholder("Admin - Audit and Tools")
+#screenshot("admin_audit.png")

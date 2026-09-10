@@ -1,6 +1,6 @@
 #import "../lib/helpers.typ": *
 
-= System Design
+= System design
 
 // Plain-text Diagram Placeholder Helper (no #image() call on a non-existent asset)
 #let diagram-placeholder(caption) = align(center)[
@@ -19,31 +19,31 @@
   ]
 ]
 
-FactStamp translates the functional requirements and data models from Chapter 3 into an operational architecture: eight functional modules, a Cloud Firestore schema governed by declarative server-side security rules, duplicate-detection and consensus algorithms, a custom component interface, defense-in-depth security policies, and an end-to-end test suite. All specifications correspond directly to the repository implementation (`/home/aadish/Documents/Github/FactStamp`).
+This chapter turns the functional requirements and data models from Chapter 3 into a working design. It covers the eight functional modules, the Cloud Firestore schema and the declarative server-side security rules that govern it, the duplicate-detection and consensus algorithms, the custom component interface, the defense-in-depth security policies, and the end-to-end test suite. Every specification here matches the implementation in the repository (`/home/aadish/Documents/Github/FactStamp`).
 
-== Basic Modules
+== Basic modules
 
-The system partitions runtime responsibilities into eight modules. Each module maps to distinct source files and participates in the claim lifecycle (submission #sym.arrow.r duplicate check #sym.arrow.r verification queue #sym.arrow.r consensus #sym.arrow.r card generation #sym.arrow.r analytics aggregation), with cross-cutting security and notification services supplied by Module 8.
+The system splits its runtime responsibilities across eight modules. Each module maps to its own source files and handles part of the claim lifecycle (submission #sym.arrow.r duplicate check #sym.arrow.r verification queue #sym.arrow.r consensus #sym.arrow.r card generation #sym.arrow.r analytics aggregation). Module 8 supplies the security and notification services that the others share.
 
-*Module 1: Authentication & Verifier Reputation.* Core files: `src/contexts/AuthContext.tsx`, `src/pages/SignIn.tsx`, `src/pages/SignUp.tsx`, `src/services/firebaseService.ts`. `AuthContext.tsx` wraps the Firebase Authentication SDK in a React Context, exposing session state and authentication methods (`signIn`, `signUp`, `signInWithGoogle`, `signOut`, `updateUser`) across the component tree. Users can register using email credentials or Google OAuth. On registration, `firebaseService.ts` initializes a `users/{uid}` document in Firestore with a baseline `reputation` of 50 (on a 0 to 100 scale), `totalVerifications` at 0, and `isAdmin` set to false. Declarative `firestore.rules` validate these initial values on write, preventing client modification. Downstream modules depend on these authenticated identities: Module 2 records the submitter identifier, Module 4 associates each verification with its author, and Module 5 reads the voter's reputation during consensus calculation.
+*Module 1: Authentication & Verifier Reputation.* Core files: `src/contexts/AuthContext.tsx`, `src/pages/SignIn.tsx`, `src/pages/SignUp.tsx`, `src/services/firebaseService.ts`. `AuthContext.tsx` wraps the Firebase Authentication SDK in a React Context and exposes session state and the authentication methods (`signIn`, `signUp`, `signInWithGoogle`, `signOut`, `updateUser`) to the whole component tree. Users register with email credentials or Google OAuth. On registration, `firebaseService.ts` creates a `users/{uid}` document in Firestore with `reputation` set to 50 (on a 0 to 100 scale), `totalVerifications` at 0, and `isAdmin` set to false. `firestore.rules` checks these initial values on write, so a client cannot change them. Other modules rely on these authenticated identities: Module 2 records the submitter, Module 4 ties each verification to its author, and Module 5 reads each voter's reputation when it calculates consensus.
 
-*Module 2: Forward Submission / Ingestion & OCR.* Core files: `src/pages/Submit.tsx`, `src/services/ocrService.ts`, `src/lib/imageCompression.ts`. `Submit.tsx` ingests claims either as pasted text or as image screenshots. When an image is supplied, `imageCompression.ts` rescales and compresses the bitmap client-side using the HTML5 Canvas API. Next, `ocrService.ts` executes Tesseract.js WebAssembly OCR locally in a browser worker without uploading the image to an external server. The extraction pipeline passes the output through `cleanExtractedOcrText()` to strip WhatsApp UI artifacts, including timestamps, sender headers, and delivery checkmarks. The user reviews and edits the parsed text in an editable area before confirming submission. Upon confirmation, `Submit.tsx` invokes Module 3 duplicate detection before persisting a new `claims/{claimId}` record.
+*Module 2: Forward Submission / Ingestion & OCR.* Core files: `src/pages/Submit.tsx`, `src/services/ocrService.ts`, `src/lib/imageCompression.ts`. `Submit.tsx` accepts a claim as pasted text or as a screenshot. For an image, `imageCompression.ts` first rescales and compresses the bitmap in the browser with the HTML5 Canvas API. `ocrService.ts` then runs Tesseract.js OCR in a WebAssembly browser worker, so the image is never uploaded to an external server. `cleanExtractedOcrText()` strips WhatsApp UI artifacts such as timestamps, sender headers, and delivery checkmarks from the output, and the user can review and edit the parsed text before confirming. On confirmation, `Submit.tsx` runs the Module 3 duplicate check before saving a new `claims/{claimId}` record.
 
-*Module 3: Duplicate Detection Engine.* Core file: `src/lib/duplicateDetection.ts`. `duplicateDetection.ts` computes word-token Jaccard similarity between candidate claim text and all existing claims in Firestore. Text is normalized (lowercased, stripped of punctuation, and collapsed) and tokenized into sets containing words with more than three characters. The similarity metric is evaluated against each existing claim: $J(A,B) = |S_A inter S_B| \/ |S_A union S_B|$. When $max J(A,B) >= 0.75$, the UI blocks insertion, displaying an inline notification with a route link to the existing claim. Distinct submissions proceed to Firestore as new `pending` records and populate the verification queue in Module 4.
+*Module 3: Duplicate Detection Engine.* Core file: `src/lib/duplicateDetection.ts`. This file compares the candidate claim text with every existing claim in Firestore using word-token Jaccard similarity. Text is lowercased, stripped of punctuation, and whitespace-collapsed, then split into a set of words longer than three characters. For each existing claim the module computes $J(A,B) = |S_A inter S_B| \/ |S_A union S_B|$. If $max J(A,B) >= 0.75$, the UI blocks the submission and shows an inline notice linking to the existing claim. Otherwise the claim is saved as a new `pending` record and appears in the Module 4 verification queue.
 
-*Module 4: Verification Queue.* Core files: `src/pages/VerifyQueue.tsx`, `src/pages/VerifyDetail.tsx`, `src/contexts/ClaimsContext.tsx`. `VerifyQueue.tsx` renders all claims in `pending` status, sorting admin-flagged items to the head of the list. `VerifyDetail.tsx` provides the verifier review interface. Verifiers choose a verdict (`TRUE`, `FALSE`, `MISLEADING`, or `UNVERIFIABLE`; `CONTESTED` is reserved for automated timeout settlement), enter a corroborating source URL classified into a quality tier by `determineSourceQuality()`, and submit an analytical explanation. `validateVerdictExplanation()` in `src/lib/security.ts` validates that the explanation contains at least 50 characters and 8 words. Valid submissions append an element to `claims.verifications[]` and increment `verificationCount` by 1, enforced both in React context and by server-side `firestore.rules`. When `verifications.length` reaches the quorum threshold of 3, `ClaimsContext.tsx` invokes Module 5 to calculate consensus and persist the final verdict in the same write.
+*Module 4: Verification Queue.* Core files: `src/pages/VerifyQueue.tsx`, `src/pages/VerifyDetail.tsx`, `src/contexts/ClaimsContext.tsx`. `VerifyQueue.tsx` lists every claim in `pending` status, with admin-flagged items sorted to the top. `VerifyDetail.tsx` is the verifier's review screen. The verifier picks a verdict (`TRUE`, `FALSE`, `MISLEADING`, or `UNVERIFIABLE`; `CONTESTED` is reserved for automatic timeout settlement), enters a source URL that `determineSourceQuality()` classifies into a quality tier, and writes an explanation. `validateVerdictExplanation()` in `src/lib/security.ts` requires the explanation to have at least 50 characters and 8 words. A valid submission appends one element to `claims.verifications[]` and increments `verificationCount` by 1, and both the React context and the server-side `firestore.rules` enforce this. When `verifications.length` reaches the quorum of 3, `ClaimsContext.tsx` calls Module 5 to calculate consensus and saves the final verdict in the same write.
 
-*Module 5: Weighted Consensus and Confidence Engine.* Core file: `src/lib/confidenceScore.ts`. `calculateConfidenceScore()` synthesizes multiple verifications into a singular outcome by determining the majority agreement ratio $A$, mean verifier reputation $R$, and mean source quality $S$:
+*Module 5: Weighted Consensus and Confidence Engine.* Core file: `src/lib/confidenceScore.ts`. `calculateConfidenceScore()` combines the verifications into a single outcome from the majority agreement ratio $A$, the mean verifier reputation $R$, and the mean source quality $S$:
 
 $ C = (A times 0.40) + (R times 0.30) + (S times 0.30) $
 
-The module also handles consensus timeouts. When a `pending` claim exceeds its 7-day `consensusDeadline` without reaching the 3-verifier quorum, an expiry sweep calculates a confidence score across available verifications and assigns the verdict `CONTESTED`. Upon transitioning status to `verified`, Module 5 signals Module 8 to dispatch an in-app notification to the original submitter, enabling export in Module 6.
+The module also handles consensus timeouts. When a `pending` claim passes its 7-day `consensusDeadline` without reaching the 3-verifier quorum, an expiry sweep calculates a confidence score from whatever verifications exist and assigns the verdict `CONTESTED`. Once a claim's status becomes `verified`, Module 5 has Module 8 send an in-app notification to the original submitter, and the claim becomes available for export in Module 6.
 
-*Module 6: Fact-Check Card Generator.* Core files: `src/components/FactCheckCard.tsx`, `src/pages/ClaimDetail.tsx`. `FactCheckCard.tsx` and `ClaimDetail.tsx` render resolved verdicts as structured graphic summaries. The `html-to-image` library rasterizes the component client-side into a 1080px-wide PNG (configured as a 540px DOM container rendered at `pixelRatio: 2`, with vertical dimensions scaling to accommodate claim text and citations). It utilizes SVG `<foreignObject>` serialization, preserving Tailwind CSS v4 `oklch()` and `oklab()` color values without raster artifacts. Users download the generated image directly to circulate within messaging channels.
+*Module 6: Fact-Check Card Generator.* Core files: `src/components/FactCheckCard.tsx`, `src/pages/ClaimDetail.tsx`. Together these render a resolved verdict as a graphic summary. The `html-to-image` library rasterizes the component in the browser into a PNG 1080px wide: a 540px DOM container rendered at `pixelRatio: 2`, with its height growing to fit the claim text and citations. The library serializes the DOM through SVG `<foreignObject>`, which keeps Tailwind CSS v4's `oklch()` and `oklab()` color values intact without raster artifacts. Users download the image and share it in their messaging groups.
 
-*Module 7: Misinformation Analytics Dashboard.* Core files: `src/pages/Dashboard.tsx`, `src/components/DashboardChart.tsx`, `src/lib/weeklyReport.ts`. `Dashboard.tsx`, `DashboardChart.tsx`, and `weeklyReport.ts` aggregate historical verification data into public visualizations. `weeklyReport.ts` processes claims resolved within a 7-day sliding window, deriving category distributions, verdict frequencies, and prominent refuted claims. Visualizations are rendered via Recharts with custom tooltip formatters. The dashboard operates in a read-only capacity, consuming data from the active React context without issuing supplemental database writes.
+*Module 7: Misinformation Analytics Dashboard.* Core files: `src/pages/Dashboard.tsx`, `src/components/DashboardChart.tsx`, `src/lib/weeklyReport.ts`. These files turn historical verification data into public charts. `weeklyReport.ts` looks at claims resolved within a 7-day sliding window and derives category distributions, verdict frequencies, and the most prominent refuted claims. Recharts draws the charts with custom tooltip formatters. The dashboard is read-only: it uses data already in the active React context and makes no extra database writes.
 
-*Module 8: System Security & Notifications.* Core files: `src/lib/security.ts`, `src/contexts/NotificationsContext.tsx`, `src/components/NotificationBell.tsx`, `firestore.rules`. `security.ts`, `NotificationsContext.tsx`, `NotificationBell.tsx`, and `firestore.rules` provide cross-cutting protection and notification delivery. `security.ts` enforces input sanitization, spam mitigation, magic-byte file validation, session timeouts, and client rate limiting. `NotificationsContext.tsx` and `NotificationBell.tsx` deliver real-time in-app alerts upon claim resolution. Correspondingly, `firestore.rules` independently validates all mutations on the Firebase server cluster.
+*Module 8: System Security & Notifications.* Core files: `src/lib/security.ts`, `src/contexts/NotificationsContext.tsx`, `src/components/NotificationBell.tsx`, `firestore.rules`. These files handle the protection and notification services the other modules share. `security.ts` covers input sanitization, spam mitigation, magic-byte file validation, session timeouts, and client rate limiting. `NotificationsContext.tsx` and `NotificationBell.tsx` deliver real-time in-app alerts when a claim is resolved. `firestore.rules` validates every mutation independently on Firebase's servers.
 
 #v(6pt)
 #align(center)[*Table 4.1.1: Cross-Module Interaction Summary*]
@@ -60,11 +60,11 @@ The module also handles consensus timeouts. When a `pending` claim exceeds its 7
   [Every write to `users`, `claims`, `notifications`, `reports`, `audit_logs`], "1, 2, 4, 5", "8", [Server-side field-level validation independent of client checks],
 )
 
-== Data Design
+== Data design
 
-FactStamp persists application state in Cloud Firestore, a NoSQL document database. Data is organized across five root collections: `users`, `claims`, `notifications`, `reports`, and `audit_logs`. Type interfaces are declared in `src/lib/types.ts`, and write constraints are enforced on every transaction by `firestore.rules`.
+FactStamp stores application state in Cloud Firestore, a NoSQL document database, across five root collections: `users`, `claims`, `notifications`, `reports`, and `audit_logs`. The type interfaces are declared in `src/lib/types.ts`, and `firestore.rules` checks the write constraints on every write.
 
-=== Schema Design
+=== Schema design
 
 #align(center)[*Table 4.2.1(a): `users` Collection*]
 #styled-table(
@@ -174,13 +174,13 @@ FactStamp persists application state in Cloud Firestore, a NoSQL document databa
   [`details`], "string", "Additional context", "Max 2000 characters",
 )
 
-=== Data Integrity and Constraints
+=== Data integrity and constraints
 
-`firestore.rules` evaluates every incoming write operation prior to persistence. Malformed requests or unauthorized mutations are rejected at the database boundary.
+`firestore.rules` evaluates every incoming write before it is persisted, and the database rejects malformed or unauthorized writes outright.
 
-*Field-level write validation.* Write evaluation verifies `request.resource.data` on a field-by-field basis. Creating a new `claims/{claimId}` document requires `text.size()` between 10 and 2000 characters, `category` membership within an explicit whitelist, `status == "pending"`, `verificationCount == 0`, and an empty `verifications == []` array. This structure blocks unverified submissions with pre-populated votes or excessive text lengths.
+*Field-level write validation.* The rules check `request.resource.data` field by field. Creating a `claims/{claimId}` document requires `text.size()` between 10 and 2000 characters, a `category` from an explicit whitelist, `status == "pending"`, `verificationCount == 0`, and an empty `verifications == []` array. A client therefore cannot create a claim that already carries votes or has text outside the length bounds.
 
-*The `isAdmin()` helper.* Privileged operations check caller authority through an `isAdmin()` helper function that inspects the caller's Firestore document at evaluation time:
+*The `isAdmin()` helper.* Privileged operations check the caller's authority through an `isAdmin()` helper that reads the caller's Firestore document at evaluation time:
 
 // Kept on one page: this block is short, and letting it split mid-expression
 // across a page boundary made the rule unreadable.
@@ -195,29 +195,29 @@ function isAdmin() {
 ```
 ]
 
-Modifications to the `isAdmin` boolean property on `users/{uid}` require the caller to already possess admin privileges. Unprivileged users cannot modify this flag, preventing client-side privilege escalation.
+Only a caller who is already an admin can change the `isAdmin` flag on `users/{uid}`, so a user cannot grant themselves admin rights from the client.
 
-*Append-exactly-one-verification-per-write.* Appending a verification to a claim enforces several concurrent conditions: `verificationCount` must increment by exactly 1, prior `verifications` entries must remain intact via `hasAll()`, `verifierId` must match the caller's `request.auth.uid`, and `verifierReputation` must equal the caller's live reputation score in `users/{uid}`. The submitted verdict must belong to the active enum set (`TRUE`, `FALSE`, `MISLEADING`, `UNVERIFIABLE`), and `sourceUrl` along with `explanation` must satisfy length and regex formatting constraints. These rules mirror the client-side validation in `validateVerdictExplanation()`, so the database rejects invalid records even if requests bypass the browser interface.
+*Append exactly one verification per write.* A write that adds a verification to a claim must meet all of these conditions at once: `verificationCount` increments by exactly 1, every earlier `verifications` entry is still present (checked with `hasAll()`), `verifierId` matches the caller's `request.auth.uid`, and `verifierReputation` equals the caller's live reputation in `users/{uid}`. The verdict must be one of `TRUE`, `FALSE`, `MISLEADING`, or `UNVERIFIABLE`, and `sourceUrl` and `explanation` must pass their length and regex checks. These rules mirror the client-side validation in `validateVerdictExplanation()`, so the database rejects invalid records even when a request bypasses the browser interface.
 
-*Immutability rules.* Helper functions `isUnchanged()` and `identityUnchanged()` lock critical attributes after document creation. The fields `text`, `category`, `submittedBy`, `submittedByName`, `createdAt`, `consensusDeadline`, and `imageUrl` remain read-only during normal verification and timeout sweeps, with override authority restricted to administrators. The `audit_logs` collection prohibits both `update` and `delete` operations, maintaining an immutable record of system actions.
+*Immutability rules.* The helper functions `isUnchanged()` and `identityUnchanged()` lock key fields once a document exists. `text`, `category`, `submittedBy`, `submittedByName`, `createdAt`, `consensusDeadline`, and `imageUrl` stay read-only through normal verification and timeout sweeps, and only administrators can override them. The `audit_logs` collection allows neither `update` nor `delete`, so its record of admin actions cannot be altered.
 
-*Storage Architecture and Quorum atomicity.* Storing verifications directly in an embedded array on each `Claim` document serves two architectural requirements. First, atomic quorum resolution in Module 5 requires evaluating `verifications.length` synchronously in the same snapshot as the verification append. A subcollection would require either an aggregation query or a separate counter synchronized across multiple writes, creating a potential concurrency race during quorum triggers. Second, single-read hydration allows screens displaying a claim to fetch claim metadata and its full verification history in one document read. Although `firestore.rules` retains an unused declaration for a legacy `verdicts` subcollection, active application paths read and write only the embedded array. While Firestore caps documents at 1 MiB, the three-verifier quorum ceiling and the 3000-character explanation limit keep total document size well below this threshold.
+*Embedded storage and quorum atomicity.* Verifications are stored as an embedded array on each `Claim` document for two reasons. First, Module 5 resolves quorum atomically by reading `verifications.length` in the same snapshot as the verification append. With a subcollection, the count would need either an aggregation query or a separate counter kept in sync across several writes, which opens a race when quorum triggers. Second, any screen that shows a claim can load its metadata and full verification history in a single document read. `firestore.rules` still declares an unused legacy `verdicts` subcollection, but the application reads and writes only the embedded array. Firestore caps documents at 1 MiB, and with at most three verifications and a 3000-character explanation limit, a claim document stays well under that.
 
-*Image Payload Constraints.* Screenshot submissions are encoded as base64 data URIs within `claims/{claimId}.imageUrl`. Because base64 expands binary size by approximately 33%, `firestore.rules` enforces `imageUrl.size() <= 800000` characters to ensure the total document remains below Firestore's 1 MiB limit alongside the `verifications` array. Client-side compression scales images to a maximum dimension of 1280 pixels and reduces JPEG quality from 0.72 to a minimum of 0.4 until payload size drops below 700,000 bytes. A separate `storage.rules` configuration exists in the repository for authenticated uploads under 10 MB, but active client workflows use the embedded data URI mechanism exclusively.
+*Image payload constraints.* Screenshots are stored as base64 data URIs in `claims/{claimId}.imageUrl`. Base64 inflates binary data by about 33%, so `firestore.rules` enforces `imageUrl.size() <= 800000` characters to keep the whole document, including the `verifications` array, under Firestore's 1 MiB limit. On the client, images are scaled to a maximum dimension of 1280 pixels, and JPEG quality steps down from 0.72 (to no lower than 0.4) until the payload is below 700,000 bytes. The repository also contains a `storage.rules` configuration for authenticated uploads under 10 MB, but the client uses only the embedded data URI path.
 
-*Server-Side Rule Enforcement.* Client-side validation provides immediate interface feedback, but direct requests to the Firestore SDK can bypass browser controls. Consequently, `firestore.rules` defines a parallel, authoritative set of constraints for enum memberships, field length bounds, user ownership, quorum increment arithmetic, immutable properties, and administrator roles. The database engine enforces these rules on all incoming operations regardless of client state.
+*Server-side rule enforcement.* Client-side validation gives the user immediate feedback, but a direct call to the Firestore SDK skips the browser entirely. `firestore.rules` therefore holds the authoritative version of every constraint: enum membership, field length bounds, user ownership, quorum increment arithmetic, immutable fields, and administrator roles. The database applies these rules to every incoming operation regardless of what the client did.
 
-== Procedural Design
+== Procedural design
 
-=== Logic Diagrams
+=== Logic diagrams
 
-The system control flow follows the claim lifecycle from initial submission through duplicate evaluation and peer verification to final consensus. The workflow proceeds through nine stages: (1) the user submits claim text or an image screenshot; (2) image submissions undergo canvas compression, OCR extraction, WhatsApp header stripping, and user review before joining the text path; (3) the text is normalized and tokenized; (4) candidate tokens are compared against existing claims using the Jaccard index; (5) if $max J(A,B) >= 0.75$, submission is rejected with a link to the matching claim, whereas values below 0.75 generate a new `pending` claim with a 7-day `consensusDeadline`; (6) the claim enters the verification queue, where independent verifiers supply a verdict, a source URL, and a text explanation; (7) when `verifications.length` reaches 3, the consensus engine calculates the final score and marks the claim `verified`, while claims with fewer verifications remain `pending`; (8) an automated sweep settles any claim exceeding its 7-day deadline under quorum with the verdict `CONTESTED`; and (9) verified claims trigger submitter notifications, card generation, and dashboard metric updates.
+The control flow follows a claim from submission through duplicate evaluation and peer verification to final consensus, in nine stages: (1) the user submits claim text or an image screenshot; (2) an image goes through canvas compression, OCR extraction, WhatsApp header stripping, and user review before joining the text path; (3) the text is normalized and tokenized; (4) its tokens are compared against existing claims using the Jaccard index; (5) if $max J(A,B) >= 0.75$, the submission is rejected with a link to the matching claim, and a lower score creates a new `pending` claim with a 7-day `consensusDeadline`; (6) the claim enters the verification queue, where independent verifiers each supply a verdict, a source URL, and a written explanation; (7) when `verifications.length` reaches 3, the consensus engine calculates the final score and marks the claim `verified`, while claims with fewer verifications stay `pending`; (8) an automated sweep settles any under-quorum claim past its 7-day deadline with the verdict `CONTESTED`; and (9) a verified claim triggers a submitter notification, becomes available for card generation, and updates the dashboard metrics.
 
 #align(center)[#image("attachments/claim_lifecycle_flow.svg", width: 100%, height: 88%, fit: "contain")]
 
-=== Data Structures
+=== Data structures
 
-The core data structures are declared in `src/lib/types.ts` and imported across all modules described in Section 4.1 without duplicate declarations.
+The core data structures are declared once in `src/lib/types.ts`, and every module in Section 4.1 imports them from there instead of redeclaring them.
 
 ```typescript
 export type Verdict = 'TRUE' | 'FALSE' | 'MISLEADING' | 'UNVERIFIABLE' | 'CONTESTED'
@@ -321,11 +321,11 @@ export interface AdminAuditLog {
 }
 ```
 
-The `Verdict` enum includes `CONTESTED`, which is assigned programmatically during consensus expiry in Module 5. Verifiers cannot select this outcome directly in `VerifyDetail.tsx`. Similarly, `Claim.verifications` is typed as an embedded array to mirror the storage architecture described in Section 4.2.2. TypeScript strict mode requires all modules reading optional fields (`?`) to handle unset values, so dashboard components cleanly account for `pending` records that lack a finalized `confidenceScore`.
+The `Verdict` type includes `CONTESTED`, which only the Module 5 consensus-expiry logic assigns; `VerifyDetail.tsx` does not offer it to verifiers. `Claim.verifications` is typed as an embedded array to match the storage design in Section 4.2.2. Because TypeScript strict mode forces every reader of an optional (`?`) field to handle the unset case, the dashboard components have to deal explicitly with `pending` records that have no `confidenceScore` yet.
 
-=== Algorithms Design
+=== Algorithms design
 
-*Algorithm 1: Jaccard Duplicate Detection* (`src/lib/duplicateDetection.ts`). Purpose: identify near-duplicate submissions to prevent redundant verification queues for identical or slightly reworded claims.
+*Algorithm 1: Jaccard Duplicate Detection* (`src/lib/duplicateDetection.ts`). Purpose: catch near-duplicate submissions so that identical or slightly reworded claims do not each take up a place in the verification queue.
 
 + Normalize the input text $T$: lowercase, strip punctuation, collapse whitespace.
   $ "Norm"(T) = "collapseWhitespace"("stripPunctuation"("lowercase"(T))) $
@@ -333,7 +333,7 @@ The `Verdict` enum includes `CONTESTED`, which is assigned programmatically duri
   $ S_T = { w in "split"("Norm"(T)) | |w| > 3 } $
 + For incoming claim $A$ and each existing claim $B$, compute:
   $ J(A, B) = frac(|S_A inter S_B|, |S_A union S_B|) $
-+ Track the best match clearing the threshold $tau = 0.75$ (special cases: both sets empty #sym.arrow.r similarity $1$; exactly one empty #sym.arrow.r similarity $0$).
++ Keep the best match that meets the threshold $tau = 0.75$ (special cases: both sets empty #sym.arrow.r similarity $1$; exactly one empty #sym.arrow.r similarity $0$).
 + Decision rule:
   $ "Action" = cases(
     "Block submission, link to best-matching claim" & "if" max_(B in "Claims") J(A, B) >= tau,
@@ -351,21 +351,21 @@ function findDuplicate(text, existingClaims, threshold = 0.75):
     return bestMatch   // null => no duplicate found
 ```
 
-Computational complexity is $O(n dot m)$, where $n$ is the count of scanned claims and $m$ is the average token-set cardinality. This linear scan suffices for FactStamp's current operational scale, whereas an inverted index or MinHash locality-sensitive hashing would be required for web-scale corpora.
+The complexity is $O(n dot m)$, where $n$ is the number of claims scanned and $m$ is the average token-set size. A linear scan is fast enough at FactStamp's current scale; a web-scale corpus would need an inverted index or MinHash locality-sensitive hashing.
 
 *Algorithm 2: Weighted Consensus and Confidence Scoring* (`src/lib/confidenceScore.ts`). Purpose: combine independent verifications into a final verdict and a numeric confidence score based on agreement, verifier reputation, and source credibility.
 
-+ Given verifications $V = {v_1, ..., v_N}$ (triggered once $N >= 3$), group by `verdict` and take the majority group's count $N_("majority")$.
-+ Agreement Ratio:
++ Given verifications $V = {v_1, ..., v_N}$ (triggered once $N >= 3$), group them by `verdict` and take the size of the largest group, $N_("majority")$.
++ Agreement ratio:
   $ A = frac(N_("majority"), N_("total")) times 100 $
-+ Average Verifier Reputation (each $R_i in [0,100]$, read live from `users/{uid}.reputation` at vote time):
++ Average verifier reputation, where each $R_i in [0,100]$ is read live from `users/{uid}.reputation` at the time of the vote:
   $ R = frac(1, N) sum_(i=1)^N R_i $
-+ Average Source Quality Score (each verification's `sourceQuality` string mapped by `sourceQualityToScore()`: high #sym.arrow.r 100, medium #sym.arrow.r 70, low #sym.arrow.r 30, itself derived from `determineSourceQuality()`'s domain-whitelist classification):
++ Average source quality. `sourceQualityToScore()` maps each verification's `sourceQuality` tier, which `determineSourceQuality()` assigned from the domain whitelist, to a number (high #sym.arrow.r 100, medium #sym.arrow.r 70, low #sym.arrow.r 30):
   $ S = frac(1, N) sum_(i=1)^N Q(v_i) $
-+ Combine into the final weighted confidence score:
++ Combine them into the final weighted confidence score:
   $ C = (A times 0.40) + (R times 0.30) + (S times 0.30) $
 + Clamp $C$ to $[0, 100]$ and round to the nearest integer.
-+ Assign `verdict` = majority verdict, `confidenceScore = C`, `agreementRatio = A`, `avgVerifierReputation = R`, `sourceQualityScore = S`; flip `status` to `verified`.
++ Set `verdict` to the majority verdict, `confidenceScore = C`, `agreementRatio = A`, `avgVerifierReputation = R`, and `sourceQualityScore = S`, then change `status` to `verified`.
 
 ```
 function calculateConfidenceScore(verifications):
@@ -385,11 +385,11 @@ function calculateConfidenceScore(verifications):
     return { score, agreementRatio, avgReputation, sourceQualityScore }
 ```
 
-The consensus-expiry sweep (see Section 4.1, Module 5) reuses this function: a `pending` claim past its deadline with fewer than 3 verifications evaluates `calculateConfidenceScore()` across available verifications, with the final verdict set to `CONTESTED` because under-quorum outcomes are unresolved.
+The consensus-expiry sweep (Section 4.1, Module 5) reuses this function. For a `pending` claim past its deadline with fewer than 3 verifications, it runs `calculateConfidenceScore()` over the verifications that exist and sets the verdict to `CONTESTED`, since an under-quorum outcome is unresolved.
 
-== User Interface Design
+== User interface design
 
-FactStamp uses a custom component architecture without external UI component libraries. Interactive primitives (`Button`, `Input`, `Modal`, `Badge`, `CategoryBadge`, `VerdictPill`, `Avatar`, `SourceQualityDot`, `EmptyState`, `ErrorState`, `Skeletons`, `ThemeToggle`, `LoadingButton`, `PasswordStrength`, `ShimmerText`, `Marquee`, `FlowButton`, `InteractiveHoverButton`, `SpotlightCard`) reside in `src/components/ui/` and are styled using Tailwind CSS v4 custom properties, allowing theme transitions by updating root-level variables. Framer Motion supplies animations across navigation components and verdict badges. Recharts provides visualizations for the dashboard and admin console, and application state is coordinated through React Context (`AuthContext`, `ClaimsContext`, `NotificationsContext`, `ThemeContext`, `UsersContext`).
+FactStamp's components are custom-built, with no external UI component library. The interactive primitives (`Button`, `Input`, `Modal`, `Badge`, `CategoryBadge`, `VerdictPill`, `Avatar`, `SourceQualityDot`, `EmptyState`, `ErrorState`, `Skeletons`, `ThemeToggle`, `LoadingButton`, `PasswordStrength`, `ShimmerText`, `Marquee`, `FlowButton`, `InteractiveHoverButton`, `SpotlightCard`) live in `src/components/ui/` and are styled with Tailwind CSS v4 custom properties, so switching themes only means updating root-level variables. Framer Motion animates the navigation components and verdict badges, Recharts draws the charts in the dashboard and admin console, and React Context (`AuthContext`, `ClaimsContext`, `NotificationsContext`, `ThemeContext`, `UsersContext`) holds application state.
 
 #align(center)[*Table 4.4.1: Routing Table*]
 #styled-table(
@@ -409,70 +409,70 @@ FactStamp uses a custom component architecture without external UI component lib
   [`*`], [`NotFound.tsx`], "Public", "404 fallback",
 )
 
-*Home (`/`).* A hero section explains FactStamp's functionality with actions to submit or browse the queue, live platform counters via `AnimatedCounter`, an architectural walkthrough, and a persistent navigation bar showing authentication state, theme toggles, notifications, and profile links.
+*Home (`/`).* The hero section explains what FactStamp does and offers buttons to submit a claim or browse the queue. Below it are live platform counters (`AnimatedCounter`) and a walkthrough of the system's architecture. A persistent navigation bar shows authentication state, the theme toggle, notifications, and profile links.
 
 #align(center)[#image("attachments/wireframe_home.png", width: 100%, height: 90%, fit: "contain")]
 
-*Submit (`/submit`, protected).* Users choose between 'Text Forward' and 'Screenshot (OCR)' modes. Screenshot mode triggers inline compression and Tesseract.js OCR with loading feedback, populating an editable text area with filtered output. Below it sits the category grid, built from `CategoryBadge` cards offering five classifications: 'Health & Medical', 'Political & Govt', 'Financial & Loans', 'Religious & Culture', and 'Other Topics'. Duplicate checking executes when the text area loses focus; a detected match displays an inline alert with a navigation button to the existing claim and disables submission.
+*Submit (`/submit`, protected).* Users choose between 'Text Forward' and 'Screenshot (OCR)' modes. Screenshot mode compresses the image and runs Tesseract.js OCR inline with loading feedback, then fills an editable text area with the filtered output. Below that is the category grid of `CategoryBadge` cards with five options: 'Health & Medical', 'Political & Govt', 'Financial & Loans', 'Religious & Culture', and 'Other Topics'. The duplicate check runs when the text area loses focus. If it finds a match, an inline alert links to the existing claim and the submit button is disabled.
 
 #align(center)[#image("attachments/wireframe_submit.png", width: 100%, height: 90%, fit: "contain")]
 
-*VerifyQueue (`/verify`, protected).* A scrollable feed of `ClaimCard` components presents text excerpts, category badges, timestamps, and verification progress via a three-segment `ConsensusStepper`. Cards include deadline countdown indicators, priority review badges for admin-flagged items, and image attachment indicators. Admin-flagged claims are prioritized at the top of the feed alongside category filtering and search tools.
+*VerifyQueue (`/verify`, protected).* A scrollable feed of `ClaimCard` components shows each claim's text excerpt, category badge, timestamp, and verification progress on a three-segment `ConsensusStepper`. Cards also carry a deadline countdown, a priority badge for admin-flagged claims, and an indicator when an image is attached. Admin-flagged claims sit at the top of the feed, which also has category filters and search.
 
 #align(center)[#image("attachments/wireframe_verify_queue.png", width: 100%, height: 90%, fit: "contain")]
 
-*VerifyDetail (`/verify/:claimId`, protected).* The workbench presents the claim text or screenshot above a verification progress indicator. To prevent anchoring bias and bandwagon effects, verifiers cannot see peer verdicts prior to submission (blind review). The evaluation form provides a `VerdictPill` selector (omitting the system-assigned `CONTESTED` option), a source URL input with real-time domain quality classification via `SourceQualityDot`, and an explanation field validated by `validateVerdictExplanation()`.
+*VerifyDetail (`/verify/:claimId`, protected).* The workbench shows the claim text or screenshot above a verification progress indicator. Review is blind: verifiers cannot see other verdicts before submitting their own, which guards against anchoring and bandwagon effects. The form has a `VerdictPill` selector (without the system-assigned `CONTESTED` option), a source URL input whose domain quality `SourceQualityDot` classifies as the user types, and an explanation field checked by `validateVerdictExplanation()`.
 
 #align(center)[#image("attachments/wireframe_verify_detail.png", width: 100%, height: 90%, fit: "contain")]
 
-*ClaimDetail (`/claim/:claimId`, public).* This public view displays claim text, image evidence, the resolved verdict pill, the confidence score with constituent metric breakdowns, contributing verifications with citation links, and an export button generating a 1080px-wide PNG fact-check card via `html-to-image` (540px layout rendered at `pixelRatio: 2`).
+*ClaimDetail (`/claim/:claimId`, public).* This public page shows the claim text, any image evidence, the resolved verdict pill, the confidence score with a breakdown of its components, and the contributing verifications with citation links. An export button generates a 1080px-wide PNG fact-check card via `html-to-image` (a 540px layout rendered at `pixelRatio: 2`).
 
 #align(center)[#image("attachments/wireframe_claim_detail.png", width: 100%, height: 90%, fit: "contain")]
 
-*Dashboard (`/dashboard`, public).* Recharts visualizations display category distributions, verdict proportions, a 7-day rolling trend list, and verifier leaderboards with customized tooltips.
+*Dashboard (`/dashboard`, public).* Recharts charts show category distribution and verdict proportions, alongside a 7-day rolling trend list and verifier leaderboards, all with custom tooltips.
 
 #align(center)[#image("attachments/wireframe_dashboard.png", width: 100%, height: 90%, fit: "contain")]
 
-*Profile (`/profile`, protected).* Displays account metadata, reputation scores with tier classifications (Novice, Trusted, Expert, Elite), submission and verification history, and profile preferences.
+*Profile (`/profile`, protected).* The profile page shows account details, the user's reputation score and tier (Novice, Trusted, Expert, or Elite), their submission and verification history, and profile preferences.
 
 #align(center)[#image("attachments/wireframe_profile.png", width: 100%, height: 90%, fit: "contain")]
 
-*Admin (`/admin`, admin-guarded).* The console is an unlisted route omitted from public navigation. Access is governed by `AdminRoute.tsx`, which enforces an authentication gate before presenting five functional tabs:
-- System Overview: displays platform KPI metrics, category bar charts, verdict consensus distributions, and reputation tier distributions.
-- Verifier Directory: provides a searchable table of `User` records with controls to adjust reputation scores, toggle administrative status, and remove accounts.
-- Claims Moderation: enables administrators to inspect claims, toggle expedited review flags, modify categories or text, override verdicts, and delete records.
-- Incident Queue: manages `ModerationReport` tickets with filtering by status and severity.
-- Audit and Tools: provides a real-time log viewer for `AdminAuditLog` records, manual triggers for consensus expiry sweeps, broadcast notification tools, and JSON database exports.
+*Admin (`/admin`, admin-guarded).* The console is an unlisted route that does not appear in public navigation. `AdminRoute.tsx` requires admin authentication before showing its five tabs:
+- System Overview: platform KPI metrics, category bar charts, verdict distributions, and reputation tier distributions.
+- Verifier Directory: a searchable table of `User` records with controls to adjust reputation, toggle admin status, and remove accounts.
+- Claims Moderation: lets administrators inspect claims, toggle expedited-review flags, edit categories or text, override verdicts, and delete records.
+- Incident Queue: manages `ModerationReport` tickets, with filters for status and severity.
+- Audit and Tools: a real-time viewer for `AdminAuditLog` records, a manual trigger for the consensus-expiry sweep, a broadcast notification tool, and JSON database export.
 
-Mutating administrative operations execute through the shared `addAuditLog()` utility.
+Every mutating admin operation goes through the shared `addAuditLog()` utility.
 
 #align(center)[#image("attachments/wireframe_admin.png", width: 100%, height: 90%, fit: "contain")]
 
-== Security Issues
+== Security issues
 
-FactStamp's security architecture employs defense in depth. Client-side controls provide immediate user interface feedback and intercept casual invalid inputs, while server-side `firestore.rules` evaluations enforce non-bypassable constraints on all database writes.
+FactStamp uses defense in depth. Client-side controls give immediate feedback and stop casual invalid input, and server-side `firestore.rules` enforce constraints on every database write that a client cannot get around.
 
-*Dual-layer admin authentication.* Access to `/admin` requires two independent checks: a `sessionStorage` unlock flag (`fs_admin_session_unlocked`) set upon credential submission, and a live Firestore authorization check evaluated on every render. `AdminRoute.tsx` verifies that `user?.isAdmin === true` against the active profile snapshot. If the session storage flag is present but the user document lacks admin privileges, the client clears the flag and redirects to the login screen. Attempting to set `fs_admin_session_unlocked` manually in browser storage fails because every protected route requires verified server-side privileges.
+*Dual-layer admin authentication.* Access to `/admin` requires two independent checks: a `sessionStorage` unlock flag (`fs_admin_session_unlocked`) set when the admin submits credentials, and a live Firestore authorization check on every render. `AdminRoute.tsx` confirms that `user?.isAdmin === true` on the active profile snapshot. If the session flag is present but the user document has no admin privileges, the client clears the flag and redirects to the login screen. Setting `fs_admin_session_unlocked` by hand in browser storage therefore gets an attacker nothing, because the route also requires `isAdmin` to be true on the live Firestore profile.
 
-*Login rate-limiting.* `checkLoginRateLimit()`, `recordFailedLogin()`, and `resetLoginAttempts()` protect authentication endpoints against brute-force attacks. `SignIn.tsx` keys attempt counters by email identifier, whereas `AdminRoute.tsx` utilizes a shared client-wide counter. Reaching `MAX_LOGIN_ATTEMPTS = 5` failed attempts for a specific identifier enforces a 15-minute lockout (`LOCKOUT_DURATION_MS = 15 times 60 times 1000` ms). Identifier-specific attempts are tracked alongside a global counter: if global failed attempts reach 10, a client-wide lockout activates. Counters persist across both `localStorage` and `sessionStorage`, and successful authentication clears all stored attempts. `formatLockoutRemaining()` formats the remaining duration as `MM:SS`.
+*Login rate limiting.* `checkLoginRateLimit()`, `recordFailedLogin()`, and `resetLoginAttempts()` defend sign-in against brute-force attacks. `SignIn.tsx` keys its attempt counters by email, while `AdminRoute.tsx` uses a single client-wide counter. After `MAX_LOGIN_ATTEMPTS = 5` failed attempts for one identifier, that identifier is locked out for 15 minutes (`LOCKOUT_DURATION_MS = 15 times 60 times 1000` ms). A global counter runs alongside the per-identifier ones, and 10 failed attempts in total trigger a client-wide lockout. The counters persist in both `localStorage` and `sessionStorage`, and a successful login clears them all. `formatLockoutRemaining()` displays the remaining lockout time as `MM:SS`.
 
-*Idle session timeout.* `recordActivity()` and `isSessionExpired()` enforce a 30-minute idle session timeout (`SESSION_TIMEOUT_MS = 30 times 60 times 1000` ms). User interactions record timestamps in `sessionStorage`. When elapsed inactivity exceeds the threshold, the session expires and requires re-authentication, reducing risk from unattended browser tabs. `clearSecuritySession()` purges both the timestamp and the admin session flag upon logout.
+*Idle session timeout.* `recordActivity()` and `isSessionExpired()` enforce a 30-minute idle timeout (`SESSION_TIMEOUT_MS = 30 times 60 times 1000` ms). Each user interaction writes a timestamp to `sessionStorage`. Once inactivity passes the threshold, the session expires and the user must sign in again, which limits the risk from an unattended browser tab. On logout, `clearSecuritySession()` removes both the timestamp and the admin session flag.
 
-*Triple-layer file upload validation.* `validateImageUpload()` evaluates uploaded image files through four sequential checks:
-+ Maximum file size: files must not exceed 5 MB (`MAX_UPLOAD_SIZE_BYTES = 5 times 1024 times 1024`), and empty files are rejected.
-+ Extension whitelist: extensions are restricted to `.jpg`, `.jpeg`, `.png`, `.webp`, and `.gif`.
-+ MIME type whitelist: declared content types are restricted to `image/jpeg`, `image/png`, `image/webp`, and `image/gif`.
-+ Magic-byte signature verification: the first 12 bytes of file data are validated against known binary file signatures (JPEG `FF D8 FF`, PNG `89 50 4E 47`, GIF `47 49 46 38`, and WebP RIFF `52 49 46 46`). Because extension and MIME headers can be forged by renaming files or modifying client request headers, inspecting leading binary signatures prevents non-image payloads from being processed.
+*Triple-layer file upload validation.* `validateImageUpload()` checks the file size first and then verifies the file type three separate ways:
++ Size: files may not exceed 5 MB (`MAX_UPLOAD_SIZE_BYTES = 5 times 1024 times 1024`), and empty files are rejected.
++ Extension whitelist: only `.jpg`, `.jpeg`, `.png`, `.webp`, and `.gif` are accepted.
++ MIME type whitelist: the declared content type must be `image/jpeg`, `image/png`, `image/webp`, or `image/gif`.
++ Magic-byte signature: the first 12 bytes of the file must match a known image signature (JPEG `FF D8 FF`, PNG `89 50 4E 47`, GIF `47 49 46 38`, or WebP RIFF `52 49 46 46`). Renaming a file fakes its extension and editing request headers fakes its MIME type, but neither changes the leading bytes, so this check stops non-image payloads from being processed.
 
-*Verdict-explanation anti-spam validation.* `validateVerdictExplanation()` applies eight validation filters: minimum 50 characters, maximum 1500 characters (the server-side cap is 3000), minimum 8 words, repeated character detection (6 or more consecutive identical characters), repeated word detection (3 consecutive identical words), cop-out phrase blacklists (`just trust me`, `trust me bro`, `check it yourself`, `search it on google`, `search google`, `idk`, `i don't know`, `random text to fill space`, `asdfasdf`, `qwertyuiop`), claim text duplication detection (rejecting explanations matching 30 or more characters of claim text), and constructive guidance prompts.
+*Verdict-explanation anti-spam validation.* `validateVerdictExplanation()` applies eight filters: a minimum of 50 characters; a maximum of 1500 characters (the server allows up to 3000); a minimum of 8 words; detection of repeated characters (6 or more identical in a row); detection of repeated words (3 identical in a row); a blacklist of cop-out phrases (`just trust me`, `trust me bro`, `check it yourself`, `search it on google`, `search google`, `idk`, `i don't know`, `random text to fill space`, `asdfasdf`, `qwertyuiop`); rejection of explanations that copy 30 or more characters of the claim text; and prompts that steer the verifier toward a constructive explanation.
 
-*XSS input sanitization.* `sanitizeTextInput()` strips dangerous HTML elements (`script`, `iframe`, `object`, `embed`, `form`, `link`, `meta`, `style`, `svg`, `math`, `base`, `applet`), event handler attributes (`on*`, `srcdoc`, `formaction`, `xlink:href`), dangerous URI protocols (`javascript:`, `vbscript:`, `data:`), and null bytes, complementing React's automatic JSX encoding.
+*XSS input sanitization.* `sanitizeTextInput()` strips dangerous HTML elements (`script`, `iframe`, `object`, `embed`, `form`, `link`, `meta`, `style`, `svg`, `math`, `base`, `applet`), event-handler and related attributes (`on*`, `srcdoc`, `formaction`, `xlink:href`), dangerous URI schemes (`javascript:`, `vbscript:`, `data:`), and null bytes. This runs on top of React's automatic JSX encoding.
 
-*Server-Side Rule Enforcement.* `firestore.rules` enforces validation independently of client application code. While client-side routines improve responsiveness, backend rules secure data integrity against direct API invocations: the 50 to 3000 character bound on `explanation` enforces an upper size ceiling; `sourceUrl` regular expressions validate cited links; append-only verification logic guarantees exactly one entry is added per write; `verifierId` and `verifierReputation` verify author identity against live user profiles; and the `imageUrl` byte cap limits stored payload sizes. Finally, `isAdmin()` checks on the database cluster prevent unauthorized administrative modifications, establishing backend authority across all platform transactions.
+*Server-side rule enforcement.* `firestore.rules` validates data independently of the client code. Client-side checks make the interface responsive, but only the server rules protect against direct API calls. The 50 to 3000 character bound on `explanation` caps its size, regular expressions validate `sourceUrl`, the append-only verification logic allows exactly one new entry per write, `verifierId` and `verifierReputation` are checked against the caller's live profile, and the `imageUrl` size cap limits stored payloads. `isAdmin()` checks on the server block any administrative change from a non-admin.
 
-== Test Cases Design
+== Test cases design
 
-The test cases below cover the functional pipeline (registration #sym.arrow.r submission #sym.arrow.r duplicate detection #sym.arrow.r verification #sym.arrow.r consensus) and security paths (rate-limited authentication, administrative access control) described in Sections 4.2, 4.4, and 4.5. Every expected result traces to an enforced rule; full execution logs and observed outcomes appear in Chapters 5 and 6.
+The test cases below cover the functional pipeline (registration #sym.arrow.r submission #sym.arrow.r duplicate detection #sym.arrow.r verification #sym.arrow.r consensus) and the security paths (rate-limited authentication, administrative access control) described in Sections 4.2, 4.4, and 4.5. Each expected result traces back to an enforced rule. Chapters 5 and 6 contain the full execution logs and observed outcomes.
 
 #styled-table(
   columns: (0.55fr, 0.85fr, 1.5fr, 1.5fr, 1.9fr),

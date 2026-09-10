@@ -2,7 +2,6 @@
 
 = Requirements and Analysis
 
-#pagebreak(weak: true)
 == Problem Definition
 
 === Statement of the Problem
@@ -442,7 +441,7 @@ FactStamp's functionality is organized into 8 core modules, each responsible for
 #pagebreak(weak: true)
 == Conceptual Models
 
-Each diagram listed in `Rules/Diagrams-Checklist.md` for this section appears below, with a short note on what it models for FactStamp specifically. The `.puml` and `.dot` sources are built into the embedded `.svg` assets by the separate pipeline described in `Rules/Diagram-rules.md`.
+Each conceptual diagram modeling FactStamp's structural, behavioral, architectural, and data flow properties appears below, accompanied by an explanation of what it models for the system.
 
 === Entity-Relationship (E-R) Diagram
 Models FactStamp's Firestore data domain as five conceptual entities: *USER* (uid, displayName, reputation, isAdmin), *CLAIM* (id, text, status, verdict, confidence, category, submittedBy), *VERIFICATION* (id, claimId, verifierId, verdict, sourceUrl, sourceQuality), *DUPLICATE_CLUSTER* (canonical claim grouping for near-duplicate submissions), and *CATEGORY_METRIC* (aggregated per-category rollups for the dashboard). USER submits many CLAIMs and casts many VERIFICATIONs; CLAIM receives many VERIFICATIONs (minimum 3 for quorum) and may group duplicates under a DUPLICATE_CLUSTER; CLAIM aggregates many-to-one into a CATEGORY_METRIC.
@@ -475,7 +474,7 @@ Models a Claim's lifecycle as a finite state machine over the two status values 
 #align(center)[#image("attachments/state_diagram.svg", width: 85%)]
 
 === Sequence Diagram
-Traces the temporal message flow for a single verification-to-consensus event: Verifier to the Verify Detail UI, to the Claims context (submit verdict), to the Firebase service layer (persist verification), to Firestore security rules (server-side validation), back to the Claims context which, once quorum is reached, invokes the confidence-score calculator, persists the settled claim, and triggers a notification to the original submitter. Per `Rules/Diagram-rules.md`, this will be hand-drawn in native Typst/Fletcher rather than PlantUML.
+Traces the temporal message flow for a single verification-to-consensus event: Verifier to the Verify Detail UI, to the Claims context (submit verdict), to the Firebase service layer (persist verification), to Firestore security rules (server-side validation), back to the Claims context which, once quorum is reached, invokes the confidence-score calculator, persists the settled claim, and triggers a notification to the original submitter.
 
 #align(center)[#image("attachments/sequence_diagram.svg", width: 100%, height: 88%, fit: "contain")]
 
@@ -498,21 +497,19 @@ Models the physical/logical nodes: a Client Device node hosting the Browser and 
 
 *Level 0 (Context Diagram):* models FactStamp as a single process bubble with two external entities, User and Admin, and Firestore/Firebase Auth shown as an external data store at the boundary.
 
-*Level 1:* decomposes the single Level 0 process into major processing stages: Submit Claim, Detect Duplicate, Manage Verification Queue, Compute Consensus, Generate Fact-Check Card, Serve Analytics Dashboard, and Admin Moderation, each reading from and writing to the shared Firestore data store.
-
-*Level 2 (drill-down of Submit Claim):* further decomposes claim submission into Accept Text/Screenshot Input, Compress Image, Run Client-Side OCR, Clean WhatsApp Chrome Text, Auto-Classify Category, and Persist Claim Record.
-
-All three DFD levels are produced with Graphviz per `Rules/Diagram-rules.md` (the one diagram type that stays on `dot` rather than PlantUML), rendered top-to-bottom.
-
 #align(center)[#image("attachments/dfd_level_0.svg", width: 85%)]
 
+*Level 1:* decomposes the single Level 0 process into major processing stages: Submit Claim, Detect Duplicate, Manage Verification Queue, Compute Consensus, Generate Fact-Check Card, Serve Analytics Dashboard, and Admin Moderation, each reading from and writing to the shared Firestore data store.
+
 #align(center)[#image("attachments/dfd_level_1.svg", width: 100%, height: 86%, fit: "contain")]
+
+*Level 2 (drill-down of Submit Claim):* further decomposes claim submission into Accept Text/Screenshot Input, Compress Image, Run Client-Side OCR, Clean WhatsApp Chrome Text, Auto-Classify Category, and Persist Claim Record.
 
 #align(center)[#image("attachments/dfd_level_2.svg", width: 100%, height: 86%, fit: "contain")]
 
 === Event Table
 
-Per `Rules/Diagram-rules.md`, the Event Table is tabular data, not a diagram, and is rendered here as a native table. The consensus-deadline sweep named in the final row is implemented as `expireOverdueClaims()` in `src/contexts/ClaimsContext.tsx`.
+The Event Table captures the external, temporal, and state-driven triggers that initiate system actions across the claim lifecycle. The consensus-deadline sweep named in the final row is implemented as `expireOverdueClaims()` in `src/contexts/ClaimsContext.tsx`.
 
 #styled-table(
   columns: (1.3fr, 1.2fr, 2fr, 1.5fr, 1.3fr),

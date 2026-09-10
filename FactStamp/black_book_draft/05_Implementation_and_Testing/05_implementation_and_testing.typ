@@ -1,63 +1,67 @@
 #import "../lib/helpers.typ": *
 
-= Implementation and Testing
+= Implementation and testing
 
-== Implementation Approaches
+== Implementation approaches
 
-=== Project Summary
+=== Project summary
 
-FactStamp was implemented as a single-page web application (SPA): React 18.3.1 on Vite 5.4, written in strict TypeScript 5.5, styled with Tailwind CSS v4, and backed entirely by Firebase v12 (Authentication, Cloud Firestore, Storage) as a Backend-as-a-Service. There is no custom Node/Express server anywhere in the stack: every module (authentication, claim ingestion, duplicate detection, the verification queue, the consensus engine, the PNG card generator, and the analytics dashboard) is a client-side TypeScript module that reads and writes Firestore directly, gated by declarative `firestore.rules`. This "thin client, thick edge" architecture was chosen deliberately (Chapter 2, Survey of Technologies) to keep the whole system operable within Firebase's free Spark tier with zero dedicated DevOps effort.
+FactStamp is a single-page web application (SPA) built with React 18.3.1 on Vite 5.4, written in strict TypeScript 5.5, styled with Tailwind CSS v4, and backed entirely by Firebase v12 (Authentication, Cloud Firestore, Storage) as a Backend-as-a-Service. The stack has no custom Node or Express server. Every module (authentication, claim ingestion, duplicate detection, the verification queue, the consensus engine, the PNG card generator, and the analytics dashboard) is client-side TypeScript that reads and writes Firestore directly, and declarative `firestore.rules` control what each write may do. This design was chosen (Chapter 2, Survey of Technologies) so the whole system could run inside Firebase's free Spark tier without any dedicated DevOps work.
 
-Implementation proceeded module-by-module rather than screen-by-screen: each of the 8 core system modules (Auth #sym.amp Reputation, Forward Submission/OCR, Duplicate Detection, Verification Queue, Weighted Consensus, Fact-Check Card Generator, Analytics Dashboard, and Security #sym.amp Notifications) was built, wired into a dedicated React Context or `src/lib/*.ts` utility file, and manually exercised against the Firebase Local Emulator Suite before being connected to the next module downstream. This module-first sequencing meant the Jaccard duplicate-detection engine and the weighted consensus formula, the two pieces of genuine algorithmic complexity in the system, were implemented and hand-verified in isolation (as pure functions with no Firebase dependency) before being wired into the stateful `ClaimsContext` that drives the live UI.
+Implementation went module by module. Each of the 8 core modules (Auth #sym.amp Reputation, Forward Submission/OCR, Duplicate Detection, Verification Queue, Weighted Consensus, Fact-Check Card Generator, Analytics Dashboard, and Security #sym.amp Notifications) was built, connected to its own React Context or `src/lib/*.ts` utility file, and exercised by hand against the Firebase Local Emulator Suite before the next module downstream was attached to it. Because of this order, the two algorithmically complex parts of the system, the Jaccard duplicate-detection engine and the weighted consensus formula, were written and checked by hand as pure functions with no Firebase dependency before they were connected to the stateful `ClaimsContext` that drives the live UI.
 
-The overall system architecture below shows how those modules compose into the end-to-end claim pipeline, from an incoming WhatsApp forward through duplicate detection, the quorum queue, and the consensus engine, to the exportable fact-check card and the public analytics dashboard, with Cloud Firestore and its declarative security rules as the single shared backend beneath them.
+The architecture diagram below shows how the modules fit together. An incoming WhatsApp forward passes through duplicate detection, the quorum queue, and the consensus engine, and the result feeds the exportable fact-check card and the public analytics dashboard. Cloud Firestore and its security rules sit underneath all of them as the one shared backend.
 
 #align(center)[#image("attachments/system_architecture.svg", width: 92%)]
 
-=== Incremental, Agile Delivery
+=== Incremental, agile delivery
 
-Development followed an *iterative, incremental Agile process* rather than a Waterfall sequence, consistent with the SDLC model comparison in Chapter 2 and the Scrum framework referenced in `template/2020-Scrum-Guide-US.md` and `template/SCRUM_Model.md`. Work was organized into four broad sprint-like phases (as reflected in the Project Synopsis's milestone schedule):
+Development was iterative and incremental, following Agile rather than Waterfall, in line with the SDLC model comparison in Chapter 2 and the Scrum framework in `template/2020-Scrum-Guide-US.md` and `template/SCRUM_Model.md`. The work fell into four broad sprint-like phases, matching the milestone schedule in the Project Synopsis:
 
-+ *Foundation #sym.amp Ingestion Pipeline:* React/Vite/Firebase scaffolding, Firebase Auth wiring, the claim submission form, client-side image compression, OCR text extraction, and the Jaccard duplicate-detection algorithm.
-+ *Quorum #sym.amp Consensus Engine:* the public Verification Queue, the 3-verifier quorum voting workbench, the weighted consensus formula, verifier reputation scoring, and the Firestore security rules that back all of the above server-side.
-+ *Card Generator #sym.amp Analytics Subsystem:* the `html-to-image` 1080px-wide card export pipeline, the Recharts-based misinformation-trends dashboard, and real-time in-app notifications.
-+ *Security Hardening #sym.amp Documentation:* the OWASP-style client hardening in `src/lib/security.ts` (rate limiting, file-upload validation, anti-spam explanation checks), cross-browser verification, and this dissertation.
++ *Foundation #sym.amp ingestion pipeline:* React/Vite/Firebase scaffolding, Firebase Auth, the claim submission form, client-side image compression, OCR text extraction, and the Jaccard duplicate-detection algorithm.
++ *Quorum #sym.amp consensus engine:* the public Verification Queue, the 3-verifier voting workbench, the weighted consensus formula, verifier reputation scoring, and the Firestore security rules that enforce all of it on the server.
++ *Card generator #sym.amp analytics:* the `html-to-image` export pipeline for 1080px-wide cards, the Recharts misinformation-trends dashboard, and real-time in-app notifications.
++ *Security hardening #sym.amp documentation:* the OWASP-style client hardening in `src/lib/security.ts` (rate limiting, file-upload validation, anti-spam explanation checks), cross-browser verification, and this dissertation.
 
-Each phase produced a working, demonstrable increment of the product rather than a partial, unusable slice of every screen at once: a claim could already be submitted, deduplicated, and queued for verification before the confidence-score formula or the PNG card generator existed. This incremental delivery model let algorithmic tuning (e.g. adjusting the Jaccard stop-word length filter, or the 40/30/30 confidence weighting) happen against a small but real, exercised codebase rather than against a design document.
+Each phase ended with a working increment that could be demonstrated. A claim could already be submitted, deduplicated, and queued for verification before the confidence-score formula or the PNG card generator existed. Algorithmic tuning, such as adjusting the Jaccard stop-word length filter or the 40/30/30 confidence weighting, could then be done against a small but real, running codebase instead of a design document.
 
-=== State Management: React Context, Not Redux
+=== State management with React Context
 
-FactStamp's client-side state is managed entirely through React's built-in Context API (`AuthContext`, `ClaimsContext`, `NotificationsContext`, `ThemeContext`, and `UsersContext`), with no external state library (Redux, Zustand, MobX) in the dependency tree. Three things made that workable:
+All client-side state lives in React's built-in Context API (`AuthContext`, `ClaimsContext`, `NotificationsContext`, `ThemeContext`, and `UsersContext`), and no external state library (Redux, Zustand, MobX) is in the dependency tree. Three things made that workable.
 
-- The application's state graph is *shallow and loosely coupled*: five independent concerns (identity, claims, notifications, theme, the user directory) that rarely need to read each other's internal state, unlike a large e-commerce or IDE-style application where dozens of features share a single normalized store.
-- Each Context already owns exactly the Firestore real-time listener (`onSnapshot`) relevant to its domain, so the "single source of truth" that Redux exists to enforce is already naturally provided by Firestore itself: Redux would mean synchronizing a client-side store with a server-side real-time store, which is duplicated bookkeeping with no benefit.
-- Context plus plain `useState`/`useCallback` avoids Redux's action-type/reducer/dispatch boilerplate entirely, which for a solo-developer academic project reduces both the amount of code to maintain and the amount of code a grader has to read to verify correctness.
+The state is shallow and loosely coupled. Its five concerns (identity, claims, notifications, theme, and the user directory) rarely need to read each other's internal state, unlike a large e-commerce or IDE-style application where dozens of features share one normalized store.
 
-The trade-off (Context re-renders every consumer on any state change, which does not scale to a large, deeply-nested store) is acceptable here because each Context's consumer tree is small, a handful of pages and components per concern, so re-rendering it costs almost nothing.
+Each Context also owns the Firestore real-time listener (`onSnapshot`) for its own domain, so Firestore already acts as the single source of truth that Redux is meant to enforce. Adding Redux would mean keeping a client-side store in sync with a server-side real-time store, which duplicates bookkeeping for no benefit.
+
+Context with plain `useState` and `useCallback` also avoids Redux's action types, reducers, and dispatch boilerplate. For a solo academic project, that means less code to maintain and less code for a grader to read when checking correctness.
+
+The cost is that a Context re-renders every consumer on any state change, which does not scale to a large, deeply nested store. Here each Context has a small consumer tree of a handful of pages and components, so those re-renders are cheap.
 
 === Firebase as Backend-as-a-Service
 
-Choosing Firebase (Auth + Firestore + Storage) over a custom server was the single implementation decision with the largest downstream effect on the rest of the codebase:
+Using Firebase (Auth, Firestore, and Storage) instead of a custom server shaped more of the codebase than any other implementation decision.
 
-- There is no server to operate: no REST/GraphQL API layer, no server-side session management, and no infrastructure to patch, scale, or monitor. `src/services/firebaseService.ts` talks to Firestore directly from the browser, and `firestore.rules` is the only "backend logic" that exists, expressed declaratively rather than imperatively.
-- Real-time listeners come for free: the Verification Queue, the live notification bell, and the admin console's Incident Queue and Audit Log all rely on Firestore's `onSnapshot()` primitive, a feature that would otherwise require hand-rolling a WebSocket server and client reconnection logic.
-- *The Firebase Local Emulator Suite* (Auth on port 9099, Firestore on port 8080, Storage on port 9199, with an inspection UI on port 4000, run via `npm run emulators`) reproduces the entire backend locally, which is what makes the module-by-module, hand-verified implementation approach above practical: every module could be built and tested against a real (if local) Firestore instance from day one, without touching production data or requiring network connectivity.
+There is no server to run: no REST or GraphQL API layer, no server-side session management, and no infrastructure to patch, scale, or monitor. `src/services/firebaseService.ts` talks to Firestore directly from the browser, and `firestore.rules` holds the only backend logic, written declaratively.
 
-This BaaS-first approach let implementation effort concentrate on the parts of the system that are actually novel to this project (the Jaccard duplicate engine, the weighted consensus formula, the OCR/WhatsApp-chrome cleanup pipeline, and the OKLCH-aware PNG card renderer) rather than on undifferentiated backend plumbing (auth flows, session tokens, database drivers) that Firebase already solves.
+Firestore also supplies real-time listeners. The Verification Queue, the notification bell, and the admin console's Incident Queue and Audit Log all use `onSnapshot()`, which would otherwise have needed a hand-written WebSocket server and client reconnection logic.
 
-== Coding Details and Code Efficiency
+The Firebase Local Emulator Suite (Auth on port 9099, Firestore on 8080, Storage on 9199, and an inspection UI on 4000, started with `npm run emulators`) reproduces the whole backend on the local machine. That is what made the module-by-module, hand-checked approach practical: every module could be built and tested against a real local Firestore instance from the first day, without touching production data or needing a network connection.
 
-=== Coding Approach by Module
+With the backend taken care of, effort could go to the parts that are new in this project (the Jaccard duplicate engine, the weighted consensus formula, the OCR and WhatsApp-chrome cleanup pipeline, and the OKLCH-aware PNG card renderer) instead of auth flows, session tokens, and database drivers, which Firebase already provides.
 
-Each of FactStamp's 8 core modules is implemented as a small, focused cluster of files rather than a monolithic controller. The coding conventions applied consistently across all of them are:
+== Coding details and code efficiency
 
-- Algorithmic logic is written as pure functions. The two mathematically load-bearing pieces of the system, Jaccard duplicate similarity (`src/lib/duplicateDetection.ts`) and weighted consensus scoring (`src/lib/confidenceScore.ts`), are written as pure, side-effect-free functions that take plain data in and return plain data out. Neither file imports React or Firebase. This was a deliberate coding choice: it makes both functions trivially callable from a Node REPL or a throwaway script for manual verification (see 5.3.1), independent of the UI or the database being available.
-- Strict TypeScript interfaces guard every boundary. `src/lib/types.ts` defines the canonical `Claim`, `Verification`, `User`, and `Verdict` shapes; every function that touches Firestore data (e.g. `mapFirestoreDocToClaim` in `src/services/firebaseService.ts`) narrows an untyped Firestore document into one of these interfaces immediately on read, so a malformed or legacy-shaped document cannot silently propagate `undefined` fields into the consensus computation.
-- Context providers are the only stateful layer. UI components consume state exclusively through `useAuth()`, `useClaims()`, `useNotifications()`, etc.; no component reaches into Firestore directly. This keeps the Firestore read/write surface auditable to a handful of files (`src/services/firebaseService.ts` plus the five Context files) instead of scattered across dozens of page components.
+=== Coding approach by module
+
+Each of the 8 core modules is a small cluster of focused files. Three conventions apply across all of them:
+
+- Algorithmic logic is written as pure functions. Jaccard duplicate similarity (`src/lib/duplicateDetection.ts`) and weighted consensus scoring (`src/lib/confidenceScore.ts`), the two parts of the system whose correctness depends on the math, take plain data in and return plain data out, and neither file imports React or Firebase. Both can therefore be called from a Node REPL or a throwaway script for manual verification (see 5.3.1) without the UI or the database running.
+- Strict TypeScript interfaces guard every boundary. `src/lib/types.ts` defines the canonical `Claim`, `Verification`, `User`, and `Verdict` shapes. Every function that handles Firestore data (for example `mapFirestoreDocToClaim` in `src/services/firebaseService.ts`) narrows the untyped document into one of these interfaces as soon as it is read, so a malformed or legacy-shaped document cannot slip `undefined` fields into the consensus computation.
+- Context providers are the only stateful layer. Components get state only through `useAuth()`, `useClaims()`, `useNotifications()`, and the other Context hooks, and no component touches Firestore directly. All Firestore reads and writes stay in a handful of files (`src/services/firebaseService.ts` and the five Context files), which keeps them easy to audit.
 
 *Duplicate Detection Engine (`src/lib/duplicateDetection.ts`)*
 
-The engine normalizes text (lowercase, strip punctuation, collapse whitespace), tokenizes it into a set of words longer than 3 characters (a lightweight stop-word filter), and computes the Jaccard index between the incoming claim and every existing claim:
+The engine normalizes text (lowercase, strip punctuation, collapse whitespace), splits it into a set of words longer than 3 characters, which works as a lightweight stop-word filter, and computes the Jaccard index between the incoming claim and every existing claim:
 
 // Short excerpt (24 lines) — kept on one page so the function body is never
 // torn mid-expression across a page boundary.
@@ -89,11 +93,11 @@ function jaccardSimilarity(a: string, b: string): number {
 ```
 ]
 
-`findDuplicate()` then linearly scans the existing claim corpus, keeping the highest-scoring match above the `0.75` threshold and returning `null` when nothing clears it: a submission is only ever redirected to an existing claim, never silently merged, so the calling code in `ClaimsContext` retains full control over what happens next.
+`findDuplicate()` then scans the existing claims one by one, keeps the highest-scoring match at or above the `0.75` threshold, and returns `null` if nothing reaches it. A duplicate submission is only ever redirected to the existing claim and is never merged into it automatically, so the calling code in `ClaimsContext` decides what happens next.
 
 *Weighted Consensus Engine (`src/lib/confidenceScore.ts`)*
 
-Once a claim has accumulated verifications, `calculateConfidenceScore()` combines three independently-computed 0--100 components into the final confidence percentage:
+Once a claim has verifications, `calculateConfidenceScore()` combines three separately computed components, each on a scale of 0 to 100, into the final confidence percentage:
 
 // Short excerpt (24 lines) — kept on one page. Previously this block split
 // across a page boundary, tearing the "// 3. Source quality score" section
@@ -126,21 +130,21 @@ const score = Math.round(
 ```
 ]
 
-The function is intentionally shape-agnostic about *where* `verifierReputation` and `sourceQuality` come from: `ClaimsContext.tsx` is responsible for resolving each verifier's live reputation and converting their cited source URL's domain (via `determineSourceQuality()`, exported alongside the scorer from `src/lib/confidenceScore.ts`) into a `high` / `medium` / `low` tier and then a numeric score (`sourceQualityToScore()`) before calling into this function. Keeping the scoring math itself free of that resolution logic is what makes it independently, manually testable (5.3.1).
+The function does not care where `verifierReputation` and `sourceQuality` come from. Before calling it, `ClaimsContext.tsx` looks up each verifier's live reputation and turns the cited source URL's domain into a `high` / `medium` / `low` tier with `determineSourceQuality()` (exported from `src/lib/confidenceScore.ts` alongside the scorer), then into a number with `sourceQualityToScore()`. Keeping that lookup out of the scoring math is what lets the math be tested by hand on its own (5.3.1).
 
 *Other Modules*
 
-- *Auth #sym.amp Reputation* (`AuthContext.tsx`) wraps Firebase Auth's email/password and Google OAuth flows and mirrors the signed-in user's Firestore `users/{uid}` profile (including `reputation`, base value 50) into React state via a live listener.
-- *Ingestion #sym.amp OCR* (`Submit.tsx`, `ocrService.ts`, `imageCompression.ts`) chains client-side image compression, a Tesseract.js WebAssembly OCR pass, and a WhatsApp-chrome regex cleanup (`cleanExtractedOcrText()`) before the extracted text is ever shown to the user for confirmation.
-- *Verification Queue* (`VerifyQueue.tsx`, `VerifyDetail.tsx`) renders pending claims and funnels every submitted verdict through `validateVerdictExplanation()` in `src/lib/security.ts` (minimum 50 characters / 8 words) before it reaches `ClaimsContext`.
-- *Card Generator* (`FactCheckCard.tsx`) is a plain, deterministic React component laid out at a 540px card width; `html-to-image` rasterizes it client-side at `pixelRatio: 2` on export, yielding a 1080px-wide PNG with no server round-trip.
-- *Analytics Dashboard* (`Dashboard.tsx`, `weeklyReport.ts`) derives all charts from data already held in `ClaimsContext` and `UsersContext`; no additional Firestore queries are issued purely for the dashboard.
+- *Auth #sym.amp Reputation* (`AuthContext.tsx`) wraps Firebase Auth's email/password and Google OAuth flows and copies the signed-in user's Firestore `users/{uid}` profile (including `reputation`, which starts at 50) into React state through a live listener.
+- *Ingestion #sym.amp OCR* (`Submit.tsx`, `ocrService.ts`, `imageCompression.ts`) runs client-side image compression, a Tesseract.js WebAssembly OCR pass, and a regex cleanup of WhatsApp chrome (`cleanExtractedOcrText()`) before the user sees the extracted text for confirmation.
+- *Verification Queue* (`VerifyQueue.tsx`, `VerifyDetail.tsx`) lists pending claims and passes every submitted verdict through `validateVerdictExplanation()` in `src/lib/security.ts` (at least 50 characters and 8 words) before it reaches `ClaimsContext`.
+- *Card Generator* (`FactCheckCard.tsx`) is a plain, deterministic React component laid out at a card width of 540px. On export, `html-to-image` rasterizes it in the browser at `pixelRatio: 2`, producing a 1080px-wide PNG with no server round-trip.
+- *Analytics Dashboard* (`Dashboard.tsx`, `weeklyReport.ts`) builds all of its charts from data already held in `ClaimsContext` and `UsersContext`, and issues no Firestore queries of its own.
 
-=== Code Efficiency
+=== Code efficiency
 
-*Vite Manual Chunk-Splitting*
+*Vite manual chunk splitting*
 
-`vite.config.ts` explicitly partitions the production bundle into six vendor chunks instead of relying on Vite's default automatic chunking:
+`vite.config.ts` splits the production bundle into six named vendor chunks instead of leaving chunking to Vite's defaults:
 
 // Short excerpt (16 lines) — kept on one page so the nested `manualChunks`
 // object is never split mid-literal across a page boundary.
@@ -164,27 +168,27 @@ build: {
 ```
 ]
 
-This matters because Tesseract.js and the Firebase SDK are both large and change far less often than the application's own code. Without explicit splitting, a single application code change would invalidate one large bundle containing everything; with `vendor-ocr` and `vendor-firebase` isolated, a returning user's browser cache continues to serve those chunks unchanged across most deployments, and a user who never visits `/submit` (and therefore never needs OCR) can, with route-level lazy loading, avoid downloading the Tesseract WASM chunk at all on first load.
+Tesseract.js and the Firebase SDK are both large, and they change far less often than the application's own code. Without explicit splitting, any change to the application code would invalidate one large bundle containing everything. With `vendor-ocr` and `vendor-firebase` in their own chunks, a returning user's browser keeps serving them from cache across most deployments. Combined with route-level lazy loading, a user who never opens `/submit`, and so never needs OCR, can also skip downloading the Tesseract WASM chunk on first load.
 
-*Firestore Schema: Embedded Verifications, Not a Subcollection*
+*Embedded verifications in the Firestore schema*
 
-Verifications are stored as an embedded array field directly on each `Claim` document rather than as a separate `verifications` subcollection keyed by claim ID. This is a deliberate denormalization: it means the real-time claims listener (`subscribeClaimsRealtime` in `firebaseService.ts`) can reconstruct a complete `Claim` (text, status, verdict, and every verification cast against it) from a *single document read*, rather than needing one query for the claim plus a second query per claim for its verifications (an N+1 read pattern that would multiply Firestore read costs linearly with the number of claims rendered in the Verification Queue list view). The trade-off, accepted because a claim requires only a 3-verification quorum rather than an open-ended comment thread, is that each claim document must stay under Firestore's 1 MiB per-document limit, which is also why claim screenshots are compressed before being embedded rather than stored as raw uploads.
+Verifications are stored as an embedded array on each `Claim` document instead of in a separate `verifications` subcollection keyed by claim ID. With this denormalization, the real-time claims listener (`subscribeClaimsRealtime` in `firebaseService.ts`) can build a complete `Claim`, with its text, status, verdict, and every verification, from a single document read. A subcollection would need one query for the claims and another for each claim's verifications, an N+1 pattern that would make Firestore read costs grow linearly with the number of claims shown in the Verification Queue list. The trade-off is that each claim document must stay under Firestore's 1 MiB limit. That is acceptable because a claim needs only a 3-verification quorum, not an open-ended comment thread, and the same limit is why screenshots are compressed before they are embedded.
 
-*Client-Side Image Compression Before Firestore Writes*
+*Client-side image compression before Firestore writes*
 
-Screenshots submitted with a claim are compressed client-side (`src/lib/imageCompression.ts`, via the HTML5 Canvas API) to a bounded resolution before being base64-encoded and written directly onto the claim document. This keeps the combined size of claim text, verification array, and screenshot data comfortably under Firestore's 1 MiB document ceiling without provisioning a paid Cloud Storage bucket for the primary image path, and it means the OCR pass in `ocrService.ts` also runs against a smaller, already-normalized image, which is faster and more memory-stable inside the Tesseract.js WebAssembly worker than running OCR against an uncompressed multi-megapixel photo.
+Screenshots attached to a claim are compressed in the browser (`src/lib/imageCompression.ts`, using the HTML5 Canvas API) to a bounded resolution, then base64-encoded and written directly onto the claim document. This keeps the claim text, verification array, and screenshot together under Firestore's 1 MiB document limit without a paid Cloud Storage bucket for images. It also means the OCR pass in `ocrService.ts` works on a smaller, already-normalized image, which is faster and uses memory more predictably inside the Tesseract.js WebAssembly worker than an uncompressed multi-megapixel photo would.
 
-*Memoization and Real-Time Listener Patterns in Contexts*
+*Memoization and real-time listeners in Contexts*
 
-Each Context subscribes to exactly one Firestore real-time listener for its domain (`onSnapshot`) and derives all downstream values from that single subscription rather than re-querying per consumer. Expensive derived values, such as the weekly trending-misinformation report in `weeklyReport.ts` and the dashboard's category/verdict aggregations, are computed with `useMemo` keyed on the underlying `claims` array reference, so a re-render triggered by an unrelated state change (e.g. the theme toggling) does not re-run the rolling 7-day aggregation. Listener cleanup is handled uniformly: every `useEffect` that opens an `onSnapshot` subscription returns the corresponding unsubscribe function, preventing the duplicate-listener leaks that would otherwise silently multiply Firestore read billing every time a component using `useClaims()` mounted and unmounted (e.g. navigating away from and back to the Verification Queue).
+Each Context opens exactly one Firestore real-time listener (`onSnapshot`) for its domain and derives everything else from that subscription instead of querying again for each consumer. Expensive derived values, such as the weekly trending-misinformation report in `weeklyReport.ts` and the dashboard's category and verdict aggregations, are wrapped in `useMemo` keyed on the `claims` array reference, so a re-render caused by something unrelated, such as toggling the theme, does not re-run the 7-day aggregation. Every `useEffect` that opens an `onSnapshot` subscription returns its unsubscribe function. Without that cleanup, each time a component using `useClaims()` mounted and unmounted (for example, when the user leaves the Verification Queue and comes back), another listener would be left running and Firestore read billing would climb.
 
-== Testing Approach
+== Testing approach
 
-FactStamp's repository contains no automated test runner: `package.json` defines only `dev`, `build`, `preview`, `typecheck`, `emulators` (and its `:persist`/`:export` variants), `seed:db`, `create:admin`, and `create:user`; there is no `test` script, and no `*.test.ts` / `*.spec.ts` file exists anywhere under `src/`. The project's quality assurance is therefore *manual and structured*, not backed by a Jest/Vitest suite running in CI. The single automated safety net that does exist is the `typecheck-and-build` job in `.github/workflows/ci.yml`, which runs `npm ci`, `npm run typecheck` (`tsc --noEmit`), and `npm run build` (`tsc -b && vite build`) on every push; this catches type errors and build breakages, but not logical or behavioral regressions. Given that constraint, testing was organized into three deliberate, manually-executed layers: unit-level verification of the two pure algorithmic modules, integration testing across Firebase service boundaries using the Local Emulator Suite, and full end-to-end system/beta walkthroughs of real user journeys.
+The FactStamp repository has no automated test runner. `package.json` defines only `dev`, `build`, `preview`, `typecheck`, `emulators` (with its `:persist` and `:export` variants), `seed:db`, `create:admin`, and `create:user`. There is no `test` script, and no `*.test.ts` or `*.spec.ts` file exists anywhere under `src/`. Quality assurance was therefore done by hand, with no Jest or Vitest suite running in CI. The one automated check is the `typecheck-and-build` job in `.github/workflows/ci.yml`, which runs `npm ci`, `npm run typecheck` (`tsc --noEmit`), and `npm run build` (`tsc -b && vite build`) on every push. It catches type errors and broken builds, but not logic or behavior regressions. Within that limit, manual testing was organized in three layers: unit checks of the two pure algorithmic modules, integration tests across the Firebase service boundary using the Local Emulator Suite, and end-to-end system and beta walkthroughs of real user journeys.
 
-=== Unit Testing
+=== Unit testing
 
-Because `duplicateDetection.ts` and `confidenceScore.ts` are pure, dependency-free TypeScript functions, they were manually unit-verified by calling them directly with hand-constructed inputs and checking the returned value against a hand-computed expected result, the same discipline an automated `it(...)` block would apply, executed manually in the absence of a test runner.
+Since `duplicateDetection.ts` and `confidenceScore.ts` are pure TypeScript functions with no dependencies, they were checked by calling them directly with hand-built inputs and comparing each result with a value worked out by hand. This is the same check an automated `it(...)` block would make, run manually because there is no test runner.
 
 *Duplicate Detection: `findDuplicate()` / Jaccard Similarity*
 
@@ -199,7 +203,7 @@ Because `duplicateDetection.ts` and `confidenceScore.ts` are pure, dependency-fr
   "3", ["Eating raw garlic cures corona virus infection completely"], ["Eating garlic cures corona virus disease naturally"], [7, 7, 5, 9 #sym.arrow.r `J=0.56`], [*Not* flagged (`J < 0.75`); queued as a new, independent claim.],
 )
 
-Case 3 was specifically constructed to manually verify the threshold's precision/recall trade-off: two claims share a real topical core (garlic curing coronavirus) but diverge enough in wording that treating them as the same claim would risk conflating two distinct viral variants into a single verdict. Manually re-running `findDuplicate()` confirmed it correctly separates Cases 1--2 (redirect) from Case 3 (new claim), matching the `J >= 0.75` threshold specified in Chapter 4's algorithm design.
+Case 3 tests the threshold's precision/recall trade-off. The two claims share a topic (garlic curing coronavirus) but differ enough in wording that treating them as one claim could fold two separate viral variants into a single verdict. Re-running `findDuplicate()` by hand confirmed that it redirects Cases 1 and 2 and creates a new claim for Case 3, as the `J >= 0.75` threshold in Chapter 4's algorithm design specifies.
 
 *Weighted Consensus: `calculateConfidenceScore()`*
 
@@ -215,74 +219,74 @@ Case 3 was specifically constructed to manually verify the threshold's precision
   "3", [`[]` (empty array, edge case)], "0 / 0 / 0", "Early-return guard, no division by zero", [*0*],
 )
 
-Manual computation for Case 1: $C = (100 times 0.40) + (70 times 0.30) + (90 times 0.30) = 40 + 21 + 27 = 88$, matching `Math.round()`'s output exactly. Case 3 confirms the function's explicit early-return guard (`if (verifications.length === 0) return { score: 0, ... }`) rather than a divide-by-zero: this guard was added specifically because a claim can theoretically be read mid-write with zero verifications still attached, and the UI must render a sane `0%` rather than `NaN` in that window.
+Worked by hand, Case 1 gives $C = (100 times 0.40) + (70 times 0.30) + (90 times 0.30) = 40 + 21 + 27 = 88$, which is exactly what `Math.round()` returns. Case 3 exercises the function's explicit early return (`if (verifications.length === 0) return { score: 0, ... }`), which prevents a division by zero. The guard was added because a claim can in theory be read mid-write with no verifications attached yet, and in that moment the UI has to show `0%`, not `NaN`.
 
-=== Integration Testing
+=== Integration testing
 
-Integration testing exercises the boundary between modules and Firebase itself, which pure unit tests of `duplicateDetection.ts`/`confidenceScore.ts` cannot cover. All integration testing was performed against the *Firebase Local Emulator Suite* (`npm run emulators`, or `npm run emulators:persist` to retain state across runs), Auth on port `9099`, Firestore on port `8080`, Storage on port `9199`, with the inspection UI on port `4000`, so that Auth, Firestore, and Storage rules could be exercised together without touching the production project or incurring quota usage.
+Integration tests cover the boundary between the modules and Firebase itself, which unit checks of `duplicateDetection.ts` and `confidenceScore.ts` cannot reach. All of them ran against the Firebase Local Emulator Suite (`npm run emulators`, or `npm run emulators:persist` to keep state between runs), with Auth on port `9099`, Firestore on `8080`, Storage on `9199`, and the inspection UI on `4000`. This let Auth, Firestore, and Storage rules be tested together without touching the production project or using up quota.
 
-Representative integration scenarios manually executed against the emulator:
+The main scenarios run by hand against the emulator were:
 
-+ *End-to-end quorum consensus.* Seed the emulator (`npm run seed:db`), sign in as three distinct seeded verifier accounts in sequence, and submit one verdict each (via `VerifyDetail.tsx`) against the same pending claim. Confirmed: (a) each submitted verification is appended to the claim document's embedded `verifications` array and `firestore.rules` rejects a write attempting to increment `verificationCount` by anything other than exactly 1; (b) once the third verification lands, `ClaimsContext` recomputes the verdict and calls `calculateConfidenceScore()`, and the claim's `status` transitions from `pending` to `verified` in the same Firestore write; (c) the computed confidence score displayed in `ClaimDetail.tsx` matches the manually hand-computed value for the same three verdicts (cross-checked against 5.3.1's formula).
-+ *Firestore rules rejecting a forged write.* Attempted (via the Firestore emulator's REST endpoint, bypassing the app's own UI) to write a verification with an inflated `verifierReputation` value not matching the authenticated user's live profile. Confirmed `firestore.rules` rejects the write: the client-side consensus math in `ClaimsContext.tsx` cannot be trusted alone; the server-side rule is the actual enforcement point.
-+ *Storage + Auth interaction for screenshot claims.* Attempted to submit a claim with an attached screenshot while signed out: confirmed both `firestore.rules` (`match /claims/{claimId}` #sym.arrow.r `allow create: if request.auth != null`) and `storage.rules` (`match /claim_screenshots/{fileName}` #sym.arrow.r `allow write: if request.auth != null`) reject the write, i.e. claim submission is an authenticated-only path, consistent with `/submit` being wrapped in `ProtectedRoute` in `src/App.tsx`. Re-run while signed in, the same submission succeeded, with the file-type/size constraints from `src/lib/security.ts` still enforced client-side.
-+ *Self-verification lock.* Attempted to submit a verification, as the same user who submitted the original claim, against that same claim: confirmed the anti-Sybil self-verification check in the verification workbench blocks the submission client-side before it ever reaches Firestore.
-+ *Admin dual-layer authorization.* Manually attempted the documented `sessionStorage.setItem('fs_admin_session_unlocked', 'true')` DevTools bypass against a non-admin seeded account signed in through the emulator; confirmed `AdminRoute.tsx` re-derives `hasVerifiedAdminRole` from the live Firestore-backed `user.isAdmin` snapshot on every render and discards the stale session flag, bouncing back to the login gate.
++ *End-to-end quorum consensus.* After seeding the emulator (`npm run seed:db`), three different seeded verifier accounts signed in one after another and each submitted a verdict through `VerifyDetail.tsx` on the same pending claim. The test confirmed that (a) each verification was appended to the claim's embedded `verifications` array, and `firestore.rules` rejected any write that tried to increment `verificationCount` by anything other than exactly 1; (b) when the third verification arrived, `ClaimsContext` recomputed the verdict, called `calculateConfidenceScore()`, and moved the claim's `status` from `pending` to `verified` in the same Firestore write; and (c) the confidence score shown in `ClaimDetail.tsx` matched the value worked out by hand for the same three verdicts with the formula from 5.3.1.
++ *Firestore rules rejecting a forged write.* Using the Firestore emulator's REST endpoint to bypass the app's UI, a verification was written with a `verifierReputation` higher than the signed-in user's live profile value. `firestore.rules` rejected the write. The client-side consensus math in `ClaimsContext.tsx` cannot be trusted on its own; this server-side rule is where enforcement actually happens.
++ *Storage and Auth for screenshot claims.* Submitting a claim with an attached screenshot while signed out was rejected by both `firestore.rules` (`match /claims/{claimId}` #sym.arrow.r `allow create: if request.auth != null`) and `storage.rules` (`match /claim_screenshots/{fileName}` #sym.arrow.r `allow write: if request.auth != null`). Claim submission is therefore an authenticated-only path, consistent with `/submit` being wrapped in `ProtectedRoute` in `src/App.tsx`. The same submission succeeded once signed in, with the file-type and size checks from `src/lib/security.ts` still enforced on the client.
++ *Self-verification lock.* The user who submitted a claim tried to verify that same claim. The anti-Sybil self-verification check in the verification workbench blocked the submission on the client before anything reached Firestore.
++ *Admin dual-layer authorization.* On a non-admin seeded account signed in through the emulator, the documented DevTools bypass `sessionStorage.setItem('fs_admin_session_unlocked', 'true')` was tried. On the next render, `AdminRoute.tsx` re-derived `hasVerifiedAdminRole` from the live Firestore-backed `user.isAdmin` snapshot, discarded the stale session flag, and sent the user back to the login gate.
 
-=== System/Beta Testing
+=== System/beta testing
 
-System and beta testing consisted of manually walking through complete, realistic user journeys end-to-end against a running instance of the application (locally via `npm run dev` against the emulators, and separately against a deployed build), rather than testing modules in isolation. The walkthroughs are scripted and repeatable, but they are executed by hand: the repository carries no Playwright or Cypress configuration, just as it carries no `test` script in `package.json`.
+System and beta testing meant walking through complete, realistic user journeys by hand on a running copy of the application, both locally with `npm run dev` against the emulators and separately on a deployed build. The walkthroughs are scripted and repeatable but executed manually: the repository has no Playwright or Cypress configuration, just as `package.json` has no `test` script.
 
 *Public submitter journey:*
 
-+ Sign up via `SignUp.tsx` (email/password), confirming a new `users/{uid}` Firestore profile is created with a base reputation of 50.
-+ Submit a claim via `Submit.tsx` as a screenshot upload, confirming client-side image compression runs, Tesseract.js OCR extracts readable text into the form, and `cleanExtractedOcrText()` strips WhatsApp timestamp/checkmark chrome from the extracted string.
-+ Confirm the duplicate-detection check runs against the existing claim corpus before the claim is queued (submitting a claim already known to be a near-duplicate correctly redirects to the existing claim's page instead of creating a new one).
-+ Confirm the new claim appears in `VerifyQueue.tsx` for other users, and that the submitter receives a real-time in-app notification once three verifications resolve the claim.
-+ Open `ClaimDetail.tsx` once resolved, confirm the verdict badge, confidence percentage, and source list render correctly, and export the fact-check PNG card via `html-to-image` (1080px wide, from a 540px card at `pixelRatio: 2`, with the height growing to fit the claim text and source list), confirming the OKLCH-based theme colors rasterize correctly (the specific failure mode the legacy canvas parser could not handle; see Section 5.4).
++ Sign up through `SignUp.tsx` with email and password, and confirm that a new `users/{uid}` Firestore profile is created with a base reputation of 50.
++ Submit a claim through `Submit.tsx` as a screenshot upload, and confirm that client-side compression runs, Tesseract.js OCR puts readable text into the form, and `cleanExtractedOcrText()` removes WhatsApp timestamps and checkmarks from the extracted string.
++ Confirm that the duplicate check runs against the existing claims before the new claim is queued. Submitting a known near-duplicate redirects to the existing claim's page and creates nothing new.
++ Confirm that the new claim appears in `VerifyQueue.tsx` for other users, and that the submitter gets a real-time in-app notification once three verifications resolve it.
++ Open `ClaimDetail.tsx` after resolution, check that the verdict badge, confidence percentage, and source list render properly, and export the fact-check PNG via `html-to-image` (1080px wide, from a 540px card at `pixelRatio: 2`, with height growing to fit the claim text and source list). Confirm that the OKLCH theme colors rasterize correctly, which is exactly where the legacy canvas parser failed (see Section 5.4).
 
 *Community verifier journey:*
 
-+ Sign in as a seeded verifier account, open the Verification Queue, and select a pending claim.
-+ Attempt to submit a verdict with a short, low-effort explanation ("fake"): confirm `validateVerdictExplanation()` rejects it (below the 50-character / 8-word minimum) with a specific, actionable error message rather than a generic failure.
-+ Submit a properly-sourced verdict with a real citation URL; confirm the source-quality tier (`determineSourceQuality()`) is correctly derived from the domain and reflected in the eventual confidence score.
-+ Confirm the verifier's own reputation score updates once the claim reaches consensus, consistent with whether their verdict matched the eventual majority.
++ Sign in as a seeded verifier, open the Verification Queue, and select a pending claim.
++ Try to submit a verdict with a short, low-effort explanation ("fake"), and confirm that `validateVerdictExplanation()` rejects it for falling below the 50-character / 8-word minimum, with an error message that says what to fix.
++ Submit a verdict with a real citation URL, and confirm that `determineSourceQuality()` derives the right source-quality tier from the domain and that the tier shows up in the eventual confidence score.
++ Confirm that the verifier's own reputation changes once the claim reaches consensus, according to whether their verdict matched the majority.
 
 *Admin console walkthrough:*
 
-+ Navigate directly to the unlisted `/admin` route and authenticate through `AdminRoute.tsx`'s login gate.
-+ Walk through all five tabs: System Overview (KPI cards and Recharts visualizations), Verifier Directory (search/filter, edit reputation, toggle `isAdmin`), Claims Moderation (override a verdict, flag a claim for expedited review), Incident Queue (create and resolve a `ModerationReport`), and Audit #sym.amp Tools (confirm every mutating action from the previous steps produced a corresponding `AdminAuditLog` entry, then exercise "force-run consensus expiry" and the JSON database export tool).
-+ Confirm the "Lock Console" action clears the session flag and returns to the login gate on the next render.
++ Go directly to the unlisted `/admin` route and sign in through the `AdminRoute.tsx` login gate.
++ Work through all five tabs: System Overview (KPI cards and Recharts charts), Verifier Directory (search and filter, edit reputation, toggle `isAdmin`), Claims Moderation (override a verdict, flag a claim for expedited review), Incident Queue (create and resolve a `ModerationReport`), and Audit #sym.amp Tools. In the last tab, confirm that every mutating action from the earlier steps produced an `AdminAuditLog` entry, then run "force-run consensus expiry" and the JSON database export.
++ Confirm that "Lock Console" clears the session flag and returns to the login gate on the next render.
 
-Every one of these walkthroughs was re-run manually after each of the modifications described in 5.4, to confirm the fix or enhancement did not regress an adjacent user journey, which is the nearest this project gets to the regression safety net a CI-gated test suite would provide.
+All of these walkthroughs were re-run by hand after each change described in 5.4, to check that the change had not broken an adjacent journey. Without an automated suite in CI, this is the project's regression check.
 
-== Modifications and Improvements
+== Modifications and improvements
 
-Implementation was not a single linear pass: several capabilities were revised after initial delivery, either to fix a real defect discovered during manual testing (5.3) or to improve on an earlier, weaker implementation. The modifications below are drawn from the project's own `CHANGELOG.md` and the architectural notes in `INDEX.md`.
+Several features were revised after their first delivery, either to fix a defect found during manual testing (5.3) or to replace a weaker first version. The changes below come from the project's `CHANGELOG.md` and the architectural notes in `INDEX.md`.
 
-*1. Verification Queue Auto-Replenishment Fix (Bug Fix)*
+*1. Verification queue auto-replenishment (bug fix)*
 
-Problem discovered: during manual testing, the Verification Queue at `/verify` was found to intermittently display zero pending claims. Root-cause investigation traced this to `applyLocalExpiry()` in `ClaimsContext.tsx`: the automatic 7-day consensus-expiry logic (claims that fail to reach the 3-verifier quorum within their `consensusDeadline` are settled as `CONTESTED`) was correctly resolving overdue claims, but nothing was replenishing the queue with new pending work, so a batch of seeded demo claims could all expire at once and leave the queue empty.
+During manual testing, the Verification Queue at `/verify` sometimes showed no pending claims at all. The cause was in `applyLocalExpiry()` in `ClaimsContext.tsx`. The 7-day consensus-expiry logic, which settles claims that miss the 3-verifier quorum by their `consensusDeadline` as `CONTESTED`, was working as intended, but nothing refilled the queue with new pending claims. A batch of seeded demo claims could therefore all expire together and leave the queue empty.
 
-Fix implemented: `scripts/seed-db.mjs` was updated to generate claims with *dynamic future deadlines* (3 to 6 days ahead of the script's execution time). `applyLocalExpiry()` was modified so that whenever expiry processing leaves the database with zero `pending` claims, it automatically replenishes the in-memory claims list with fresh active seed claims (each assigned a new future `consensusDeadline`), guaranteeing the Verification Queue is never left empty. The realtime Firestore subscription cleanup in `subscribeClaimsRealtime()` was also hardened to safely tear down both the primary ordered query listener and its unindexed fallback query, preventing a duplicate-listener leak that could otherwise mask the same symptom. This was manually re-verified by letting seeded claims run past their deadline in the emulator and confirming the queue view always continued to show at least one actionable claim afterward.
+`scripts/seed-db.mjs` now gives each generated claim a deadline 3 to 6 days after the script runs. `applyLocalExpiry()` was changed so that whenever expiry leaves no `pending` claims, it adds fresh seed claims, each with a new future `consensusDeadline`, to the in-memory claims list, so the Verification Queue never goes empty. The cleanup in `subscribeClaimsRealtime()` was also fixed to tear down both the primary ordered-query listener and its unindexed fallback query, closing a duplicate-listener leak that could produce the same symptom. To re-verify the fix, seeded claims were left to run past their deadlines in the emulator, and the queue kept showing at least one claim to act on.
 
-*2. Authentication Security Hardening #sym.amp Rate Limiting*
+*2. Authentication hardening and rate limiting*
 
-The original sign-in flow had no protection against repeated failed login attempts. `src/lib/security.ts` was extended with a multi-tiered rate limiter: failed attempts are tracked both per-account and globally per browser client, using `localStorage` with a `sessionStorage` fallback so a tab reload or browser close cannot reset the counter. A *5-attempt threshold* triggers a strict *15-minute lockout* (`LOCKOUT_DURATION_MS = 15 * 60 * 1000`), with `formatLockoutRemaining()` driving a live ticking countdown in the sign-in UI, and `resetLoginAttempts()` clearing the counter immediately on a successful login. `SignIn.tsx` was updated to check the rate-limit state before dispatching a network request to Firebase Auth, display an "X/5 attempts left" indicator, and standardize all invalid-credential error copy to a generic "Invalid email or password" message, closing a user-enumeration side-channel. The same rate-limiting primitives were also wired into `AdminRoute.tsx`'s login gate.
+The original sign-in flow did nothing about repeated failed logins. `src/lib/security.ts` gained a rate limiter that tracks failed attempts both per account and globally per browser client, using `localStorage` with a `sessionStorage` fallback so that reloading the tab or closing the browser does not reset the count. Five failed attempts trigger a 15-minute lockout (`LOCKOUT_DURATION_MS = 15 * 60 * 1000`). `formatLockoutRemaining()` drives a live countdown in the sign-in UI, and `resetLoginAttempts()` clears the count as soon as a login succeeds. `SignIn.tsx` now checks the rate-limit state before sending anything to Firebase Auth, shows an "X/5 attempts left" indicator, and uses the same generic "Invalid email or password" message for every credential error, so an attacker cannot tell which emails are registered. The login gate in `AdminRoute.tsx` uses the same rate-limiting functions.
 
-*3. Universal Sliding Dual-Icon Theme Toggle Rollout*
+*3. Sliding dual-icon theme toggle across the app*
 
-Plain, inconsistent icon-only theme buttons scattered across different pages were replaced with a single, reusable `<ThemeToggle />` component: a compact pill container with an animated sliding thumb between `Sun` and `Moon` Lucide icons, fully keyboard-accessible. `ThemeContext.tsx` was expanded to expose an explicit `setTheme` alongside the existing `toggleTheme`. The component was then placed consistently across every surface that previously lacked it or used a bespoke variant: the desktop Navbar and mobile navigation drawer, the Admin Command Center's header and Tools tab, the Admin authentication gate, the Sign In / Sign Up auth panels, and the global footer.
+Pages used to have their own inconsistent, icon-only theme buttons. These were replaced with one reusable `<ThemeToggle />` component: a small pill with a thumb that slides between Lucide's `Sun` and `Moon` icons, fully usable from the keyboard. `ThemeContext.tsx` now exposes an explicit `setTheme` alongside the existing `toggleTheme`. The toggle now appears in the same form on every surface that lacked one or had a custom variant: the desktop Navbar and mobile navigation drawer, the Admin Command Center's header and Tools tab, the admin authentication gate, the Sign In / Sign Up panels, and the global footer.
 
-*4. Pan-Indic Typography Migration (Font-Stack Rework)*
+*4. Pan-Indic typography migration (font-stack rework)*
 
-The original typography setup loaded three separate Google Font families (`DM Sans`, `JetBrains Mono`, `Lora`) totaling over 120 KB across twelve font files, and had no support for Devanagari script, so Hindi or Marathi text embedded in a WhatsApp forward would render with broken baselines. `DM Sans` was replaced with a single variable Latin font, *Plus Jakarta Sans*, and *Noto Sans Devanagari* was added for native Hindi/Marathi rendering. `JetBrains Mono` was dropped in favor of native CSS `font-variant-numeric: tabular-nums` for reputation ratios, case IDs, and countdown timers, achieving the same fixed-width alignment at *zero additional network payload*. `Lora` styling was removed from quoted forward text in favor of plain message typography.
+The original setup loaded three Google Font families (`DM Sans`, `JetBrains Mono`, `Lora`), over 120 KB across twelve font files, and had no Devanagari support, so Hindi or Marathi text in a WhatsApp forward rendered with broken baselines. `DM Sans` was replaced with a single variable Latin font, Plus Jakarta Sans, and Noto Sans Devanagari was added for Hindi and Marathi. `JetBrains Mono` was dropped. Reputation ratios, case IDs, and countdown timers now use the CSS `font-variant-numeric: tabular-nums` property, which gives the same fixed-width alignment with no extra download. `Lora` was removed from quoted forward text, which now uses plain message typography.
 
-*5. `html-to-image` Adoption Replacing a Legacy Canvas Parser*
+*5. `html-to-image` replacing a legacy canvas parser*
 
-The original fact-check card exporter used a hand-written JavaScript canvas-based CSS parser to rasterize `FactCheckCard.tsx` into a downloadable PNG. Once the design system's colors were expressed in Tailwind v4's native OKLCH/OKLAB color space, this legacy parser (which only understood `rgb()`/hex syntax) could not interpret the card's actual computed styles, and card exports came out visually broken or entirely black. The exporter was rewritten around `html-to-image`, which rasterizes DOM nodes through the browser's own native SVG `<foreignObject>` rendering path rather than a custom CSS interpreter, resolving `oklch()`/`oklab()` exactly as the page itself renders it and eliminating the entire class of color-parsing bugs at the root. Cards now export at a crisp 1080px width, rasterized from the 540px card at a 2#sym.times device pixel ratio, with the height scaling to the card's own content and no layout distortion.
+The first card exporter used a hand-written canvas-based CSS parser to rasterize `FactCheckCard.tsx` into a PNG. That parser understood only `rgb()` and hex colors, so once the design system moved to Tailwind v4's OKLCH/OKLAB colors it could not read the card's computed styles, and exports came out broken or completely black. The exporter was rewritten around `html-to-image`, which rasterizes DOM nodes through the browser's own SVG `<foreignObject>` rendering instead of a custom CSS interpreter. It resolves `oklch()` and `oklab()` exactly as the page does, which removes this whole class of color-parsing bug. Cards now export at 1080px wide from the 540px card at a 2#sym.times device pixel ratio, with height following the card's content and no layout distortion.
 
-*Summary Comparison*
+*Summary comparison*
 
 // Files column widened to 1.8fr (~4.4cm) and the directory prefixes dropped
 // (`src/lib/security.ts` -> `security.ts`, `scripts/seed-db.mjs` ->
@@ -299,9 +303,9 @@ The original fact-check card exporter used a hand-written JavaScript canvas-base
   [`html-to-image` adoption], "Bug fix / architectural improvement", "Legacy canvas parser could not render OKLCH card colors", [`FactCheckCard.tsx`, `ClaimDetail.tsx`],
 )
 
-== Test Cases Execution Matrix
+== Test cases execution matrix
 
-The table below is the *executed* counterpart to Chapter 4.6's test case design: each row was actually run manually (per the approach in 5.3) against a running instance of FactStamp on the Firebase Local Emulator Suite, and the Actual Result / Pass column records the outcome observed on that run. Only one row is marked as a historical failure, corresponding to the verification-queue auto-replenishment defect documented and fixed in 5.4; every other scenario passed on the build current at the time of this dissertation.
+This table is the executed counterpart to the test case design in Chapter 4.6. Each row was run by hand, following the approach in 5.3, on a running instance of FactStamp against the Firebase Local Emulator Suite, and the Actual Result and Pass columns record what happened on that run. One row is marked as a historical failure: the verification-queue auto-replenishment defect documented and fixed in 5.4. Every other scenario passed on the build that was current when this dissertation was written.
 
 // Every cell carrying markup is a content block [...], not a string. Columns
 // rebalanced (wider ID/Pass so "TC-01" and "Fail -> Fixed" stop spilling into
