@@ -1,6 +1,6 @@
 # References
 
-*(Draft status: content-complete. Numbered academic bibliography for the unnumbered "REFERENCES" back-matter section that follows Chapter 7 — Conclusions, per `Rules/Project_syllabus.md`. Citation style mirrors `Project Synopsis/project_synopsis.typ` §14 "References & Academic Bibliography" exactly, extended with official technology documentation for every tool named in Chapter 2 — Survey of Technologies. No fabricated sources: every entry below is a real, verifiable standard, paper, or vendor documentation page.)*
+*(Draft status: content-complete. Numbered academic bibliography for the unnumbered "REFERENCES" back-matter section that follows Chapter 7 — Conclusions, per `Rules/Project_syllabus.md`. Citation style mirrors `Project Synopsis/project_synopsis.typ` Section 14 "References & Academic Bibliography" exactly, extended with official technology documentation for every tool named in Chapter 2 — Survey of Technologies. No fabricated sources: every entry below is a real, verifiable standard, paper, or vendor documentation page.)*
 
 ---
 
@@ -27,7 +27,7 @@
 ## Citation Notes
 
 - Entries 1–6 are the foundational standards, methodology guide, security taxonomy, and academic literature underpinning the project's algorithmic design (Jaccard-based Duplicate Detection, Weighted Consensus) and its motivating socio-technical problem (WhatsApp misinformation in India).
-- Entries 3 and 4 are the two peer-reviewed academic papers grounding the Problem Statement (Chapter 3, §3.1) and Literature Survey: Vosoughi et al. (2018) is the landmark large-scale empirical study on the differential spread velocity of false versus true news, and Garimella & Eckles (2020) is a direct empirical study of image-borne misinformation on WhatsApp in India — the exact platform and geography FactStamp targets.
+- Entries 3 and 4 are the two peer-reviewed academic papers grounding the Problem Statement (Chapter 3, Section 3.1) and Literature Survey: Vosoughi et al. (2018) is the landmark large-scale empirical study on the differential spread velocity of false versus true news, and Garimella & Eckles (2020) is a direct empirical study of image-borne misinformation on WhatsApp in India — the exact platform and geography FactStamp targets.
 - Entry 5 (Jaccard, 1901) is the original source of the Jaccard similarity coefficient that FactStamp's Duplicate Detection engine (`src/lib/duplicateDetection.ts`) implements at a $J \geq 0.75$ threshold.
 - Entries 7–17 are official, vendor/maintainer-published documentation for every runtime technology named in Chapter 2 — Survey of Technologies and used in the working FactStamp codebase at `/home/aadish/Documents/Github/FactStamp` (verified against `package.json`).
 - No entry in this list is invented. Where certainty about an author, title, venue, or year could not be established, the source was omitted rather than approximated.

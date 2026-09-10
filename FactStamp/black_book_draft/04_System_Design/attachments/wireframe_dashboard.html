@@ -1,0 +1,190 @@
+<!doctype html><meta charset="utf-8">
+<link rel="stylesheet" href="wireframe.css">
+<style>
+/* Scoped schematic chart shapes — greyscale only, never hue. Kept local to this
+   file rather than added to the shared wireframe.css because only the analytics
+   screens need them. Wedge fills differ by LIGHTNESS so the figure survives a
+   black-and-white print. */
+.donutwrap { display: flex; align-items: center; gap: 18px; margin-top: 8px; }
+.donut {
+  width: 96px; height: 96px; border-radius: 50%; flex: 0 0 auto; position: relative;
+  background: conic-gradient(
+    #1a1a1a 0 34%,     #fff 34% 34.8%,
+    #4d4d4d 34.8% 58%, #fff 58% 58.8%,
+    #808080 58.8% 76%, #fff 76% 76.8%,
+    #b3b3b3 76.8% 90%, #fff 90% 90.8%,
+    #e6e6e6 90.8% 99.2%, #fff 99.2% 100%);
+  box-shadow: inset 0 0 0 1.5px #111;
+}
+.donut::after { content: ""; position: absolute; inset: 19.5%; border-radius: 50%;
+                background: #fff; box-shadow: inset 0 0 0 1.5px #111; }
+.donutcap { font-size: 9.5px; font-style: italic; color: #777; text-align: center;
+            width: 96px; margin-top: 3px; flex: 0 0 auto; }
+.lg { flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 5px 24px; font-size: 11px; }
+.lg span { display: flex; align-items: center; }
+.lg b { margin-left: auto; font-family: monospace; }
+.sw { width: 11px; height: 11px; border: 1.5px solid #111; margin-right: 6px; flex: 0 0 auto; }
+
+/* Weekly-report proportion bars — the real UI draws a 1.5 px track, not a chart */
+.mini { font-size: 11px; margin-bottom: 6px; }
+.mini em { font-style: normal; font-weight: 700; }
+.mini b { float: right; font-family: monospace; }
+.bar { height: 6px; border: 1.5px solid #111; background: #fff; margin-top: 3px; clear: both; }
+.bar i { display: block; height: 100%; background: #555; }
+
+/* List row — the weekly report, leaderboard, directory and feed are all LISTS */
+.li { border: 1px solid #999; background: #fafafa; padding: 4px 7px; font-size: 11px; margin-top: 3px; }
+.li small { display: block; color: #777; font-style: italic; margin-top: 2px; font-size: 10px; }
+.sub { font-size: 9.5px; font-weight: 700; letter-spacing: .6px; color: #666;
+       text-transform: uppercase; border-bottom: 1px solid #ccc; padding-bottom: 3px; margin-bottom: 7px; }
+.tiny { font-size: 10.5px; color: #555; }
+.avat { width: 17px; height: 17px; border: 1.5px solid #111; border-radius: 50%; display: inline-block;
+        text-align: center; line-height: 14px; font-size: 9px; font-weight: 700; }
+.dot { width: 8px; height: 8px; border: 1.5px solid #111; border-radius: 50%; background: #111;
+       display: inline-block; margin-right: 5px; }
+.srch { border: 1.5px solid #111; background: #fafafa; padding: 4px 8px; font-size: 10.5px;
+        font-style: italic; color: #666; display: inline-block; }
+.seg { display: inline-flex; margin-left: 6px; }
+.seg span { border: 1.5px solid #111; padding: 3px 8px; font-size: 10.5px; font-weight: 700; background: #fff; }
+.seg span.on { background: #111; color: #fff; }
+.k { font-weight: 700; }
+.sec { padding: 8px 12px; }
+.nav { padding: 7px 13px; }
+.title { margin-bottom: 7px; }
+.subtitle { margin: -5px 0 8px; }
+.note { margin-top: 3px; font-size: 10px; }
+.card { padding: 6px 7px; }
+.h { margin-bottom: 4px; }
+</style>
+
+<div class="title">FactStamp — Misinformation Dashboard (/dashboard)</div>
+<div class="subtitle">Public route — every analytics panel renders without sign-in; only the two conditional panels are gated.</div>
+
+<div class="frame">
+  <div class="nav"><span class="brand">FactStamp</span><span>Home</span><span>Verify Claims</span><span>Dashboard</span><span>My Profile</span><span class="sp"></span><span class="muted">theme</span><span class="muted">alerts (3)</span><span class="muted">sign out</span><span class="pill">Submit claim</span><span class="pill">AD · 72%</span></div>
+
+  <!-- Header banner + CTAs -->
+  <div class="sec">
+    <span class="btn" style="float:right;margin:0 0 0 8px;padding:7px 13px">Verify Claims Queue</span>
+    <span class="btn ghost" style="float:right;margin:0;padding:7px 13px">Submit Claim</span>
+    <div class="h" style="margin-bottom:3px">Misinformation Dashboard <span class="pill" style="font-weight:700">128 claims tracked</span></div>
+    <div class="tiny">Real-time analytics, category distribution and top-verifier leaderboards across viral Indian WhatsApp forwards.</div>
+  </div>
+
+  <!-- KPI cards -->
+  <div class="sec">
+    <div class="lbl" style="margin-bottom:6px">Key performance indicators · AnimatedCounter</div>
+    <div class="row" style="margin-top:0">
+      <div class="card col"><span class="pill" style="float:right">71% of total</span><span style="font-size:19px;font-weight:700">91</span><small>Total Claims Verified</small></div>
+      <div class="card col"><span class="pill" style="float:right">48% of verified</span><span style="font-size:19px;font-weight:700">44</span><small>False Claims Debunked</small></div>
+      <div class="card col"><span class="pill" style="float:right">High confidence</span><span style="font-size:19px;font-weight:700">83%</span><small>Avg Consensus Score</small></div>
+    </div>
+  </div>
+
+  <!-- Weekly trending report — three LIST columns, deliberately no chart -->
+  <div class="sec">
+    <span class="pill" style="float:right">● Updated Live</span>
+    <div class="h" style="margin-bottom:2px">Weekly Trending Report — 03–09 Sep 2026</div>
+    <div class="tiny">17 claims submitted this week · recomputed live from the claims feed</div>
+    <div class="row">
+      <div class="col">
+        <div class="sub">Top Categories</div>
+        <div class="mini"><em>Health</em><b>7</b><div class="bar"><i style="width:100%"></i></div></div>
+        <div class="mini"><em>Political</em><b>5</b><div class="bar"><i style="width:71%"></i></div></div>
+        <div class="mini"><em>Financial</em><b>3</b><div class="bar"><i style="width:43%"></i></div></div>
+      </div>
+      <div class="col">
+        <div class="sub">Most Debunked</div>
+        <div class="li" style="margin-top:0"><span class="k">“Boiled neem water cures dengue in 3 days”</span><small>FALSE · 5 checks</small></div>
+        <div class="li"><span class="k">“₹2,000 note withdrawn from midnight”</span><small>FALSE · 4 checks</small></div>
+      </div>
+      <div class="col">
+        <div class="sub">Top Performance</div>
+        <div class="li" style="margin-top:0"><span class="avat">P</span> <span class="k">Priya S.</span><small>12 checks · 96% accuracy</small></div>
+        <div class="li"><span class="avat">R</span> <span class="k">Rahul M.</span><small>9 checks · 91% accuracy</small></div>
+      </div>
+    </div>
+    <div class="note">All three columns are ranked <span class="k">lists</span> — the weekly report renders no chart, and the application contains no line or area chart anywhere.</div>
+  </div>
+
+  <!-- Desktop 8/12 + 4/12 grid ------------------------------------------------ -->
+  <div class="sec">
+    <div class="lbl" style="margin-bottom:6px">Desktop grid — 8/12 primary column · 4/12 community column</div>
+    <div class="row" style="margin-top:0;gap:14px;align-items:flex-start">
+
+      <!-- ── Primary column ── -->
+      <div class="col" style="flex:8">
+
+        <div class="h" style="margin-bottom:2px">Claims by Category <span class="pill" style="float:right">5 Active Categories</span></div>
+        <div class="tiny">Distribution of verified WhatsApp forwards</div>
+        <div class="donutwrap">
+          <div>
+            <div class="donut"></div>
+            <div class="donutcap">donut · inner r 55 / outer r 90</div>
+          </div>
+          <div class="lg">
+            <span><i class="sw" style="background:#1a1a1a"></i>Health <b>31</b></span>
+            <span><i class="sw" style="background:#4d4d4d"></i>Political <b>22</b></span>
+            <span><i class="sw" style="background:#808080"></i>Financial <b>16</b></span>
+            <span><i class="sw" style="background:#b3b3b3"></i>Religious <b>13</b></span>
+            <span><i class="sw" style="background:#e6e6e6"></i>Other <b>9</b></span>
+          </div>
+        </div>
+        <div class="note">Code-split: <span class="k">DashboardChart</span> lazy-loads Recharts via <span class="k">import('recharts')</span>, showing a shimmer until it resolves.</div>
+
+        <div style="border-top:1.5px solid #999;margin:9px -12px 0;padding:8px 12px 0">
+          <div class="lbl" style="margin-bottom:5px">Conditional panels — rendered only when their guard passes</div>
+          <div class="row" style="margin-top:0">
+            <div class="col">
+              <div class="h" style="font-size:13px;margin-bottom:4px">Your Submitted Claims (2)</div>
+              <div class="tiny" style="margin-bottom:4px">guard: user has submissions</div>
+              <div class="card"><span class="pill">Health</span><span class="pill on" style="float:right">Pending 2/3</span>
+                <div style="margin-top:5px;font-size:11px">“Drinking hot water flushes out the virus”</div>
+                <div class="tiny" style="margin-top:4px;border-top:1px solid #ccc;padding-top:3px">4 hours ago<span style="float:right">View Queue →</span></div></div>
+            </div>
+            <div class="col">
+              <div class="h" style="font-size:13px;margin-bottom:4px">Admin Expedite Review</div>
+              <div class="tiny" style="margin-bottom:4px">guard: user.isAdmin &amp;&amp; pending &gt; 0</div>
+              <div class="card"><span class="pill">Political</span><span class="pill on" style="float:right">Expedited</span>
+                <div style="margin-top:5px;font-size:11px">“Voter list deleted in 4 districts overnight”</div>
+                <div class="tiny" style="margin-top:4px;border-top:1px solid #ccc;padding-top:3px">1/3 checks · 6 h ago<span style="float:right">Unflag</span></div></div>
+            </div>
+          </div>
+        </div>
+
+        <div style="border-top:1.5px solid #999;margin:9px -12px 0;padding:8px 12px 0">
+          <div class="h" style="margin-bottom:6px">Community Claims Directory <span style="font-family:monospace">/50</span></div>
+          <div><span class="srch">Search claims…</span><span class="seg"><span class="on">All</span><span>Verified</span><span>Pending</span></span><span class="seg"><span class="on">Recent</span><span>⇅ Verified</span></span></div>
+          <div class="callout" style="padding:6px 7px;margin-top:7px"><b>Onboarding Guide</b>Verify pending items, View finished verdicts, then share the stamped card back into WhatsApp.</div>
+          <div class="li"><span class="pill">Health</span> <span class="k">“Boiled neem water cures dengue in 3 days”</span><span class="pill on" style="float:right">FALSE</span><small>ID c7f39a10 · 3 hours ago · 3 / 3 checks · consensus<span style="float:right;font-style:normal">View →</span></small></div>
+          <div class="li"><span class="pill">Political</span> <span class="k">“Voter list deleted in 4 districts overnight”</span><span class="pill" style="float:right">Pending Review</span><small>ID 91b0c4de · 6 hours ago · 1 / 3 checks · consensus<span style="float:right;font-style:normal">Verify →</span></small></div>
+          <div class="li"><span class="pill">Financial</span> <span class="k">“RBI is giving ₹5,000 to every UPI user”</span><span class="pill on" style="float:right">FALSE</span><small>ID 4a2e88b1 · 2 days ago · 3 / 3 checks · consensus<span style="float:right;font-style:normal">View →</span></small></div>
+          <div class="note">Scrollable, capped at 500 px / 50 rows; an empty result set raises a toast.</div>
+        </div>
+
+      </div>
+
+      <!-- ── Community column ── -->
+      <div class="col" style="flex:4;border-left:1.5px solid #999;padding-left:14px">
+        <div class="h" style="font-size:13.5px;margin-bottom:2px">Top Verifiers <span class="pill" style="float:right">Top 5</span></div>
+        <div class="tiny">Highest consensus scores this week</div>
+        <div class="li"><span class="avat">P</span> <span class="k">Priya Sharma</span><small>Lead Fact-Checker · 12 checks · 96% Rep</small></div>
+        <div class="li"><span class="avat">R</span> <span class="k">#2 Rahul Mehta</span><small>Senior Analyst · 9 checks · 88% Rep</small></div>
+        <div class="li"><span class="avat">A</span> <span class="k">#3 Aisha Khan</span><small>Senior Analyst · 8 checks · 81% Rep</small></div>
+        <div class="li"><span class="avat">D</span> <span class="k">#4 Dev Patel</span><small>Community Verifier · 4 checks · 64% Rep</small></div>
+        <div class="li"><span class="avat">S</span> <span class="k">#5 Sana Iqbal</span><small>Contributor · 1 check · 52% Rep</small></div>
+        <div class="note">A plain ranked list, not a chart. Signed-out visitors get a “Sign in to see verifier rankings” prompt in its place.</div>
+
+        <div style="border-top:1px solid #ccc;margin-top:12px;padding-top:10px">
+          <div class="h" style="font-size:13.5px;margin-bottom:2px">Recent Activity</div>
+          <div class="tiny">Latest claims fact-checked across India</div>
+          <div class="li"><span class="dot"></span><span class="pill">Health</span> <span class="pill on">FALSE</span><small>“Boiled neem water cures dengue…” · 3 h ago</small></div>
+          <div class="li"><span class="dot"></span><span class="pill">Political</span> <span class="pill on">TRUE</span><small>“Petrol subsidy restored nationwide” · 9 h ago</small></div>
+          <div class="li"><span class="dot"></span><span class="pill">Financial</span> <span class="pill on">FALSE</span><small>“RBI is giving ₹5,000 to every…” · 2 d ago</small></div>
+          <div class="note">Vertical timeline of the 8 most recent verified claims.</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>

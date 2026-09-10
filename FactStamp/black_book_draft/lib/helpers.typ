@@ -1,8 +1,8 @@
 // ==============================================================================
-// SHARED HELPERS — single definition site for the whole black book.
+// SHARED HELPERS: single definition site for the whole black book.
 //
 // Why this file exists: in Typst, `#set` and `#show` rules propagate from a
-// parent into an `#include`d file, but `#let` bindings do NOT — an included
+// parent into an `#include`d file, but `#let` bindings do NOT - an included
 // file is evaluated in its own module scope. So these helper functions cannot
 // simply be defined in master_draft.typ; each chapter partial that calls them
 // must `#import` them explicitly:
@@ -22,7 +22,7 @@
   ..rows.pos().map(cell => text(size: 10pt)[#cell])
 )
 
-// Responsive Image Helper (Typst 0.15+ compatible) — for the diagram assets
+// Responsive Image Helper (Typst 0.15+ compatible): for the diagram assets
 // that will be wired into Chapters 3 and 4 once PlantUML/Graphviz output exists.
 #let responsive-image(path, width: 90%, max-height: none) = align(center)[
   #if max-height == none [

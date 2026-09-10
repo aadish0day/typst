@@ -1,16 +1,18 @@
 # Diagram Tooling Rules — FactStamp Docs
 
-Hybrid architecture, decided after peer review: **PlantUML for UML diagram types, Graphviz for graph-oriented diagrams (topology, dependency, directed-flow, relationship graphs), native Typst for linear/tabular content.** Three tools now, not two — each used where it's actually the right fit, not where it's merely possible.
+Hybrid architecture, decided after peer review: **PlantUML for UML diagram types, Graphviz for graph-oriented diagrams (topology, dependency, directed-flow, relationship graphs), native Typst for linear/tabular content.** Each tool used where it's actually the right fit, not where it's merely possible.
+
+**Current state:** all 16 built diagrams are PlantUML — the DFDs and PERT chart were converted from Graphviz, so no `.dot` sources remain in the book. Graphviz stays documented and permitted (Rule 2); PlantUML is the default for anything new.
 
 ## Master Required Diagrams Checklist
 
 | # | Diagram Name | Syllabus Section | Tool Actually Used | Status (aspect W/H) |
 |---|---|---|---|---|
-| 1 | PERT Chart | Ch 3.3 (Planning & Scheduling) | Graphviz (`.dot` → `.svg`) | Built — `pert_chart.svg` (0.66, portrait) |
-| 2 | GANTT Chart | Ch 3.3 (Planning & Scheduling) | PlantUML `@startgantt` (`.puml` → `.svg`) | Built — `gantt_chart.svg` (2.05, landscape but legible unrotated) |
-| 3 | Data Flow Diagram (DFD) — Level 0 (Context) | Ch 3.6 (Conceptual Models) | Graphviz (`.dot` → `.svg`) | Built — `dfd_level_0.svg` (0.85) |
-| 4 | Data Flow Diagram (DFD) — Level 1 | Ch 3.6 (Conceptual Models) | Graphviz (`.dot` → `.svg`) | Built — `dfd_level_1.svg` (0.69) |
-| 5 | Data Flow Diagram (DFD) — Level 2 | Ch 3.6 (Conceptual Models) | Graphviz (`.dot` → `.svg`) | Built — `dfd_level_2.svg` (0.66) |
+| 1 | PERT Chart | Ch 3.3 (Planning & Scheduling) | PlantUML (`.puml` → `.svg`) | Built — `pert_chart.svg` (0.46, portrait) |
+| 2 | GANTT Chart | Ch 3.3 (Planning & Scheduling) | PlantUML `@startgantt` (`.puml` → `.svg`) | Built — `gantt_chart.svg` (2.05, landscape; legible unrotated; colour-coded by phase) |
+| 3 | Data Flow Diagram (DFD) — Level 0 (Context) | Ch 3.6 (Conceptual Models) | PlantUML (`.puml` → `.svg`) | Built — `dfd_level_0.svg` (0.69) |
+| 4 | Data Flow Diagram (DFD) — Level 1 | Ch 3.6 (Conceptual Models) | PlantUML (`.puml` → `.svg`) | Built — `dfd_level_1.svg` (0.75, tuned to fill the embed box) |
+| 5 | Data Flow Diagram (DFD) — Level 2 | Ch 3.6 (Conceptual Models) | PlantUML (`.puml` → `.svg`) | Built — `dfd_level_2.svg` (0.66) |
 | 6 | Use Case Diagram | Ch 3.6 (Conceptual Models) | PlantUML (`.puml` → `.svg`) | Built — `use_case_diagram.svg` (0.46) |
 | 7 | Activity Diagram | Ch 3.6 (Conceptual Models) | PlantUML (`.puml` → `.svg`) | Built — `activity_diagram.svg` (0.34) |
 | 8 | State Diagram (State Machine) | Ch 3.6 (Conceptual Models) | PlantUML (`.puml` → `.svg`) | Built — `state_diagram.svg` (0.98) |
@@ -24,7 +26,7 @@ Hybrid architecture, decided after peer review: **PlantUML for UML diagram types
 | 16 | UI Wireframes & Screen Layouts | Ch 4.3 & Ch 6.1 (UI & Manual) | SVG / high-res mockups | **Outstanding** — needs the running UI |
 | 17 | Overall System Architecture Diagram | Ch 5.1 (Implementation Approach) | PlantUML (`.puml` → `.svg`) | Built — `system_architecture.svg` (1.04) |
 
-All 16 built diagrams live in the relevant chapter's `attachments/` folder alongside their `.puml`/`.dot` source, and are embedded with `#align(center)[#image("attachments/<name>.svg", …)]` (see Workflow, below). Aspect ratio is width ÷ height; A4's text block is ≈ 0.667, so anything below that is comfortably portrait. Only the Gantt exceeds 1.0, and it was verified legible on the page without rotation.
+All 16 built diagrams live in the relevant chapter's `attachments/` folder alongside their `.puml` source, and are embedded with `#align(center)[#image("attachments/<name>.svg", …)]` (see Workflow, below). Aspect ratio is width ÷ height; A4's text block is ≈ 0.667, so anything below that is comfortably portrait. Only the Gantt exceeds 1.0, and it was verified legible on the page without rotation.
 
 ## Rule 1 — PlantUML (`.puml` → `svg` → `#image()`) for UML diagrams
 
@@ -47,20 +49,43 @@ Anything that IS formally a UML diagram type gets PlantUML's native UML DSL inst
 
 Use Graphviz/DOT primarily for **graph-oriented diagrams** such as topology, dependency, directed-flow, and relationship graphs. PlantUML does not provide native DFD notation, so DFDs may be represented using appropriate PlantUML constructs or Graphviz/DOT when needed.
 
-| Diagram type | Why Graphviz fits here |
+**Status on this project: every one of the 16 built diagrams is PlantUML.** The DFDs and the PERT chart were originally authored in Graphviz and later converted, so no `.dot` sources remain. Graphviz stays documented and permitted by this rule — it is a legitimate choice for the diagram types below — but a contributor adding a diagram should default to PlantUML for consistency with what is already in the book.
+
+| Diagram type | Notes |
 |---|---|
-| DFDs (Level 0/1/2, Context Diagram) | Not a UML type — pure data-flow topology. PlantUML has no native DFD notation, so either approximate it with PlantUML constructs or (preferred) use Graphviz, which gives direct control over the required shapes: circle = process, cylinder/open rectangle = data store, box = external entity. |
-| PERT / precedence networks | A directed acyclic precedence graph. Node/edge topology with auto-routing is exactly what `dot` is for. |
+| DFDs (Level 0/1/2, Context Diagram) | Not a UML type. PlantUML has no native DFD notation, so borrow shapes deliberately: `usecase` (ellipse) = process, `database` (cylinder) = data store, `rectangle` = external entity. Graphviz gives those shapes directly instead of by analogy, which is its main advantage here. |
+| PERT / precedence networks | A directed acyclic precedence graph. Both tools handle a linear chain well; PlantUML `rectangle` + `usecase` milestones is what this project used. |
 | Dependency graphs, generic flowcharts | Any non-UML node/edge graph with no standard UML equivalent. |
 
 Everything that **is** a UML type stays on Rule 1 (PlantUML).
 
-**Practical note on layout control.** The reason to reach for Graphviz on a graph-shaped diagram is that it exposes layout primitives PlantUML deliberately hides — and on this project those were load-bearing, not theoretical:
+### Layout-control equivalence (correction — previously stated wrongly here)
 
-- DFD Level 1 first compiled landscape (2892 × 1700) because `{ rank=same; ... }` does not bind a node that has no *constrained* in-edge. Fixed in the source with an explicit invisible spine (`style=invis` edges) plus `constraint=false` on the store-side hops, giving 1676 × 2448 portrait.
-- The PERT chart's END milestone used `shape=ellipse, peripheries=2` instead of `doublecircle`, which was forcing ~215 pt of dead height.
+An earlier version of this rule claimed Graphviz's rank-control primitives were "not expressible in PlantUML." **That is false**, and the DFD conversion disproved it directly. The mapping is:
 
-Neither fix is expressible in PlantUML. Note also that PlantUML itself shells out to Graphviz for most non-sequence diagram types (`plantuml -testdot` confirms the dependency), so choosing PlantUML does not remove `dot` from the toolchain — it just puts a layer over it.
+| Graphviz | PlantUML equivalent |
+|---|---|
+| `style=invis` (invisible spine edge) | `-[hidden]->` |
+| `constraint=false` (edge that does not affect ranking) | `-[norank]->` |
+| `ranksep` / `nodesep` | `skinparam ranksep` / `skinparam nodesep` (passed through to dot) |
+| `{ rank=same; ... }` | **no equivalent** — but usually redundant if every node already has exactly one constrained-or-hidden in-edge |
+
+Every `constraint=false` edge in the original DFD sources ported one-for-one, and all three DFDs held their portrait orientation after conversion.
+
+Two PlantUML-specific gotchas worth knowing, both hit during that conversion:
+
+- **Rank follows written order, not arrow direction.** Writing a return flow as `SYS --> VER` ranks `VER` *below* `SYS`. Write it `VER <-- SYS` to keep `VER` above. Getting this wrong made DFD Level 0 compile landscape (842 × 647) instead of portrait.
+- **Inline line styles silently reset stroke width.** `#line.dashed` drops the border back to 1px, discarding a `BorderThickness 2.5`. Use a stereotype with its own skinparams if you need both.
+
+Note also that PlantUML itself shells out to Graphviz for most non-sequence diagram types (`plantuml -testdot` confirms the dependency), so choosing PlantUML does not remove `dot` from the toolchain — it just puts a layer over it.
+
+### Sizing for the page, not for the ratio metric
+
+A lower width÷height ratio is **not** automatically better. Diagrams are embedded with `fit: "contain"` inside a fixed box (for the full-page diagrams, `width: 100%, height: 86%` ≈ 16.0 × 21.2 cm, box ratio ≈ **0.755**). Below that ratio the image becomes *height-bound*, leaving horizontal space unused, so pushing the ratio lower actively shrinks the printed result.
+
+DFD Level 1 is the worked example: at ratio 0.686 it printed 14.6 × 21.2 cm; retuning `ranksep` to 110 brought it to 0.754 and it now prints 16.0 × 21.2 cm — the same content, ~10% more area, with no source restructuring.
+
+**Raising the diagram's font size does not help.** Bumping DFD Level 1 from `UsecaseFontSize 19` to `24` grew the SVG canvas proportionally (1701 × 2255 → 2122 × 2403), and `fit: "contain"` scaled it straight back down: printed text went 1.79 mm → 1.81 mm, a 1% change. The only real levers on printed legibility are reducing content, matching the box ratio, or giving the diagram more page.
 
 ## Rule 3 — Native Typst (or `fletcher`) for linear/tabular content
 
@@ -535,13 +560,15 @@ Submission of 3.6 Conceptual Models - Data Flow Diagram/
 │  data_flow_diagram.typ
 │  data_flow_diagram.pdf
 └─ attachments/
-   │  dfd_level_0.dot
+   │  dfd_level_0.puml
    │  dfd_level_0.svg
-   │  dfd_level_1.dot
+   │  dfd_level_1.puml
    │  dfd_level_1.svg
-   │  dfd_level_2_ingestion.dot
-   └  dfd_level_2_ingestion.svg
+   │  dfd_level_2.puml
+   └  dfd_level_2.svg
 ```
+
+(These are the real filenames as built. They were `.dot` originally — the `.svg` names are unchanged by the conversion, which is what let the Typst `#image()` calls stay untouched.)
 
 Rules:
 - One source file + one `.svg` per diagram, even if two diagrams are related — don't combine ER + Class into one `.puml`.

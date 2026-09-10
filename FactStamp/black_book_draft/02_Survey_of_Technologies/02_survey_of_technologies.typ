@@ -2,176 +2,173 @@
 
 = Survey of Technologies
 
-This chapter surveys the architecture patterns, frameworks, libraries, and algorithmic consensus models evaluated for FactStamp, and justifies the specific technology chosen at every layer of the system against three central project constraints: (a) the system must run entirely on the Firebase free tier with no paid backend or dedicated DevOps budget, (b) Optical Character Recognition must work at zero external API cost and without sending user screenshots to a third-party cloud service, and (c) the shareable PNG fact-check card export must correctly render modern CSS color functions (`oklch()`/`oklab()`) used throughout the design system. Every library version, function name, threshold, and formula cited in this chapter is verified directly against the FactStamp source tree.
+This chapter examines the architecture patterns, frameworks, libraries, and consensus models evaluated for FactStamp. Several core operational constraints govern technical selections across the stack. The system must operate strictly within the Firebase Spark free tier without dedicated server compute, execute Optical Character Recognition locally to eliminate API fees and prevent cloud data egress, and accurately render modern CSS color functions (`oklch()` and `oklab()`) during PNG card export. Every library version, interface contract, threshold, and formula cited in this chapter reflects the concrete FactStamp codebase.
 
 == Web Architectures
 
-Before any individual library or framework can be justified, the project's foundational architectural pattern has to be chosen — that choice constrains almost everything downstream. This section surveys standard web application architecture patterns, then justifies the combination FactStamp adopted: a client-heavy React Single Page Application (SPA) backed entirely by Firebase as a Backend-as-a-Service (BaaS), with no custom REST/GraphQL server anywhere in the stack.
+Application delivery architecture governs how the system manages client state and distributes compute workloads across hosting environments. FactStamp operates as a Single Page Application (SPA) built in React and backed by Firebase as a Backend-as-a-Service (BaaS), omitting any intermediate REST or GraphQL application server.
 
 === Survey of Application Delivery Patterns
 
-*Multi-Page Application (MPA).* The traditional model — every navigation is a full page load, with the server rendering a new HTML document per route. Simple to reason about and SEO-friendly by default, but poorly suited to an app like FactStamp where verifiers, submitters, and the analytics dashboard all need live, real-time-updating views (a claim's confidence score changing as new verifications arrive) without a full page reload.
+Traditional Multi-Page Applications (MPAs) trigger full document round-trips on navigation, relying on server-side HTML generation for each route. While effective for search engine indexing, this model is ill-suited to FactStamp. Interactive verification queues and live notifications require continuous state synchronization without page reloads, particularly when incoming reviews alter a claim's confidence score in real time.
 
-*Server-Side Rendering (SSR) / Hybrid frameworks* (e.g. Next.js, Remix). Render the initial page on the server for fast first paint and SEO, then hydrate into a client-side app for subsequent interaction. This is the right choice when SEO and time-to-first-byte are dominant concerns, but it requires a Node.js server runtime (or a serverless function per route) to do the rendering — infrastructure FactStamp explicitly wanted to avoid provisioning and operating.
+Server-Side Rendering (SSR) and hybrid frameworks such as Next.js or Remix render initial HTML on a server to accelerate first contentful paint, hydrating into a client-side application thereafter. Executing this rendering logic, however, requires a persistent Node.js runtime or serverless invocation budget. FactStamp operates under a zero-cost infrastructure constraint that rules out paid server runtimes.
 
-*Single Page Application (SPA).* The entire UI is a client-side JavaScript application; the server (or a static host) serves one HTML shell plus a JS/CSS bundle, and all navigation and rendering happens in the browser via a client-side router. This trades away default SEO and first-paint speed for a much simpler deployment model and the ability to do heavy client-side computation — which matters directly for FactStamp, since OCR extraction and PNG card rasterization both need to run in the browser regardless of the architecture chosen elsewhere.
+Single Page Applications (SPAs) deliver static HTML, CSS, and pre-bundled JavaScript to the client browser, delegating view routing and rendering entirely to the client runtime. While SPAs sacrifice out-of-the-box search indexing, static distribution eliminates application server dependencies and simplifies deployment. Client-side execution also fits the system's requirement to run compute tasks, such as in-browser OCR processing and PNG card rasterization, directly on user devices.
 
-*Backend-as-a-Service (BaaS) vs. a custom server.* A custom Node/Express backend gives full control over business logic, but that control has to be paid for: writing and maintaining authentication, authorization middleware, a database access layer, and hand-rolled WebSocket or polling infrastructure for real-time updates. A BaaS platform (Firebase, Supabase, AWS Amplify) instead exposes authentication, a database, and file storage as managed services accessed directly from the client, with server-side authorization enforced declaratively (security rules) rather than imperatively (route handler code).
+Evaluating backend infrastructure involves weighing a custom Express and Node service against a managed Backend-as-a-Service (BaaS) model. A custom backend grants fine-grained control over endpoints, but requires dedicated maintenance of database migrations, authentication middleware, and WebSocket infrastructure for real-time distribution. Conversely, a BaaS platform such as Firebase or Supabase supplies authentication, document storage, and live synchronization as managed cloud primitives. The client communicates directly with these services, enforcing security constraints through declarative database rules rather than procedural server handlers.
 
 === FactStamp's Architecture: React SPA + Firebase BaaS
 
-FactStamp is a pure client-heavy Single Page Application backed entirely by Firebase as a Backend-as-a-Service — there is no custom REST/GraphQL server anywhere in the deployed system. This ruled out SSR/hybrid frameworks outright — they need a server runtime FactStamp has no budget to operate — and it made a custom backend unnecessary rather than merely undesirable: FactStamp's real-time requirements (a live-updating verification queue, live notification badges, live leaderboards) map directly onto Firestore's `onSnapshot` real-time listener primitive, which a hand-rolled backend would otherwise have to reimplement with WebSocket infrastructure from scratch.
+The production build deploys without a custom application gateway. Server-side rendering and hybrid frameworks were rejected because dedicated Node runtimes incur recurring hosting fees. Building a custom API server was equally unnecessary: FactStamp requires real-time data delivery across the verification queue and user notifications, which Cloud Firestore provides natively through `onSnapshot` listeners without dedicated WebSocket infrastructure.
 
-Firebase supplies the three backend concerns a custom server would normally own:
-- *Firebase Authentication* handles email/password and Google OAuth sign-in, removing the need to implement password hashing, session tokens, or OAuth handshake logic.
-- *Cloud Firestore* (NoSQL document store) holds the `users`, `claims`, `notifications`, `reports`, and `audit_logs` collections that the application reads and writes directly from the browser.
-- *Firestore Security Rules* (`firestore.rules`) take over the authorization role a server's route middleware would normally play — every write path is validated server-side so the client-side consensus logic in `ClaimsContext.tsx` cannot be bypassed by a malicious client writing directly to the Firestore REST API.
+Firebase handles core backend responsibilities through three integrated cloud primitives:
+- Firebase Authentication manages password credentials and Google OAuth tokens directly, eliminating custom password hashing routines and session token validation.
+- Cloud Firestore supplies the managed NoSQL document store hosting the `users`, `claims`, `notifications`, `reports`, and `audit_logs` collections, accessible directly from the browser runtime.
+- Firestore Security Rules (`firestore.rules`) enforce authorization at the database layer rather than through Express middleware. The database engine evaluates write requests against authentication tokens and document invariants, preventing unauthorized clients from bypassing the consensus rules defined in `ClaimsContext.tsx`.
 
-Because there is no application server, all client-heavy computation that would otherwise be offloaded to a backend — OCR text extraction, image compression, PNG card rasterization, the Jaccard duplicate check, and the weighted consensus calculation — runs in the browser instead. This is the direct consequence of choosing BaaS over a custom server, and it is why "client-side" is a recurring theme across nearly every technology decision in this chapter.
+Because the system operates without an application server, standard backend tasks execute within the client browser. These include OCR character extraction, client-side image compression, PNG card rasterization, Jaccard duplicate calculation, and weighted quorum consensus scoring.
 
 === Deployment Targets
 
-A BaaS-backed SPA compiles down to static assets, which means the backend and the hosting are decoupled. FactStamp is deployable to three interchangeable targets, each configured with a strict security-header set (Content-Security-Policy, `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Referrer-Policy`); Firebase Hosting additionally sets HSTS and `Permissions-Policy`, and the Nginx target carries a slightly narrower CSP than the Firebase/Vercel one:
+Static SPA compilation decouples client bundle distribution from database infrastructure. FactStamp supports multiple hosting configurations, each enforcing strict HTTP security headers including Content-Security-Policy, `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, and `Referrer-Policy` (with HSTS and `Permissions-Policy` active on Firebase Hosting):
 
-- *Firebase Hosting* (`firebase.json`) — the natural default, since Firestore/Auth/Storage are already Firebase services; supports the Firebase Local Emulator Suite (Auth `:9099`, Firestore `:8080`, Storage `:9199`, Emulator UI `:4000`) for fully offline development and CI.
-- *Vercel* (`vercel.json`) — an alternative static-hosting target with equivalent rewrite/header configuration, useful for preview-deployment workflows.
-- *Docker + Nginx* (`Dockerfile`, `docker-compose.yml`, `nginx.conf`) — a multi-stage build (Node 20 build stage producing static assets, served by an `nginx:1.27-alpine` stage) for environments where Firebase/Vercel hosting is not an option, such as on-prem or restricted-network deployment for an institutional partner.
+- Firebase Hosting (`firebase.json`) provides the primary production environment, paired with the project database and authentication setup. It connects with the Firebase Local Emulator Suite (Auth `:9099`, Firestore `:8080`, Storage `:9199`, Emulator UI `:4000`) for reproducible offline development and automated testing.
+- Vercel (`vercel.json`) supplies static edge hosting with matching security header policies, used for branch previews.
+- Docker and Nginx (`Dockerfile`, `docker-compose.yml`, `nginx.conf`) configure a multi-stage container build compiling static assets with Node 20 and serving them through `nginx:1.27-alpine`. This target provides an on-premises deployment option for restricted or air-gapped campus environments.
 
-Having three interchangeable static-hosting targets rather than one is only possible because the architecture pushed all statefulness into Firebase; a custom server architecture would have coupled the backend logic to wherever that server process runs, closing off this flexibility.
+Since application state persists within Firestore rather than host filesystems, shifting between these hosting environments requires zero application code modification.
 
 == Frontend Frameworks
 
-=== UI Framework — React 18.3.1
+=== UI Framework: React 18.3.1
 
-React was selected over alternatives (Vue 3, Svelte, Angular) primarily for its mature ecosystem of Firebase bindings and its Context API, which turned out to be sufficient to manage all application state (`AuthContext`, `ClaimsContext`, `NotificationsContext`, `ThemeContext`, `UsersContext`) without pulling in an external state-management library like Redux or Zustand — the app's state graph is shallow enough (five independent, loosely-coupled concerns) that Context plus `useReducer`-style callbacks avoid Redux's boilerplate cost entirely.
+React 18.3.1 was selected over alternatives like Vue 3 or Svelte due to the maturity of its Firebase bindings and the capabilities of its native Context API. Application state decomposes into five isolated Context providers: `AuthContext`, `ClaimsContext`, `NotificationsContext`, `ThemeContext`, and `UsersContext`. Because state transitions remain encapsulated within these discrete domains, pairing Context with `useReducer` handlers meets all synchronization requirements without introducing external state management libraries such as Redux or Zustand.
 
-=== Type Safety — TypeScript 5.5
+=== Type Safety: TypeScript 5.5
 
-TypeScript 5.5 in strict mode (`tsc -b` as the build's type-checking gate before Vite bundles anything) was non-negotiable given the amount of Firestore document shape-normalization the application performs (`mapFirestoreDocToClaim` in `src/services/firebaseService.ts`). Firestore is schemaless at the database level, so nothing stops a malformed or legacy-shaped document from reaching the client; strict TypeScript interfaces (`src/lib/types.ts`) turn that class of bug into a compile-time error instead of a runtime data-corruption incident inside the consensus computation.
+TypeScript 5.5 in strict mode enforces schema compliance across client routines, with `tsc -b` validating type integrity prior to Vite bundling. Strict typing is necessary because Firestore enforces no server-side document schemas, meaning malformed or legacy documents can reach the client. Document mapping routines such as `mapFirestoreDocToClaim` in `src/services/firebaseService.ts` validate incoming payloads against strict interface contracts defined in `src/lib/types.ts`, catching schema mismatches at compile time before data reaches consensus components.
 
-=== Build Tooling — Vite 5.4
+=== Build Tooling: Vite 5.4
 
-Vite was chosen over Create React App (now deprecated) and a hand-configured Webpack setup for its native ES-module dev server (near-instant Hot Module Replacement) and its first-class Rollup-based production build. `vite.config.ts` configures explicit manual chunk-splitting (`vendor-react`, `vendor-firebase`, `vendor-ui`, `vendor-charts`, `vendor-html-to-image`, `vendor-ocr`) so the large, rarely-changed Tesseract.js and Firebase SDK bundles stay cacheable independently of frequently-changed application code — directly reducing repeat-visit load time. The dev server is also configured with the same strict security headers (`X-Frame-Options`, CSP, `X-Content-Type-Options`) used in production, so security-header regressions are visible in local development rather than only surfacing after deployment.
+Vite 5.4 replaced legacy configurations such as Create React App and manual Webpack setups. Vite couples native ES module development serving with a Rollup-based production pipeline. In `vite.config.ts`, manual chunking splits vendor dependencies into discrete bundles: `vendor-react`, `vendor-firebase`, `vendor-ui`, `vendor-charts`, `vendor-html-to-image`, and `vendor-ocr`. Isolating large libraries like Tesseract.js and Firebase allows the browser to cache them independently across deployments, speeding up repeat page loads. In development, the local Vite server mirrors production security headers (`X-Frame-Options`, CSP, `X-Content-Type-Options`) to uncover header conflicts prior to staging.
 
-=== Animation Layer — Framer Motion 12
+=== Animation Layer: Framer Motion 12
 
-Framer Motion supplies the JavaScript-driven half of the "tactile stamp" motion language described in the project's design system: staggered section reveals on the landing page (`src/pages/Home.tsx`, `staggerChildren`), spring-physics panel and progress-bar mounts on the verifier profile (`src/pages/Profile.tsx`), and the multi-state `LoadingButton` transition machine (`src/components/ui/LoadingButton.tsx`). The purely declarative half of the same motion language stays in CSS — the verdict stamp's impact animation (scale 1.35× down to 1.0×, slight rotation, fast-in/slow-out easing) is a `@keyframes stamp-press` rule in `src/index.css` applied by `src/components/VerdictStamp.tsx`, and the sliding dual-icon theme toggle reused across the Navbar, Footer, authentication layout, and Admin console (`src/components/ui/ThemeToggle.tsx`) is a plain Tailwind transition. Framer Motion was chosen for the remaining interactions because sequencing, interruption handling, and physics-based easing curves are what plain CSS keyframes cannot express cleanly.
+Framer Motion 12 manages complex JavaScript animations across the interface, including staggered card reveals on the landing page (`src/pages/Home.tsx`, `staggerChildren`), spring-physics panels and progress indicators on the profile view (`src/pages/Profile.tsx`), and interaction states in `LoadingButton` (`src/components/ui/LoadingButton.tsx`). Lightweight transitions remain in pure CSS: the verdict press effect uses `@keyframes stamp-press` in `src/index.css` via `src/components/VerdictStamp.tsx`, while the theme toggle switch (`src/components/ui/ThemeToggle.tsx`) uses standard Tailwind transition utilities. Framer Motion is reserved for physics-based spring easing and sequenced DOM mounts that CSS keyframes cannot coordinate cleanly.
 
 == Styling and Design Tokens
 
 === Tailwind CSS v4
 
-Tailwind v4's new `@tailwindcss/vite` plugin — CSS-native configuration, no separate `tailwind.config.js` file, no PostCSS pipeline — was adopted for its OKLCH-based design-token system, which underlies the entire "warm editorial" visual language documented in the project's `DESIGN.md`: a warm-cream background palette, saffron brand accents, and five verdict-semantic colors (True / False / Misleading / Unverifiable / Contested), each double-encoded with an icon so verdict meaning never depends on color alone.
+Tailwind CSS v4 integrates via `@tailwindcss/vite`, configuring styling rules directly in CSS without `tailwind.config.js` or separate PostCSS tooling. The styling layer defines OKLCH design tokens adhering to the specification in `DESIGN.md`: a cream background, saffron brand accents, and distinct chromatic assignments across the five verdict outcomes (True, False, Misleading, Unverifiable, and Contested). Each verdict badge pairs color with a dedicated Lucide icon, keeping status indicators legible for users with color vision deficiencies.
 
-=== Why OKLCH Over Traditional Color Spaces
+=== Perceptual Uniformity with OKLCH
 
-OKLCH (Lightness, Chroma, Hue in the Oklab perceptual color space) was chosen over `rgb()`/`hsl()` because it is perceptually uniform — a given step change in the lightness channel produces a visually consistent brightness change across every hue, which is what makes it possible to generate an entire color ramp programmatically and have every step look evenly spaced to the eye. The trade-off is that `oklch()`/`oklab()` are relatively new CSS Color Level 4 functions, not every rendering pipeline understands them — a fact directly relevant later in this chapter (§2.6), where it is the reason a legacy canvas-based card export parser had to be replaced entirely.
+FactStamp adopts the OKLCH color space (Lightness, Chroma, Hue in Oklab space) rather than legacy `rgb()` or `hsl()` formats. OKLCH offers perceptual uniformity: varying the lightness parameter produces a consistent change in perceived brightness across all hues. This characteristic enables consistent, accessible color ramps across interface states. Because `oklch()` and `oklab()` belong to the newer CSS Color Module Level 4 specification, certain canvas rasterization libraries fail to parse them, an issue directly influencing the card export architecture detailed in Section 2.6.
 
-=== Utility Class Composition — `clsx` + `tailwind-merge`
+=== Utility Class Composition: `clsx` and `tailwind-merge`
 
-Conditional Tailwind class construction can easily produce class-string conflicts, where two conditionally-applied classes both target the same CSS property. `clsx` composed with `tailwind-merge` (which understands Tailwind's utility namespaces and resolves conflicts by keeping the last conflicting utility) is wrapped in a single `cn()` helper in `src/lib/utils.ts`, used across the entire component library to resolve conditional class conflicts cleanly.
+Dynamic Tailwind class concatenation often generates conflicting utility assignments when multiple classes target identical CSS properties. To resolve specificity conflicts, the project combines `clsx` and `tailwind-merge` within a centralized `cn()` helper function in `src/lib/utils.ts`. The merge algorithm resolves class namespaces and retains the latest declared property, enabling clean conditional styling across components.
 
 == Cloud Databases
 
-=== Firebase v12 as the Sole Backend
+=== Firebase v12 as Backend Infrastructure
 
-Firebase (Auth, Firestore, Storage) is FactStamp's entire backend — a deliberate choice to avoid building and operating a custom server for a project with no dedicated DevOps budget. It was chosen over a custom Node/Express + PostgreSQL stack for one dominant reason: the project's real-time requirements map directly onto Firestore's `onSnapshot` real-time listener primitive, which a custom stack would otherwise have to reimplement with hand-rolled WebSocket infrastructure.
+Selecting Firebase v12 over a self-hosted PostgreSQL and Express deployment eliminates server maintenance overhead while providing native `onSnapshot` listeners for real-time document streaming. Firebase Authentication handles user credentials directly via email and password logins or Google OAuth, removing the need for custom session tokens or password hashing logic.
 
-- *Firebase Authentication* handles email/password and Google OAuth sign-in, removing the need to implement password hashing, session-token issuance, or OAuth handshake logic from scratch.
-- *Firebase Storage* is configured (`storage.rules`) as a secondary image-upload path, though the primary image flow instead compresses screenshots to base64 JPEG data URLs stored directly on the claim document (`src/lib/imageCompression.ts`) — keeping the project entirely within the Firestore free tier without provisioning a paid Storage bucket.
+To respect free-tier bandwidth and storage quotas without provisioning dedicated Firebase Storage buckets, incoming screenshots undergo client-side JPEG compression in `src/lib/imageCompression.ts`. The resulting base64 data URLs are embedded directly into the claim document, keeping asset storage within Spark free-tier allowances.
 
-=== Cloud Firestore — Document Model and the Embedded-Array Decision
+=== Cloud Firestore: Document Model and Embedded Arrays
 
-Cloud Firestore, a NoSQL document store, holds the `users`, `claims`, `notifications`, `reports`, and `audit_logs` collections. The most consequential schema decision is how a claim's verifications are stored: *embedded as an array field directly on the claim document*, rather than as a separate `verifications` subcollection keyed by claim ID.
+Cloud Firestore organizes application state into collections for `users`, `claims`, `notifications`, `reports`, and `audit_logs`. A central schema decision involved whether to persist verifications within an embedded document array or as a separate subcollection.
 
-- *Embedded array (chosen):* The real-time claims subscription (`subscribeClaimsRealtime`) reconstructs a complete `Claim` object — including every verification cast on it — from a single document read, avoiding an N+1 subcollection-read pattern in list views.
-- *Subcollection (rejected):* Would scale better for an unbounded number of verifications, but FactStamp's verification count per claim is small and bounded by design (a 3-verifier quorum, occasionally more), so the subcollection's main advantage does not apply while its N+1-read cost would.
+The system stores verifications directly in an array attribute on the claim document. When `subscribeClaimsRealtime` executes, the client retrieves the full claim record and its complete verification history in a single document read, avoiding N+1 read operations when rendering the verification queue. While subcollections handle high-cardinality nested items effectively, FactStamp caps verification cohorts at a three-verifier quorum target. Querying a separate subcollection for every claim would rapidly deplete free-tier query quotas without providing query advantages.
 
 === Firestore Security Rules
 
-`firestore.rules` enforces the data model server-side — field-level validation on every write path (e.g. a verification being appended must increment `verificationCount` by exactly 1 and match the writer's own `uid` and their current live reputation value) — so the client-side consensus logic in `ClaimsContext.tsx` cannot be bypassed by a malicious client sending arbitrary writes directly to the Firestore REST API. This is what allows FactStamp to skip writing a server-side API layer at all.
+The `firestore.rules` configuration enforces database constraints directly on the server during write operations. When an authenticated user submits a verification, rule invariants verify that `verificationCount` increments by exactly 1, that the record contains the author's valid `uid`, and that the user's reputation matches the database record. This server-side validation blocks unauthorized writes attempted through direct REST requests, maintaining data integrity without requiring custom API endpoints.
 
-=== Data Visualization — Recharts 2.10
+=== Data Visualization: Recharts 2.10
 
-Recharts consumes Firestore-backed claim data to power the Misinformation Analytics Dashboard — the category-distribution pie chart on the public dashboard (`src/pages/Dashboard.tsx`, `src/components/DashboardChart.tsx`, lazy-loaded), and the category-distribution bar chart plus verdict-distribution pie chart in the Admin console (`src/pages/Admin.tsx`). The rolling weekly trend report (`src/lib/weeklyReport.ts`) and the top-verifier leaderboard are computed from the same claim data but rendered as ranked lists rather than Recharts graphs. It was chosen over using D3 directly for its declarative React-component API, dramatically faster to build and maintain for the dashboard's standard chart types, at the cost of lower-level customization the project does not need.
+Recharts 2.10 generates visual analytics from Firestore collections. Implementations include the lazy-loaded verdict distribution pie chart on the public dashboard (`src/pages/Dashboard.tsx`, `src/components/DashboardChart.tsx`) and category distribution bar charts in the Admin console (`src/pages/Admin.tsx`). The weekly trend analysis (`src/lib/weeklyReport.ts`) and verifier leaderboard consume the same underlying data formatted into ranked tables. Recharts was selected over D3 because its React component bindings accelerate chart construction while providing sufficient styling flexibility for standard visual metrics.
 
 == OCR Engines
 
-This is one of the project's most consequential technology decisions, so it is treated as its own survey rather than a single-line library pick.
+=== Evaluation of Approaches
 
-=== The Alternatives
+Incoming WhatsApp forwards frequently arrive as screenshot images rather than plain text, requiring optical text extraction. Three primary implementation pathways were evaluated:
 
-A WhatsApp forward frequently arrives as a screenshot rather than plain text, so some form of Optical Character Recognition is required. Three broad approaches exist:
+Cloud vision services such as Google Cloud Vision or AWS Textract provide high recognition accuracy over HTTPS, but charge per-request fees and require transmitting user images to external cloud infrastructure. Multimodal language model endpoints can extract text and evaluate claims concurrently, yet they incur recurring token fees, network latency, and privacy risks when processing personal messaging screenshots. By contrast, running Tesseract.js in the browser via WebAssembly executes the complete recognition pipeline locally, avoiding external API calls, bandwidth fees, and cloud data egress.
 
-- *Cloud vision/OCR APIs* (Google Cloud Vision, AWS Textract) — mature, high-accuracy managed services that accept an image over HTTPS and return extracted text, but require sending the image to a third-party server and charge per request.
-- *LLM vision endpoints* — can extract text and even attempt to interpret the claim in the same call, but remain a paid, cloud-hosted, per-request service with the same data-egress profile.
-- *Client-side WebAssembly OCR* (Tesseract.js) — runs the OCR engine entirely inside the browser via WASM, with no network call and no per-request cost.
+=== In-Browser OCR: Tesseract.js 7.0
 
-=== FactStamp's Choice — Tesseract.js 7.0, Client-Side
+FactStamp implements Tesseract.js 7.0 locally using WebAssembly (`src/services/ocrService.ts`, `createWorker`). Running OCR inside the browser satisfies three primary project constraints:
 
-Rather than sending a user's WhatsApp forward screenshot to a cloud OCR/vision API, FactStamp runs Tesseract.js entirely inside the browser via WebAssembly (`src/services/ocrService.ts`, `createWorker` from `tesseract.js`). This was driven by three factors:
+- Privacy protection: WhatsApp screenshots regularly display phone numbers and contact headers. Processing images on the client ensures that sensitive chat metadata never leaves the submitter's device.
+- Zero operating cost: Commercial vision APIs bill on a per-image basis, which conflicts with the project's zero-budget mandate. In-browser processing incurs no incremental cost as submission volume grows.
+- Offline resilience: Once the browser caches the Tesseract WebAssembly binary and language training data, character extraction operates reliably regardless of network stability.
 
-+ *Privacy* — a screenshot of a WhatsApp forward often contains other participants' names and phone numbers in the chat header; never transmitting that image off-device avoids an entire category of data-handling and consent concerns.
-+ *Cost* — cloud OCR/vision APIs charge per request; at any meaningful submission volume this becomes a recurring operational cost the project has no revenue model to cover. Client-side WASM OCR is free at unlimited scale.
-+ *Offline capability* — once the Tesseract WASM core and English model are cached, OCR extraction continues to work without a network round-trip.
+=== Trade-offs and Mitigation
 
-=== The Honest Trade-off
-
-The cost of this choice is lower raw accuracy than a modern cloud vision model, especially on low-resolution or heavily-compressed screenshots. This is mitigated two ways: `cleanExtractedOcrText()` is a WhatsApp-chrome-specific regex cleanup pass that strips timestamps, delivery checkmarks, and carrier/battery status-bar text; and the user can always manually correct the extracted text before submission — OCR output is a starting draft, never the final claim text FactStamp acts on.
+Client-side WebAssembly OCR delivers lower raw character accuracy than cloud neural models, particularly on low-resolution or compressed mobile screenshots. Two mechanisms counter this limitation. First, `cleanExtractedOcrText()` applies regular expressions to strip mobile UI artifacts such as battery meters and chat timestamps. Second, the user interface places extracted text into an editable input area, allowing submitters to review and correct misread characters manually before submitting.
 
 == Card Export Engines
 
-=== The Alternatives
+=== Evaluation of Approaches
 
-Turning a styled DOM element into a downloadable PNG image has three common solution shapes:
+Exporting styled DOM nodes into downloadable PNG cards can be accomplished through several browser rendering techniques:
 
-- *Raw HTML5 Canvas API* — manually redraw every visual element onto a `#raw("<canvas>")` element using imperative drawing calls; gives complete control but requires reimplementing a layout and CSS-parsing engine by hand.
-- *`html2canvas`* — walks the DOM and reads computed styles, then redraws the equivalent visuals onto a canvas using its own internal CSS interpretation logic, which lags behind the browser's own and can fail on newer CSS syntax.
-- *`html-to-image`* — serializes the target DOM subtree into an SVG `#raw("<foreignObject>")`, which the browser's own rendering engine then paints, and rasterizes the result. Because the browser itself does the styling work, this inherits whatever CSS support the browser already has, with zero additional parsing logic to maintain.
+Direct drawing via the HTML5 Canvas API provides low-level graphical control, but requires manual calculation of line wrapping, padding, and font metrics. The `html2canvas` library inspects the DOM and reconstructs elements onto an HTML5 canvas using a custom JavaScript CSS parser; however, its parser regularly fails when encountering newer CSS specifications. In contrast, `html-to-image` converts the target DOM element into an SVG `<foreignObject>`, allowing the browser's native rendering engine to paint the markup directly before converting the result into a PNG. This approach relies on browser-native CSS support rather than an incomplete JavaScript parser.
 
-=== FactStamp's Choice — `html-to-image`, After a Legacy Canvas Parser Failed
+=== FactStamp Implementation: `html-to-image`
 
-The shareable fact-check card (`src/components/FactCheckCard.tsx`) is rasterized client-side via `html-to-image`, but this was not the project's first attempt. FactStamp originally used a hand-written, canvas-based CSS parser, and it failed in production: it could not interpret the `oklch()`/`oklab()` color functions used throughout the Tailwind v4 design tokens, because it implemented its own limited CSS color-value interpreter rather than delegating to the browser. The result was broken, black, or incorrectly-colored card exports for a design system built entirely on OKLCH.
+FactStamp uses `html-to-image` to generate shareable fact-check cards (`src/components/FactCheckCard.tsx`). Intermediate canvas parsers like `html2canvas` fail on CSS Color Level 4 syntax, notably the `oklch()` and `oklab()` color functions used throughout Tailwind CSS v4. When applied to such elements, canvas re-parsers produce blank or corrupted backgrounds.
 
-`html-to-image` was adopted specifically to eliminate this class of bug rather than to patch around it. Because it uses the browser's native SVG foreignObject rendering path, it resolves CSS Color Level 4 syntax exactly as the browser itself does, producing crisp 1080 px-wide PNG exports (a 540 CSS px card rasterized at 2× device-pixel-ratio, its height determined by the card's own content rather than fixed to a square) with zero layout distortion. `html2canvas` was considered and rejected for the same underlying reason the legacy parser failed: it ships its own CSS interpretation layer rather than delegating to the browser, carrying the same structural risk of falling behind new CSS syntax.
+By wrapping the card markup in an SVG `<foreignObject>`, `html-to-image` delegates rendering directly to the browser's native engine, rendering OKLCH colors with full chromatic fidelity. The export routine outputs a 1080#text[ ]px wide PNG card (a 540 CSS-pixel element captured at a $2 times$ pixel ratio), with vertical dimensions scaling dynamically based on claim text and citation lengths.
 
 == Consensus Models
 
-Every technology surveyed so far in this chapter is a library or platform choice. This section is different: it surveys *claim-verification consensus models* — the algorithmic and organizational patterns by which a group decides whether a disputed statement is true — because FactStamp's core value proposition is not any single library, it is the consensus mechanism itself.
+=== Survey of Consensus Paradigms
 
-=== Survey of Consensus Models
+Beyond frontend and database libraries, the consensus model governs how community evaluations settle into definitive claim verdicts. Four operational paradigms were reviewed:
 
-*(a) Single-moderator / editorial decision.* This is how traditional fact-checking organizations such as Snopes, PolitiFact, or India-focused outlets like AltNews operate: a professional editorial team investigates a claim and an editor publishes a final verdict. Its strength is depth; its weakness is throughput — one team cannot scale to the volume of hyper-local, informal claims circulating on WhatsApp, and the decision process is opaque to the public.
+Single-moderator editorial decision: Traditional fact-checking agencies such as Snopes or AltNews employ professional journalists to investigate claims and issue verdicts. While thorough, centralized editorial desks cannot keep pace with the velocity of viral forwards circulating in closed messaging groups.
 
-*(b) Simple majority vote.* Any group of N reviewers each casts a verdict, and whichever verdict has the most votes wins. Easy to implement and explain, but it treats every voter identically regardless of track record, and says nothing about how certain the group actually is — a 2-1 split and a 10-1 split both just resolve to "the majority verdict."
+Simple majority voting: Reviewers cast unweighted votes and the plurality verdict prevails. While intuitive, unweighted voting treats all participants identically regardless of track record, and masks consensus certainty: a 2 to 1 split produces the identical verdict to a 10 to 1 consensus.
 
-*(c) Byzantine-fault-tolerant (BFT) / blockchain-style distributed consensus.* Protocols in this family (e.g. PBFT, or blockchain Proof-of-Stake) let a distributed set of nodes agree on a single value even when some participants are malicious or faulty, typically requiring a supermajority of agreement. This is the right tool when participants are mutually distrusting, anonymous nodes agreeing on a ledger state — but it is a poor fit for claim verification: BFT consensus agrees on *which value was submitted*, not on *the quality of evidence behind competing values*, and has no native concept of reviewer track record or source credibility.
+Byzantine fault tolerant (BFT) distributed consensus: Protocols like PBFT and Proof-of-Stake establish consensus among untrusted network nodes. However, BFT consensus validates transaction integrity and ordering rather than epistemic truth; it confirms that an assertion was recorded, but offers no metric for evidence validity or verifier credibility.
 
-*(d) Weighted quorum consensus.* A minimum number of independent reviewers (a quorum) must participate before a verdict is finalized, and the final confidence in that verdict is a weighted function of multiple signals rather than raw vote count. This keeps majority voting's transparency while adding a minimum-participation floor and a mechanism for evidence quality and reviewer track record to influence the final confidence score.
+Weighted quorum consensus: A minimum quorum of reviewers must participate before settling a verdict, after which confidence scoring incorporates verifier accuracy and evidence quality. This model preserves transparent participation while weighting outcomes by demonstrated verifier reliability.
 
-=== FactStamp's Choice — Weighted Quorum Consensus
+=== FactStamp Implementation: Weighted Quorum Consensus
 
-FactStamp implements model (d): a minimum 3-verifier quorum with a weighted confidence formula, computed by `calculateConfidenceScore()` in `src/lib/confidenceScore.ts`:
+FactStamp implements a weighted quorum model requiring a minimum of three verifications before computing a consensus verdict. The confidence calculation in `src/lib/confidenceScore.ts` applies the following formula:
 
-$ "Confidence" = (0.40 times "AgreementRatio") + (0.30 times "AvgVerifierReputation") + (0.30 times "SourceQualityScore") $
+// Broken across three aligned lines: as a single line this equation was
+// ~19.4 cm wide against a 14.65 cm text block, so it overran BOTH page
+// margins and collided with the black page border on the right.
+$ "Confidence" = & (0.40 times "AgreementRatio") \
+  + thin & (0.30 times "AvgVerifierReputation") \
+  + thin & (0.30 times "SourceQualityScore") $
 
-No verdict is finalized until at least three independent verifications exist — this quorum floor is what a pure majority vote lacks. Once quorum is reached, the three weighted components combine agreement, track record, and evidence quality into a single number:
+Enforcing a minimum of three verifications establishes a baseline participation floor. Once quorum is satisfied, the engine derives confidence across three weighted factors:
 
-- *AgreementRatio (40%)* — the proportion of participating verifiers whose verdict matches the eventual majority verdict.
-- *AvgVerifierReputation (30%)* — the mean verifier reputation across all participating verifiers, so a claim reviewed by several high-reputation verifiers is weighted more confidently than the same vote split among brand-new accounts.
-- *SourceQualityScore (30%)* — computed via `determineSourceQuality()` and `sourceQualityToScore()` in the same file, which classify each cited source URL against curated high-quality domain sets (e.g. `who.int`, `pib.gov.in`, `rbi.org.in`) and mid-quality domain sets (major national news outlets), scoring unlisted domains lowest.
+- Agreement ratio (40% weight): The percentage of participating verifiers whose individual verdict aligns with the majority decision.
+- Average verifier reputation (30% weight): The arithmetic mean of historical reputation scores among participating verifiers, so that assessments from experienced verifiers carry greater weight than votes from newly created accounts.
+- Source quality score (30% weight): Evaluated by `determineSourceQuality()` and `sourceQualityToScore()`. The system matches cited domains against verified tiers, granting maximum weight to authoritative domains (`who.int`, `pib.gov.in`, `rbi.org.in`), moderate weight to established press outlets, and baseline scores to unverified links.
 
-This is deliberately not a BFT-style protocol: FactStamp's participants are named, reputation-tracked community members whose historical accuracy is exactly the signal the confidence formula wants to use, not anonymous, mutually-distrusting nodes agreeing on a single submitted value.
+Unlike BFT protocols designed for anonymous nodes, FactStamp tracks participant reputations, weighting community evaluations by documented reviewer reliability.
 
-=== Supporting Mechanisms: Duplicate Pre-Filtering and Consensus-Deadline Expiry
+=== Supporting Mechanisms: Duplicate Pre-Filtering and Consensus Expiry
 
-*Jaccard-similarity duplicate detection as a pre-filter.* Before a new submission enters the verification queue, `findDuplicate()` in `src/lib/duplicateDetection.ts` compares its normalized, tokenized text against existing claims using Jaccard similarity, computed over word tokens longer than 3 characters:
+To avoid redundant verification workloads, `findDuplicate()` in `src/lib/duplicateDetection.ts` checks incoming text against the existing claim corpus prior to submission. The routine tokenizes the input text and computes Jaccard similarity across tokens exceeding three characters:
 
 $ J(A, B) = (|S_A inter S_B|) / (|S_A union S_B|) $
 
-A match with similarity $J(A,B) >= 0.75$ (the `threshold` parameter of `findDuplicate()`) redirects the submitter to the existing claim's verdict instead of opening a new, duplicate verification queue entry — preventing identical viral forwards worded slightly differently from each requiring their own independent 3-verifier quorum.
+If the computed similarity meets or exceeds 0.75 (the `threshold` setting in `findDuplicate()`), the system redirects the user to the existing claim rather than creating a duplicate entry. This pre-filtering prevents near-identical forwards from fragmenting community review effort.
 
-*Automatic 7-day consensus-deadline expiry.* A claim that fails to reach a clear majority verdict within 7 days automatically transitions to a `CONTESTED` state rather than remaining in limbo indefinitely. A community-quorum model with unpaid, occasional volunteer participation has no guarantee that three verifiers will ever weigh in, or that they will not split evenly forever — an explicit deadline keeps every claim moving toward a terminal, user-visible state instead of quietly stalling in the review queue.
+Claims that fail to reach majority consensus within seven days transition automatically to the `CONTESTED` state. In volunteer-driven verification workflows, some claims fail to attract three evaluations or reach decisive agreement. Enforcing an automatic deadline guarantees that every claim eventually settles into a final state rather than remaining permanently unresolved in the active queue.
 
 == Technology Selection Matrix
 
@@ -191,7 +188,7 @@ A match with similarity $J(A,B) >= 0.75$ (the `threshold` parameter of `findDupl
   "OCR", "Tesseract.js 7.0 (client WASM)", "Google Cloud Vision / AWS Textract / LLM vision", "Zero cost, zero data egress, offline-capable; trade-off mitigated by manual correction.",
   "Card Rasterization", "html-to-image (SVG foreignObject)", "Hand-written canvas parser / html2canvas", "Native OKLCH/OKLAB CSS Color 4 support via browser-native rendering.",
   "Consensus Model", "Weighted quorum (3-verifier, 40/30/30)", "Single-moderator / majority vote / BFT consensus", "Combines quorum-floor trust with evidence-quality and reputation weighting.",
-  "Duplicate Handling", "Jaccard token-similarity (J >= 0.75)", "No pre-filtering / exact-string matching", "Prevents redundant quorum queues for reworded duplicates.",
+  "Duplicate Handling", [Jaccard token-similarity ($J >= 0.75$)], "No pre-filtering / exact-string matching", "Prevents redundant quorum queues for reworded duplicates.",
   "Hosting", "Firebase Hosting / Vercel / Docker + Nginx", "AWS / bare-metal VPS", "Zero-ops static hosting matching the BaaS backend; Docker kept as an on-prem escape hatch."
 )
 
@@ -200,7 +197,7 @@ A match with similarity $J(A,B) >= 0.75$ (the `threshold` parameter of `findDupl
 #styled-table(
   columns: (1.3in, 1fr),
   headers: ("Library", "Purpose"),
-  "lucide-react", "Icon system — chosen over emoji or icon fonts, per the design system's explicit ban on emoji in UI.",
+  "lucide-react", "Icon system, chosen over emoji or icon fonts, per the design system's explicit ban on emoji in UI.",
   "sonner", "Toast notification primitives.",
   "react-router-dom v6", "Client-side routing (/, /submit, /verify, /claim/:id, /dashboard, /profile, /admin, etc.).",
   "clsx + tailwind-merge", "Conditional Tailwind class composition (the cn() helper in src/lib/utils.ts).",
@@ -210,5 +207,4 @@ A match with similarity $J(A,B) >= 0.75$ (the `threshold` parameter of `findDupl
 
 === Reading the Matrix
 
-Two patterns recur across nearly every row above, and both trace back to the architectural choice in §2.1: *zero-server-cost is the dominant constraint* (Firebase BaaS, the embedded-array schema, client-side OCR, and zero-ops static hosting are all instances of pushing cost and computation to the client and to managed services), and *"native browser behavior over custom reimplementation" is the recurring engineering principle* (`html-to-image`'s foreignObject strategy and Firestore Security Rules both reflect a preference for delegating to a platform's own correct implementation rather than maintaining a parallel one that can drift out of sync — the same lesson the legacy canvas-parser failure taught the hard way). The consensus-model choice stands apart from the rest of the table: it is not a cost-minimization decision like the others, but the one place in this chapter where the technology choice *is* the product's core value proposition, rather than infrastructure supporting it.
-
+Two guiding principles unite the technology selections in this matrix. First, operational cost minimization governs architecture decisions: pairing Firebase BaaS, embedded document arrays, client-side WebAssembly OCR, and static edge hosting offloads compute requirements to client runtimes and managed free tiers. Second, native browser capabilities take precedence over custom runtime parsers: `html-to-image` delegates rendering directly to browser SVG layout engines rather than fragile canvas-based CSS parsers, while Firestore Security Rules enforce access constraints directly at the database boundary. Within this framework, the weighted quorum consensus model is the central algorithmic mechanism, translating distributed community evaluations into objective, verified verdicts.

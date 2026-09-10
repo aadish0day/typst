@@ -31,7 +31,7 @@ Every diagram referenced in `3.6_conceptual_models.md` (and the Gantt/PERT chart
 - **Graphviz** (`.dot` → `.svg`) for the three DFD levels only.
 - **Native Typst / Fletcher** for the Sequence Diagram and this chapter's Event Table (which is data, not a diagram — Rule 4).
 
-When those `.puml`/`.dot` sources and their compiled `.svg` assets are produced, they should be placed in an `attachments/` subfolder of this directory (per the naming convention in `Rules/Diagram-rules.md` §"File naming & location") and the placeholder text notes in `03_requirements_and_analysis.typ` replaced with `#responsive-image("attachments/<name>.svg")` calls.
+When those `.puml`/`.dot` sources and their compiled `.svg` assets are produced, they should be placed in an `attachments/` subfolder of this directory (per the naming convention in `Rules/Diagram-rules.md` the "File naming & location" section) and the placeholder text notes in `03_requirements_and_analysis.typ` replaced with `#responsive-image("attachments/<name>.svg")` calls.
 
 ## How to Compile
 

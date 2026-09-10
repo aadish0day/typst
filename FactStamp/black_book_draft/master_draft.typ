@@ -10,7 +10,7 @@
 #import "lib/helpers.typ": *
 
 // Master Page Setup: Mandatory solid black border & binding margins
-// This is now the ONLY place page setup/border lives in the whole book —
+// This is now the ONLY place page setup/border lives in the whole book:
 // every per-chapter .typ file has had its own duplicate copy of this block removed.
 #set page(
   paper: "a4",
@@ -87,7 +87,7 @@
 #include "00_Preliminary_Pages/initial_pages.typ"
 
 // ==============================================================================
-// 1b. MASTER TABLE OF CONTENTS (single, book-wide — supersedes any per-chapter TOC)
+// 1b. MASTER TABLE OF CONTENTS (single, book-wide; supersedes any per-chapter TOC)
 // ==============================================================================
 #include "00_Preliminary_Pages/table_of_contents.typ"
 

@@ -120,7 +120,7 @@
 
 #v(0.25in)
 #text(size: 12pt)[
-  This is to certify that the project entitled, *“#project-title”*, is bonafide work of *#student-name* bearing UID / Roll No. : *#student-uid* submitted in partial fulfillment of the requirements for the award of degree of *BACHELOR OF SCIENCE in INFORMATION TECHNOLOGY* from Jai Hind College Empowered Autonomous (University of Mumbai).
+  This is to certify that the project entitled, *"#project-title"*, is bonafide work of *#student-name* bearing UID / Roll No. : *#student-uid* submitted in partial fulfillment of the requirements for the award of degree of *BACHELOR OF SCIENCE in INFORMATION TECHNOLOGY* from Jai Hind College Empowered Autonomous (University of Mumbai).
 ]
 
 #v(0.6in)
@@ -155,7 +155,7 @@
 #v(0.4in)
 
 #text(size: 12pt)[
-  I hereby declare that the project entitled, *“#project-title”* done at Jai Hind College (Empowered Autonomous), has not been in any case duplicated to submit to any other university for the award of any degree. To the best of my knowledge other than me, no one has submitted to any other university.
+  I hereby declare that the project entitled, *"#project-title"* done at Jai Hind College (Empowered Autonomous), has not been in any case duplicated to submit to any other university for the award of any degree. To the best of my knowledge other than me, no one has submitted to any other university.
 ]
 
 #v(0.2in)

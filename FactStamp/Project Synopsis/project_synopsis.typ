@@ -85,8 +85,8 @@
     #v(10pt)
     #text(size: 10pt)[*Department of Information Technology*]\
     #text(size: 11pt, weight: "bold")[JAI HIND COLLEGE (EMPOWERED AUTONOMOUS)]\
-    #text(size: 10pt)[Affiliated with University of Mumbai | Churchgate, Mumbai – 400 020]\
-    #text(size: 10pt)[*Academic Year:* 2025–2026]
+    #text(size: 10pt)[Affiliated with University of Mumbai | Churchgate, Mumbai - 400 020]\
+    #text(size: 10pt)[*Academic Year:* 2025-2026]
   ]
   #v(12pt)
 ]
@@ -100,7 +100,7 @@
   "Project Title", "FactStamp: A Community-Powered WhatsApp Misinformation Fact-Checker",
   "Candidate Name", "Aadish",
   "Candidate UID", "2023IT001",
-  "Programme / Class", "B.Sc. Information Technology (Third Year — Semester V/VI)",
+  "Programme / Class", "B.Sc. Information Technology (Third Year, Semester V/VI)",
   "Subject / Course", "Project Dissertation and Implementation (Course Code: JUSIT-DSCPR503)",
   "Project Category", "Web Application / Crowdsourced Quorum Consensus / Distributed Verification",
   "Development Stack", "React 18, Vite 5, TypeScript, Tailwind CSS v4, Cloud Firestore, Firebase Auth",
@@ -134,13 +134,13 @@
 // ==========================================
 = Executive Summary & Abstract
 
-Misinformation propagated across end-to-end encrypted messaging applications represents one of the most severe sociological, public health, and democratic challenges in modern India. With over 500 million active users, WhatsApp functions as India's primary information backbone. However, its peer-to-peer forwarding architecture facilitates the exponential, friction-free transmission of fabricated medical claims, altered political quotes, communal falsehoods, and financial swindles. Because WhatsApp messages circulate in private, closed groups ("dark social"), automated search indexing and centralized journalistic interventions remain structurally blind to hyper-local, viral forwards until widespread damage has materialized.
+Misinformation circulating across encrypted messaging platforms presents substantial risks to public health, civic communication, and personal finance in India. With over 500 million active users in the country, WhatsApp serves as a primary everyday communication channel. However, its direct forwarding model enables unverified claims, fabricated health advice, doctored media, and financial scams to spread rapidly across peer networks. Because messages circulate within private, encrypted chat groups, automated web crawlers and institutional fact-checkers cannot index or evaluate these forwards until users submit them manually or the claims gain broader public exposure.
 
-*FactStamp* is an innovative, decentralized, community-driven web application architected specifically to intercept, verify, and reverse the direction of WhatsApp misinformation. Users paste suspicious text forwards or upload screenshots received on WhatsApp. FactStamp's automated pipeline normalizes incoming text, applies client-side image compression, extracts embedded forward strings via Optical Character Recognition (OCR), and queries an intelligent *Jaccard similarity duplicate detection engine* ($J >= 0.75$). If an identical claim has already been resolved, the user is immediately routed to the existing certified verdict, preventing redundant work.
+*FactStamp* is a web application designed to collect, verify, and counter WhatsApp forwards through crowdsourced community consensus. Users submit suspicious text forwards or screenshots directly through the web interface. The intake pipeline normalizes submitted text, applies client-side image compression, extracts text from screenshots using client-side Optical Character Recognition (OCR), and compares the input against existing records using Jaccard token-overlap similarity ($J >= 0.75$). If an identical or near-duplicate claim is already recorded, the application directs the user to the existing verdict, avoiding duplicate review.
 
-Unique claims enter a public *Verification Quorum Queue*, where a minimum of three independent, authenticated community verifiers examine primary sources and submit their verdicts (*TRUE*, *FALSE*, *MISLEADING*, or *UNVERIFIABLE*) along with verifiable reference citations. A multi-factor consensus engine synthesizes these inputs into a final weighted confidence score ($C = 0.40 A + 0.30 R + 0.30 S$), combining raw agreement ratio ($A$), verifier reputation history ($R$), and source credibility tier ($S$). 
+New claims enter a public *Verification Queue*, where a minimum of three independent, authenticated verifiers evaluate primary sources and submit verdicts (*TRUE*, *FALSE*, *MISLEADING*, or *UNVERIFIABLE*) with supporting source URLs. A weighted consensus engine calculates a final confidence score ($C = 0.40 A + 0.30 R + 0.30 S$) by combining the verifier agreement ratio ($A$), average verifier reputation ($R$), and source credibility tier ($S$).
 
-Rather than confining fact-checks to an isolated web repository, FactStamp compiles verified claims client-side using `html-to-image` utilizing browser-native SVG `<foreignObject>` rasterization into a crisp, standardized, 1080#text[×]1080px square *Fact-Check PNG Card*. This card features color-coded status stamps, confidence percentages, verified source citations, and succinct counter-explanations. Users download this visual card and forward it directly back into the originating WhatsApp chat groups, weaponizing the platform's native forwarding culture to replace viral misinformation with verified truth.
+To make verified verdicts shareable within messaging threads, FactStamp renders completed claims into an exportable 1080#text[×]1080px square PNG image using client-side SVG `<foreignObject>` rasterization via `html-to-image`. The card displays the claim text, verdict stamp, confidence score, and primary source citations. Users can download this graphic and forward it into chat groups to provide evidence-based counter-information where the original forward circulated.
 
 #v(8pt)
 
@@ -149,19 +149,19 @@ Rather than confining fact-checks to an isolated web repository, FactStamp compi
 // ==========================================
 = Problem Statement & Need for the System
 
-== The WhatsApp Misinformation Epidemic in India
-In India's digital ecosystem, WhatsApp is not merely a private messaging client; it operates as an authoritative information distribution channel for hundreds of millions of first-generation smartphone users. The sociological dynamics of family circles, religious communities, and housing society groups create an environment of implicit trust: recipients assume forwards sent by acquaintances or elders possess inherent validity. 
+== Misinformation Spread on WhatsApp in India
+WhatsApp is widely used across India for everyday communication. Messages shared within peer groups, family circles, and community networks often carry interpersonal trust, leading recipients to accept forwarded claims without independent verification.
 
-Consequently, fake medical panaceas (e.g., claiming hot lemon water cures dengue fever), doctored audio-visual clips, manufactured banking advisories, and inflammatory sectarian rumors achieve millions of views within minutes. The end-to-end encryption governing WhatsApp prevents search engines and automated crawlers from monitoring this content, shielding viral misinformation inside closed communication channels.
+Unverified messages include false medical remedies (such as claiming hot lemon water cures dengue fever), altered media clips, fake financial advisories, and misleading public notices. Because WhatsApp uses end-to-end encryption, search engines and automated monitoring systems cannot index private chat content, allowing false claims to circulate unnoticed by public debunking initiatives.
 
-== Shortcomings of Conventional Fact-Checking Agencies
-While professional investigative fact-checking organizations (e.g., AltNews, BOOM Live, Vishwas News) provide rigorous journalistic investigations, their operating model faces critical structural bottlenecks:
-- *Latency and Throughput Deficit:* Professional investigative reporting requires hours or days to publish a single debunking article, while a viral forward completes its lifecycle within a few hours.
-- *Format Incompatibility:* Traditional agencies publish long-form web articles and PDF press releases. When ordinary WhatsApp users encounter a 1,500-word article, they rarely read or forward it. A dense text link cannot compete visually with an incendiary meme.
-- *Centralized Capacity Bottlenecks:* Journalistic editorial desks cannot scale to address thousands of hyper-local, regional-language, and informal community rumors circulating simultaneously.
+== Limitations of Conventional Fact-Checking Approaches
+Professional fact-checking organizations (such as AltNews, BOOM Live, and Vishwas News) produce detailed journalistic reviews, but their workflows have operational constraints:
+- *Latency and Throughput:* Thorough investigative reporting often requires hours or days to publish an article. By contrast, a viral forward can spread across multiple groups within hours.
+- *Format Incompatibility:* Fact-checking agencies typically publish long-form web articles. Users in chat threads rarely read or forward full articles, so text links fail to travel as effectively as image-based forwards.
+- *Centralized Editorial Capacity:* Newsroom desks have limited staff and cannot process the high daily volume of local, regional, and informal rumors.
 
-== System Value Proposition: Reversing Misinformation Velocity
-FactStamp solves this structural dilemma through a crowdsourced, quorum-governed verification paradigm coupled with instantaneous visual counter-artifact generation. By distributing verification tasks across authenticated community members and distilling complex findings into an unalterable, high-impact 1080#text[×]1080px PNG stamp, FactStamp transforms passive readers into active counter-misinformation advocates.
+== Proposed Approach: Distributed Verification and Visual Counter-Cards
+FactStamp addresses these operational constraints through crowdsourced quorum verification and image-based debunk generation. Distributing verification tasks across authenticated users reduces reliance on a single editorial team. Rendering the final verdict and source citations into a standardized 1080#text[×]1080px PNG card provides an artifact that users can forward directly within chat threads.
 
 #v(8pt)
 
@@ -170,16 +170,16 @@ FactStamp solves this structural dilemma through a crowdsourced, quorum-governed
 // ==========================================
 = Project Objectives
 
-The primary engineering and research objectives of FactStamp are:
+The engineering objectives of FactStamp are:
 
-- *Objective 1: Multimodal Claim Submission Pipeline:* Build an intuitive, frictionless web interface enabling users to submit unverified WhatsApp forwards either as raw plaintext or as screenshot images without mandating prior account registration.
-- *Objective 2: Intelligent Duplicate Detection Engine:* Implement a high-performance token-level Jaccard similarity algorithm ($J >= 0.75$) to detect duplicate or semantically identical claims, preventing redundant verification queues and conserving community capacity.
-- *Objective 3: Automated Client-Side OCR Ingestion:* Integrate a client-side Optical Character Recognition (OCR) pipeline that extracts text from uploaded WhatsApp screenshots, compresses images into compact base64 strings, and normalizes typography before database storage.
-- *Objective 4: Community Quorum Verification Queue:* Construct a transparent, real-time verification queue requiring a minimum quorum of three ($N >= 3$) independent community reviews before a verdict can be finalized.
-- *Objective 5: Multi-Factor Weighted Consensus Engine:* Formulate an algorithmic scoring model that computes a composite confidence percentage based on verifier agreement ratio (40%), verifier historical reputation (30%), and source domain credibility (30%).
-- *Objective 6: Sybil-Resistant Verifier Reputation Subsystem:* Design an automated reputation tracking system ($0$ to $100$ scale) that rewards verifiers whose submissions align with verified consensus and penalizes bad actors, preventing collusion and self-verification tampering.
-- *Objective 7: Dynamic WhatsApp-Optimized PNG Card Generator:* Engineer a client-side graphic rendering module using `html-to-image` that exports 1080#text[×]1080px square fact-check cards containing claim snippets, verdict badges, trust rings, and primary source links.
-- *Objective 8: Public Misinformation Analytics Dashboard:* Implement an interactive analytical dashboard illustrating weekly misinformation surges, category distributions (Health, Political, Financial, Religious), top debunked claims, and verifier leaderboards.
++ *Multimodal Claim Submission Pipeline:* Implement a web interface allowing users to submit unverified forwards as plain text or screenshot images without requiring account registration for submission.
++ *Duplicate Detection Engine:* Implement a token-level Jaccard similarity algorithm ($J >= 0.75$) to detect duplicate claims, preventing repeated entries in the verification queue.
++ *Client-Side OCR Ingestion:* Integrate an in-browser Optical Character Recognition pipeline using Tesseract.js to extract text from screenshots, compress images into base64 strings, and clean interface chrome prior to submission.
++ *Community Quorum Verification Queue:* Build a verification queue requiring a minimum quorum of three ($N >= 3$) independent reviews before a verdict settles.
++ *Weighted Consensus Engine:* Formulate a scoring model that calculates a composite confidence percentage from verifier agreement (40%), historical reputation (30%), and cited source quality (30%).
++ *Verifier Reputation Tracking:* Implement a reputation scoring system ($0$ to $100$) that adjusts verifier ratings based on alignment with consensus verdicts and restricts self-verification.
++ *Fact-Check PNG Card Generator:* Develop a client-side rendering module using `html-to-image` to export 1080#text[×]1080px square image cards containing the claim summary, verdict badge, confidence percentage, and cited sources.
++ *Public Analytics Dashboard:* Build an analytics interface showing weekly volume, category distributions (Health, Political, Financial, Religious, Other), frequently debunked claims, and verifier contribution metrics.
 
 #v(8pt)
 
@@ -189,46 +189,46 @@ The primary engineering and research objectives of FactStamp are:
 = Scope and Operational Applicability
 
 == Functional Scope
-The functional boundaries of FactStamp include:
-- Unauthenticated and authenticated user claim submissions (text and screenshot uploads).
-- Automated client-side image compression and text extraction pipeline.
-- Real-time Firestore document state management and duplicate detection indexing.
-- Quorum verification workflow allowing verifiers to input verdicts, source URLs, and plain-language reasoning.
-- Mathematical consensus derivation and real-time confidence score computation.
-- Client-side DOM-to-canvas image rasterization producing downloadable PNG counter-artifacts.
-- Reactive user notifications notifying submitters when their claims achieve consensus.
-- Analytical reporting of category trends and platform verification metrics.
+The functional scope of FactStamp encompasses:
+- Unauthenticated and authenticated claim submissions for text and screenshot uploads.
+- Client-side image compression and text extraction.
+- Firestore document synchronization and duplicate-detection index checks.
+- Quorum verification workflow where verifiers enter verdicts, source URLs, and written reasoning.
+- Consensus computation and confidence scoring once quorum is reached.
+- Client-side DOM rasterization producing downloadable PNG fact-check cards.
+- User notifications alerting submitters when their claims reach consensus.
+- Analytics reporting on category distributions and verification metrics.
 
-== Target Audience & Beneficiaries
-- *Everyday WhatsApp Users:* Individuals who receive suspicious forwards and require an instant, accessible tool to check veracity before re-sharing.
-- *Community Fact-Checkers & University Students:* Digitally literate individuals seeking an organized, reputation-building framework to debunk falsehoods.
-- *Media Literacy Researchers & Academic Investigators:* Analysts evaluating viral propagation patterns, categorical misinformation distributions, and consensus dynamics.
-- *Community Group Administrators:* Group managers seeking authoritative visual evidence to shut down dangerous rumors in neighborhood or family forums.
+== Target Audience and Beneficiaries
+- *Everyday Messaging Users:* Individuals who receive suspicious forwards and seek a tool to verify claims before sharing them further.
+- *Community Verifiers and Students:* Individuals seeking an organized framework to evaluate claims with citations and build credibility.
+- *Researchers and Analysts:* Investigators examining misinformation categories, forward patterns, and crowdsourced consensus data.
+- *Group Administrators:* Community moderators seeking evidence-backed graphic summaries to clarify disputed claims in group chats.
 
-== Operational Constraints & Assumptions
-- *Non-Invasive Architecture:* FactStamp does not modify or hook directly into WhatsApp's proprietary encrypted client protocols; it operates via user-directed uploads.
-- *Human-in-the-Loop Consensus:* Truth validation relies on multi-party human consensus backed by verified secondary/primary citations rather than unverified black-box LLM hallucinations.
-- *Zero-Cost Serverless Infrastructure:* The complete architecture is optimized to operate strictly within standard free cloud tiers (Firebase Spark plan, Vercel edge deployment) without incurring subscription liabilities.
+== Operational Constraints and Assumptions
+- *Independent Web Workflow:* FactStamp does not interface directly with WhatsApp's proprietary client protocols; it operates through manual user submissions.
+- *Human-in-the-Loop Evaluation:* Claims are verified through multi-party human judgment supported by cited references, avoiding automated or AI-generated verdicts.
+- *Free-Tier Infrastructure:* The application is designed to operate within standard free cloud tiers (Firebase Spark plan, Vercel deployment) without requiring dedicated server infrastructure.
 
 #v(8pt)
 
 // ==========================================
 // 5. Literature Survey & Competitive Benchmark
 // ==========================================
-= Literature Survey & Competitive Analysis
+= Literature Survey & Comparative Analysis
 
-Existing fact-checking services operate under diverse methodologies. A systematic comparative analysis highlights FactStamp's structural advantages:
+Existing fact-checking platforms use various organizational models. Table 1 compares FactStamp with representative existing initiatives across operational dimensions:
 
 #styled-table(
   columns: (1.2in, 1fr, 1fr, 1fr),
   headers: ("Capability", "AltNews / BOOM Live", "Snopes / PolitiFact", "FactStamp (Proposed)"),
-  "Operational Model", "Centralized full-time journalistic investigative team", "Editorial journalist staff and research fellows", "Decentralized community-driven 3-verifier quorum model",
-  "Target Channel Focus", "General web, Twitter/X, mainstream public media", "Western politics, urban legends, general web claims", "WhatsApp peer-to-peer forwarded messages and dark social",
-  "Verification Turnaround", "High latency: 6 hours to 3 business days per claim", "High latency: 12 hours to several days", "Rapid turnaround: real-time duplicate check, 1-3 hr quorum",
-  "Counter-Spread Artifact", "Text-heavy web hyperlinks; embedded editorial ads", "Long-form editorial articles and web database entries", "Standalone 1080×1080px square PNG card for WhatsApp",
-  "Multimodal Screenshot Ingestion", "Manual submission via WhatsApp bot; manual OCR", "Web forms requiring manual transcription", "Automated client-side OCR text-extraction pipeline",
-  "Consensus Transparency", "Opaque internal editorial decision-making", "Editorial review board approval process", "Mathematical consensus formula with verifiable audit log",
-  "Infrastructure Cost", "Substantial corporate operational and editorial budget", "Large media foundation funding / commercial advertising", "Zero infrastructure cost (serverless Firebase + Vercel)"
+  "Operational Model", "Full-time professional journalistic investigative team", "Editorial staff and research contributors", "Distributed 3-verifier community quorum model",
+  "Target Channel Focus", "Open web, social networks, public news media", "General web claims, political speeches, urban legends", "WhatsApp forwarded messages and private chat threads",
+  "Verification Turnaround", "Variable latency: several hours to several business days", "Variable latency: 12 hours to multiple days", "Instant duplicate lookup; quorum dependent on active verifiers",
+  "Counter-Misinformation Artifact", "Web hyperlinks to long-form articles", "Web database entries and editorial articles", "Standalone 1080×1080px square PNG card for messaging apps",
+  "Screenshot Ingestion", "Manual submission via WhatsApp bot; manual text review", "Web forms requiring manual transcription", "Client-side OCR text extraction via Tesseract.js",
+  "Consensus Transparency", "Internal editorial review process", "Editorial review board evaluation", "Deterministic consensus formula with verifiable audit log",
+  "Infrastructure Cost", "Dedicated newsroom and operating budget", "Media foundation grants and advertising revenue", "Free-tier serverless resources (Firebase Spark and Vercel)"
 )
 
 #v(8pt)
@@ -240,22 +240,22 @@ Existing fact-checking services operate under diverse methodologies. A systemati
 // ==========================================
 = Proposed System Architecture
 
-FactStamp is architected as a modular, reactive, single-page web application communicating directly with Cloud Firestore NoSQL storage via declarative security rules. The system eliminates heavy backend application servers by distributing image compression, OCR extraction, and canvas card rendering directly to client browser engines.
+FactStamp is organized as a single-page web application communicating directly with Cloud Firestore NoSQL storage through declarative security rules. The architecture avoids dedicated application servers by executing image compression, OCR extraction, and card rendering directly within client browser runtimes.
 
-== Architectural Subsystems (8 Core Modules)
-1. *Module 1: Authentication & Role-Based Access Control (RBAC):* Manages user onboarding via Firebase Auth (Email/Password and Google OAuth), maintaining distinct privilege tiers (`User`, `Verifier`, `Admin`).
-2. *Module 2: Multimodal Claim Ingestion & Preprocessing Subsystem:* Accepts raw text or uploaded screenshot images, performing client-side JPEG/PNG compression and triggering the automated OCR extraction pipeline.
-3. *Module 3: Jaccard Token-Based Duplicate Detection Engine:* Evaluates incoming text against Firestore claim collections using normalized Jaccard word-overlap metrics to eliminate redundant queues.
-4. *Module 4: Community Verification Quorum Queue:* Dispatches unverified claims to an open verification registry, managing independent reviews until the three-verifier quorum threshold ($N >= 3$) is reached.
-5. *Module 5: Weighted Consensus & Confidence Calculation Engine:* Implements the mathematical formula aggregating verifier decisions, individual historical reputation scores, and source domain validity.
-6. *Module 6: Dynamic 1080#text[×]1080px Fact-Check Card Generator:* Renders client-side PNG images styled to WhatsApp graphic dimensions using `html-to-image` with native SVG foreignObject rasterization.
-7. *Module 7: Public Verification Registry & Analytics Dashboard:* Computes weekly categorical trend reports, leaderboard matrices, and categorical breakdowns using Recharts.
-8. *Module 8: System Security, Anti-Sybil Defense & Real-Time Alerts:* Enforces Firestore database security rules, self-verification locks, input sanitation, and reactive snapshot notification listeners.
+== Core Functional Modules
+1. *Module 1: Authentication & Role-Based Access Control (RBAC):* Manages user accounts via Firebase Auth (Email/Password and Google OAuth) across three roles: User, Verifier, and Admin.
+2. *Module 2: Multimodal Claim Ingestion:* Accepts plain text or screenshot uploads, running client-side image compression and client-side OCR text extraction.
+3. *Module 3: Jaccard Duplicate Detection:* Compares incoming claim text with existing Firestore records using normalized token-overlap similarity ($J >= 0.75$).
+4. *Module 4: Verification Queue:* Maintains unverified claims in a public queue until the three-verifier quorum threshold ($N >= 3$) is reached.
+5. *Module 5: Weighted Consensus & Confidence Calculation:* Aggregates verifier decisions, reputation scores, and cited source quality into a composite confidence metric.
+6. *Module 6: Fact-Check PNG Card Generator:* Renders exportable 1080#text[×]1080px image cards using `html-to-image` and SVG `<foreignObject>` rasterization.
+7. *Module 7: Analytics Dashboard:* Displays weekly trend reports, category distributions, and verifier activity metrics using Recharts.
+8. *Module 8: System Security & Alerts:* Enforces Firestore database security rules, self-verification locks, input sanitization, and snapshot notification listeners.
 
 #pagebreak()
 
 == Architectural Workflow Diagram
-The end-to-end data processing lifecycle—from initial WhatsApp message receipt to viral counter-forward distribution—is illustrated below:
+The end-to-end data processing flow, from WhatsApp message submission to verified card generation, is illustrated below:
 
 #v(10pt)
 #responsive-image("attachments/system_workflow.svg", width: 85%)
@@ -310,7 +310,7 @@ Claims progress through a deterministic state machine based on verifier voting p
   columns: (1.2in, 1.2in, 1fr),
   headers: ("Verdict Classification", "UI Color Token", "Semantic Determination & Criteria"),
   "TRUE", "Emerald Green", "Claim is factually verified; supported by authoritative primary institutional documentation.",
-  "FALSE", "Crimson Red", "Claim is demonstrably fabricated, doctored, fraudulent, or fundamentally untrue.",
+  "FALSE", "Crimson Red", "Claim is demonstrably fabricated, doctored, or untrue.",
   "MISLEADING", "Amber Orange", "Claim contains partial facts presented in a distorted, exaggerated, or deceptive context.",
   "UNVERIFIABLE", "Slate Gray", "Insufficient empirical evidence or credible citations exist to definitively establish truth.",
   "CONTESTED", "Violet Purple", "Equally divided votes among verifiers unable to achieve majority consensus within 7 days."

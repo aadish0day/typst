@@ -104,7 +104,7 @@
 
 #v(0.25in)
 #text(size: 12pt)[
-  This is to certify that the project entitled, *“#project-title”*, is bonafide work of *#student-name* bearing UID / Roll No. : *#student-uid* submitted in partial fulfillment of the requirements for the award of degree of *BACHELOR OF SCIENCE in INFORMATION TECHNOLOGY* from Jai Hind College Empowered Autonomous (University of Mumbai).
+  This is to certify that the project entitled, *"#project-title"*, is bonafide work of *#student-name* bearing UID / Roll No. : *#student-uid* submitted in partial fulfillment of the requirements for the award of degree of *BACHELOR OF SCIENCE in INFORMATION TECHNOLOGY* from Jai Hind College Empowered Autonomous (University of Mumbai).
 ]
 
 #v(0.6in)
@@ -139,13 +139,13 @@
 #v(0.4in)
 
 #text(size: 12pt)[
-  I hereby declare that the project entitled, *“#project-title”* done at Jai Hind College (Empowered Autonomous), has not been in any case duplicated to submit to any other university for the award of any degree. To the best of my knowledge other than me, no one has submitted to any other university.
+  I declare that the project entitled, *"#project-title"*, completed at Jai Hind College (Empowered Autonomous), has not been duplicated and submitted to any other university for the award of a degree. To the best of my knowledge, no one else has submitted this work elsewhere.
 ]
 
 #v(0.2in)
 
 #text(size: 12pt)[
-  The project is done in partial fulfillment of the requirements for the award of degree of *BACHELOR OF SCIENCE (INFORMATION TECHNOLOGY)* to be submitted as #semester project as part of our curriculum.
+  This project is submitted in partial fulfillment of the requirements for the degree of *BACHELOR OF SCIENCE (INFORMATION TECHNOLOGY)* as my #semester project.
 ]
 
 #v(1.2in)
@@ -169,17 +169,17 @@
 #v(0.35in)
 
 #text(size: 12pt)[
-  I am extremely grateful for the guidance of our Head of Department (Information Technology & Software Development) *#guide-1*. Sir had great involvement in making sure my project is a well-rounded and a flawless system by constantly guiding us till the completion of our project work by providing all the necessary information for developing a good system.
+  I am grateful for the guidance of our Head of Department (Information Technology & Software Development), *#guide-1*. He guided me throughout the project, offering advice and providing the necessary information to complete the system.
 ]
 
 #v(0.18in)
 
 #text(size: 12pt)[
-  I would like to express immense gratitude to the people who have helped me throughout the course of my project. I am grateful to *Prof. #guide-2* for her constant encouragement and support.
+  I would also like to thank the people who helped me during this project. I am grateful to *Prof. #guide-2* for her continued encouragement and support.
 ]
 
 #v(0.18in)
 
 #text(size: 12pt)[
-  I would also like to thank all of my friends and my seniors who supported and helped me in completing the project, where they all had their own interesting takes on the technology stack, and their own interesting ideas on how to finesse the system even further. I would also like to thank my family for their constant support and encouragement.
+  Finally, I want to thank my friends and seniors who supported me and shared their ideas regarding the technology stack and system design. I also thank my family for their constant support.
 ]

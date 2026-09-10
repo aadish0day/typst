@@ -1,6 +1,6 @@
 # References and Glossary (Back Matter)
 
-*(Draft status: content-complete. Covers the syllabus's unnumbered "REFERENCES" and "GLOSSARY" sections that follow Chapter 7 --- Conclusions, per `Rules/Project_syllabus.md`. Content verified against `Project Synopsis/project_synopsis.typ` §14 (citation style/format precedent), `Rules/Typst_format.md` (Master Setup Block, `styled-table`, unnumbered-heading pattern), and the black book chapter drafts in `black_book_draft/01_Introduction/` through `03_Requirements_and_Analysis/` for terminology coverage.)*
+*(Draft status: content-complete. Covers the syllabus's unnumbered "REFERENCES" and "GLOSSARY" sections that follow Chapter 7 --- Conclusions, per `Rules/Project_syllabus.md`. Content verified against `Project Synopsis/project_synopsis.typ` Section 14 (citation style/format precedent), `Rules/Typst_format.md` (Master Setup Block, `styled-table`, unnumbered-heading pattern), and the black book chapter drafts in `black_book_draft/01_Introduction/` through `03_Requirements_and_Analysis/` for terminology coverage.)*
 
 ## Files in This Folder
 

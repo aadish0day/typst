@@ -1,0 +1,68 @@
+@startuml
+skinparam style strictuml
+skinparam monochrome true
+skinparam defaultFontName "Liberation Sans"
+skinparam defaultFontSize 20
+skinparam defaultFontStyle bold
+skinparam titleFontSize 26
+skinparam titleFontStyle bold
+skinparam backgroundColor white
+skinparam ArrowColor black
+skinparam ArrowThickness 2.5
+skinparam ArrowFontSize 17
+skinparam ArrowFontStyle bold
+skinparam ActivityBorderThickness 2.5
+skinparam ActivityDiamondBorderThickness 2.5
+skinparam nodesep 30
+skinparam ranksep 30
+title FactStamp - Claim Lifecycle Flow
+
+start
+
+:User submits a claim as typed text\nor an uploaded screenshot;
+
+if (Screenshot uploaded?) then (yes)
+  :Compress image client-side;
+  :Run Tesseract.js OCR in the browser;
+  :Strip WhatsApp chat chrome;
+  :User reviews and corrects\nthe extracted text;
+else (no, typed text)
+endif
+
+:Normalize and tokenize the candidate text\n(keep tokens longer than 3 characters);
+
+:Jaccard-compare against every existing claim;
+
+if (max J(A,B) >= 0.75 ?) then (yes, duplicate)
+  :Block submission and show an inline\nwarning linking to the existing claim;
+  stop
+else (no, unique)
+endif
+
+:Create a new claim document\nstatus = pending,\nconsensusDeadline = createdAt + 7 days;
+
+:Claim enters the Verification Queue;
+
+split
+  while (verifications.length >= 3 ?) is (no, stay pending)
+    :Verifier adds a verdict, a source URL\n(domain auto-classified for quality)\nand a written explanation;
+  endwhile (yes, quorum reached)
+
+  :Consensus Engine computes\nC = (A x 0.40) + (R x 0.30) + (S x 0.30);
+  :Set the majority verdict\nand flip status to verified;
+
+split again
+  repeat
+    :Periodic sweep of pending claims;
+  repeat while (Past the 7-day deadline\nand still under quorum?) is (no) not (yes)
+
+  :Force-settle the claim\nverdict = CONTESTED, status = verified;
+end split
+
+:Notify the submitter;
+
+:Claim becomes eligible for fact-check card\ngeneration and dashboard aggregation;
+
+stop
+
+@enduml

@@ -28,7 +28,7 @@ skinparam titleFontSize 26
 skinparam titleFontStyle bold
 
 ' Rule 5 (portrait): stretch ranks apart, squeeze columns together.
-skinparam ranksep 140
+skinparam ranksep 110
 skinparam nodesep 15
 
 skinparam backgroundColor white

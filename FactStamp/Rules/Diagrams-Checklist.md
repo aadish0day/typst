@@ -4,11 +4,11 @@ Below is the complete, official mapping of all required diagrams, their syllabus
 
 | # | Diagram Name | Syllabus Section | Tool Actually Used | Status (aspect W/H) |
 |---|---|---|---|---|
-| 1 | PERT Chart | Ch 3.3 (Planning & Scheduling) | Graphviz (`.dot` → `.svg`) | Built — `pert_chart.svg` (0.66, portrait) |
-| 2 | GANTT Chart | Ch 3.3 (Planning & Scheduling) | PlantUML `@startgantt` (`.puml` → `.svg`) | Built — `gantt_chart.svg` (2.05, landscape but legible unrotated) |
-| 3 | Data Flow Diagram (DFD) — Level 0 (Context) | Ch 3.6 (Conceptual Models) | Graphviz (`.dot` → `.svg`) | Built — `dfd_level_0.svg` (0.85) |
-| 4 | Data Flow Diagram (DFD) — Level 1 | Ch 3.6 (Conceptual Models) | Graphviz (`.dot` → `.svg`) | Built — `dfd_level_1.svg` (0.69) |
-| 5 | Data Flow Diagram (DFD) — Level 2 | Ch 3.6 (Conceptual Models) | Graphviz (`.dot` → `.svg`) | Built — `dfd_level_2.svg` (0.66) |
+| 1 | PERT Chart | Ch 3.3 (Planning & Scheduling) | PlantUML (`.puml` → `.svg`) | Built — `pert_chart.svg` (0.46, portrait) |
+| 2 | GANTT Chart | Ch 3.3 (Planning & Scheduling) | PlantUML `@startgantt` (`.puml` → `.svg`) | Built — `gantt_chart.svg` (2.05, landscape; legible unrotated; colour-coded by phase) |
+| 3 | Data Flow Diagram (DFD) — Level 0 (Context) | Ch 3.6 (Conceptual Models) | PlantUML (`.puml` → `.svg`) | Built — `dfd_level_0.svg` (0.69) |
+| 4 | Data Flow Diagram (DFD) — Level 1 | Ch 3.6 (Conceptual Models) | PlantUML (`.puml` → `.svg`) | Built — `dfd_level_1.svg` (0.75, tuned to fill the embed box) |
+| 5 | Data Flow Diagram (DFD) — Level 2 | Ch 3.6 (Conceptual Models) | PlantUML (`.puml` → `.svg`) | Built — `dfd_level_2.svg` (0.66) |
 | 6 | Use Case Diagram | Ch 3.6 (Conceptual Models) | PlantUML (`.puml` → `.svg`) | Built — `use_case_diagram.svg` (0.46) |
 | 7 | Activity Diagram | Ch 3.6 (Conceptual Models) | PlantUML (`.puml` → `.svg`) | Built — `activity_diagram.svg` (0.34) |
 | 8 | State Diagram (State Machine) | Ch 3.6 (Conceptual Models) | PlantUML (`.puml` → `.svg`) | Built — `state_diagram.svg` (0.98) |
