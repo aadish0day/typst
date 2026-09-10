@@ -48,14 +48,14 @@ package "Client-side Pipeline (React 18 SPA - runs entirely in the browser)" as 
   rectangle "**M2 - Client-side OCR**\ntesseract.js WebAssembly worker\nextractTextFromImage -> cleanExtractedOcrText\n-> detectClaimCategory (6 categories)" as OCR
   rectangle "imageCompression\ncanvas resize -> base64 data URI\nstored on the claim document" as IMG
 
-  rectangle "**M3 - Duplicate Detection Engine**\nJaccard similarity of token sets\nthreshold >= 0.75" as DUP
+  rectangle "**M3 - Duplicate Detection Engine**\nSimilarity comparison of token sets\nDuplicate threshold check" as DUP
   rectangle "Duplicate found:\nuser redirected to the\nexisting claim thread" as DUPHIT
 
   rectangle "**M4 - Verification Queue**\nVerifyQueue / VerifyDetail\nself-verification blocked, one verdict per user" as QUEUE
 
   rectangle "Verdict + source URL\n+ explanation\nvalidateVerdictExplanation()\ndetermineSourceQuality(url)" as VOTE
 
-  rectangle "**M5 - Weighted Consensus and Confidence**\n3 verifications required to close a claim\nConfidence = agreement x 0.40\n+ avgReputation x 0.30 + sourceQuality x 0.30" as CONS
+  rectangle "**M5 - Weighted Consensus and Confidence**\n3 verifications required to close a claim\nWeighted consensus from agreement,\nverifier reputation, and source quality" as CONS
 
   rectangle "**Verdict issued**\nTRUE / FALSE / MISLEADING /\nUNVERIFIABLE / CONTESTED\n+ confidence score 0-100" as VERD
 
@@ -81,7 +81,7 @@ SUB --> IMG : screenshot path
 IMG --> OCR
 SUB --> DUP : pasted-text path
 OCR --> DUP : extracted text
-DUP --> DUPHIT : similarity >= 0.75
+DUP --> DUPHIT : duplicate match
 DUP --> QUEUE : new claim\nstatus = pending,\nconsensusDeadline set
 VER --> QUEUE : claims a\npending claim
 QUEUE --> VOTE

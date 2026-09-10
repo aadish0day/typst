@@ -16,7 +16,7 @@ FactStamp bridges these two models through a community verification workflow. Wh
 The project addresses the following engineering and research objectives:
 
 1. Shorten the verification cycle for suspicious WhatsApp forwards by enabling direct community submission rather than relying exclusively on centralized editorial desks.
-2. Prevent redundant verification effort by calculating Jaccard token-overlap similarity ($J >= 0.75$) against the existing claim corpus, resolving reworded duplicates to existing verdicts.
+2. Prevent redundant verification effort by calculating Jaccard token-overlap similarity at a threshold of 0.75 against the existing claim corpus, resolving reworded duplicates to existing verdicts.
 3. Enforce a distributed quorum requirement rather than single-moderator authority, mandating at least three independent verifications before a verdict settles.
 4. Weight consensus confidence through verifiable evidence metrics, factoring in verifier agreement, verifier historical reputation, and cited source authority (`src/lib/confidenceScore.ts`).
 5. Provide a shareable counter-artifact in the visual medium of the forward, generating a 1080 px-wide PNG card (540 CSS px at 2#text[×] pixel ratio via `html-to-image`) with content-adaptive height for direct forwarding in chat threads.
@@ -62,8 +62,8 @@ FactStamp is designed for communities and individuals who rely on WhatsApp as an
 FactStamp is a functional, deployable web application. The codebase (`/home/aadish/Documents/Github/FactStamp`) provides the following implementations:
 
 - A Firebase-backed authentication and verifier-reputation system (`src/contexts/AuthContext.tsx`, `src/services/firebaseService.ts`) with anti-enumeration error messaging and idle-session timeout protection.
-- A Jaccard-similarity duplicate-detection engine (`src/lib/duplicateDetection.ts`) operating at a $>= 0.75$ threshold.
-- A confidence-scoring engine (`src/lib/confidenceScore.ts`) that computes `Confidence = (AgreementRatio × 0.40) + (AvgVerifierReputation × 0.30) + (SourceQualityScore × 0.30)`. It computes verdicts in real time in `src/contexts/ClaimsContext.tsx` and settles unresolved claims as `CONTESTED` after a 7-day window.
+- A Jaccard-similarity duplicate-detection engine (`src/lib/duplicateDetection.ts`) operating at a 0.75 threshold.
+- A confidence-scoring engine (`src/lib/confidenceScore.ts`) that computes a weighted consensus combining agreement ratio, verifier reputation, and source quality. It computes verdicts in real time in `src/contexts/ClaimsContext.tsx` and settles unresolved claims as `CONTESTED` after a 7-day window.
 - A client-side WebAssembly OCR pipeline (`src/services/ocrService.ts`, Tesseract.js) that normalizes WhatsApp interface noise and categorizes submissions through keyword heuristics.
 - A PNG fact-check card generator (`src/components/FactCheckCard.tsx`) using `html-to-image` with native support for OKLCH and OKLAB CSS color palettes.
 - An analytics dashboard (`src/pages/Dashboard.tsx`, `src/lib/weeklyReport.ts`) using Recharts to compute rolling 7-day category distributions and verifier leaderboards.

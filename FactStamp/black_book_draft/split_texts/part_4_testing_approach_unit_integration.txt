@@ -1,0 +1,62 @@
+5.3 Testing Approach
+
+The FactStamp repository has no automated test runner. package.json defines only dev, build, preview, typecheck, emulators (with its :persist and :export variants), seed:db, create:admin, and create:user. There is no test script, and no *.test.ts or *.spec.ts file exists anywhere under src/. Quality assurance was therefore done by hand, with no Jest or Vitest suite running in CI.
+
+The one automated check is the typecheck-and-build job in .github/workflows/ci.yml, which runs npm ci, npm run typecheck (tsc --noEmit), and npm run build (tsc -b && vite build) on every push. It catches type errors and broken builds, but not logic or behavior regressions. Within that limit, manual testing was organized in three layers: unit checks of the two pure algorithmic modules, integration tests across the Firebase service boundary using the Local Emulator Suite, and end-to-end system and beta walkthroughs of real user journeys.
+
+5.3.1 Unit Testing
+Since duplicateDetection.ts and confidenceScore.ts are pure TypeScript functions with no dependencies, they were checked by calling them directly with hand-built inputs and comparing each result with a value worked out by hand. This is the same check an automated it(...) block would make, run manually because there is no test runner.
+
+Duplicate Detection: findDuplicate() / Jaccard Similarity
+
+Case 1:
+- Claim A (incoming): "Free COVID vaccine registration open nationwide today"
+- Claim B (existing): (identical string)
+- Tokens |A|, |B|, |∩|, |∪|: 7, 7, 7, 7 -> J = 1.00
+- Expected Outcome: Flagged duplicate (J >= 0.75); redirected to existing claim.
+
+Case 2:
+- Claim A (incoming): "Drinking hot lemon water every morning cures dengue fever immediately"
+- Claim B (existing): "...cures dengue fever instantly" (one word changed)
+- Tokens |A|, |B|, |∩|, |∪|: 9, 9, 8, 10 -> J = 0.80
+- Expected Outcome: Flagged duplicate (J >= 0.75); redirected to existing claim.
+
+Case 3:
+- Claim A (incoming): "Eating raw garlic cures corona virus infection completely"
+- Claim B (existing): "Eating garlic cures corona virus disease naturally"
+- Tokens |A|, |B|, |∩|, |∪|: 7, 7, 5, 9 -> J = 0.56
+- Expected Outcome: Not flagged (J < 0.75); queued as a new, independent claim.
+
+Case 3 tests the threshold’s precision/recall trade-off. The two claims share a topic (garlic curing coronavirus) but differ enough in wording that treating them as one claim could fold two separate viral variants into a single verdict. Re-running findDuplicate() by hand confirmed that it redirects Cases 1 and 2 and creates a new claim for Case 3, as the J >= 0.75 threshold specifies.
+
+Weighted Consensus: calculateConfidenceScore()
+
+Case 1:
+- Verifications: 3x FALSE, reputations 80/60/70, source quality 100/100/70
+- Agreement / Avg Rep / Source Quality: 100.00 / 70.00 / 90.00
+- Formula: (100 x 0.4) + (70 x 0.3) + (90 x 0.3)
+- Expected Score: 88
+
+Case 2:
+- Verifications: FALSE/FALSE/TRUE, reputations 50/50/90, source quality 30/30/100
+- Agreement / Avg Rep / Source Quality: 66.67 / 63.33 / 53.33
+- Formula: (66.67 x 0.4) + (63.33 x 0.3) + (53.33 x 0.3)
+- Expected Score: 62
+
+Case 3:
+- Verifications: [] (empty array, edge case)
+- Agreement / Avg Rep / Source Quality: 0 / 0 / 0
+- Formula: Early-return guard, no division by zero
+- Expected Score: 0
+
+Worked by hand, Case 1 gives C = (100 x 0.40) + (70 x 0.30) + (90 x 0.30) = 40 + 21 + 27 = 88, which is exactly what Math.round() returns. Case 3 exercises the function’s explicit early return (if (verifications.length === 0) return { score: 0, ... }), which prevents a division by zero. The guard was added because a claim can in theory be read mid-write with no verifications attached yet, and in that moment the UI has to show 0%, not NaN.
+
+5.3.2 Integration Testing
+Integration tests cover the boundary between the modules and Firebase itself, which unit checks of duplicateDetection.ts and confidenceScore.ts cannot reach. All of them ran against the Firebase Local Emulator Suite (npm run emulators, or npm run emulators:persist to keep state between runs), with Auth on port 9099, Firestore on 8080, Storage on 9199, and the inspection UI on 4000. This let Auth, Firestore, and Storage rules be tested together without touching the production project or using up quota.
+
+The main scenarios run by hand against the emulator were:
+1. End-to-end quorum consensus: After seeding the emulator (npm run seed:db), three different seeded verifier accounts signed in one after another and each submitted a verdict through VerifyDetail.tsx on the same pending claim. The test confirmed that (a) each verification was appended to the claim’s embedded verifications array, and firestore.rules rejected any write that tried to increment verificationCount by anything other than exactly 1; (b) when the third verification arrived, ClaimsContext recomputed the verdict, called calculateConfidenceScore(), and moved the claim’s status from pending to verified in the same Firestore write; and (c) the confidence score shown in ClaimDetail.tsx matched the value worked out by hand for the same three verdicts with the formula from 5.3.1.
+2. Firestore rules rejecting a forged write: Using the Firestore emulator’s REST endpoint to bypass the app’s UI, a verification was written with a verifierReputation higher than the signed-in user’s live profile value. firestore.rules rejected the write. The client-side consensus math in ClaimsContext.tsx cannot be trusted on its own; this server-side rule is where enforcement actually happens.
+3. Storage and Auth for screenshot claims: Submitting a claim with an attached screenshot while signed out was rejected by both firestore.rules (match /claims/{claimId} -> allow create: if request.auth != null) and storage.rules (match /claim_screenshots/{fileName} -> allow write: if request.auth != null). Claim submission is therefore an authenticated-only path, consistent with /submit being wrapped in ProtectedRoute in src/App.tsx. The same submission succeeded once signed in, with the file-type and size checks from src/lib/security.ts still enforced on the client.
+4. Self-verification lock: The user who submitted a claim tried to verify that same claim. The anti-Sybil self-verification check in the verification workbench blocked the submission on the client before anything reached Firestore.
+5. Admin dual-layer authorization: On a non-admin seeded account signed in through the emulator, the documented DevTools bypass sessionStorage.setItem('fs_admin_session_unlocked', 'true') was tried. On the next render, AdminRoute.tsx re-derived hasVerifiedAdminRole from the live Firestore-backed user.isAdmin snapshot, discarded the stale session flag, and sent the user back to the login gate.

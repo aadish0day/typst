@@ -1,0 +1,28 @@
+5.5 Test Cases Execution Matrix
+
+This table is the executed counterpart to the test case design in Chapter 4.6. Each row was run by hand, following the approach in 5.3, on a running instance of FactStamp against the Firebase Local Emulator Suite, and the Actual Result and Pass columns record what happened on that run. One row is marked as a historical failure: the verification-queue auto-replenishment defect documented and fixed in 5.4. Every other scenario passed on the build that was current when this dissertation was written.
+
+| ID | Test Condition | Input | Expected Result | Actual Result | Status |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| TC-01 | New user registration | Valid email + password via SignUp.tsx | Auth account created; Firestore profile created with base reputation 50 | Account and profile created as expected; auto-signed-in | Pass |
+| TC-02 | Duplicate email registration | Email already registered | Registration rejected with clear error | Rejected with expected error, no duplicate profile | Pass |
+| TC-03 | Login lockout after repeated failures | 5 consecutive wrong-password attempts, then a 6th | Locked 15 min after 5th attempt; 6th blocked before hitting Firebase Auth | Locked exactly at attempt 5; countdown shown; 6th blocked client-side | Pass |
+| TC-04 | Text claim submission | Plain-text WhatsApp forward pasted into Submit.tsx | Claim created (status = pending), added to Verification Queue | Claim created and visible in queue within one write | Pass |
+| TC-05 | Screenshot claim + OCR | WhatsApp forward screenshot (JPEG) uploaded | Image compressed; text extracted via Tesseract.js; WhatsApp chrome stripped | Text extracted and chrome removed; shown for confirmation | Pass |
+| TC-06 | Duplicate detection: identical claim | Text identical to existing resolved claim | J = 1.00 >= 0.75; redirected to existing claim | Redirected correctly; no new claim created | Pass |
+| TC-07 | Duplicate detection: near-paraphrase | Text differing by one word (5.3.1 Case 2, J = 0.80) | Flagged duplicate; redirected | Redirected correctly | Pass |
+| TC-08 | Duplicate detection: related but distinct | Topically similar, below threshold (5.3.1 Case 3, J = 0.56) | Not flagged; new claim created independently | New claim correctly created, not merged | Pass |
+| TC-09 | Verifier explanation: too short | "fake", a 4-character explanation | Rejected client-side before any Firestore write | Rejected with expected error message | Pass |
+| TC-10 | Verifier explanation: valid | 50+ char explanation with real citation URL | Accepted; appended to embedded array; count +1 exactly | Accepted and appended correctly | Pass |
+| TC-11 | Self-verification block | User verifies a claim they submitted themselves | Blocked client-side with anti-Sybil warning | Blocked as expected before reaching Firestore | Pass |
+| TC-12 | 3-verifier quorum consensus | Three distinct verifiers submit a verdict each | On 3rd verification: status -> verified; score matches hand-computed value | Transition occurred on 3rd verification; score matched exactly | Pass |
+| TC-13 | Consensus expiry to CONTESTED | Claim’s 7-day consensus deadline passes with <3 verifications | Claim auto-settles with verdict CONTESTED via the local expiry sweep | Claim correctly settled as CONTESTED at deadline | Pass |
+| TC-14 | Verification Queue empties after mass expiry | All pending seed claims expire simultaneously | Queue should replenish automatically, never empty | Pre-fix: queue showed 0 claims (root-caused to 5.4 Mod. 1) -> Fixed: auto-replenishes with dynamic-deadline seeds | Pass (Fixed) |
+| TC-15 | Fact-check PNG card export | Export a resolved claim’s fact-check card | PNG at 1080px width (540px card @ pixelRatio: 2), height scaling to card content; OKLCH theme colors render correctly | Exported at 1080px width with correct colors; height varied with claim/source length as expected | Pass |
+| TC-16 | Firestore rule rejects forged reputation write | Direct write with an inflated verifier reputation value (bypassing UI) | Write rejected by Firestore security rules | Write rejected with permission-denied error | Pass |
+| TC-17 | Admin session-flag bypass attempt | Manually set admin unlock flag in browser session storage on a non-admin account | Bounced back to admin login gate; role re-derived from live snapshot | Bounced back correctly; stale flag discarded | Pass |
+| TC-18 | Admin audit log completeness | Claim-verdict override in Claims Moderation tab | Corresponding AdminAuditLog entry written | Audit entry created and visible in Audit & Tools tab | Pass |
+| TC-19 | File-upload validation (disguised file) | .exe renamed to .jpg, uploaded as screenshot | Rejected by extension + MIME + magic-byte signature check | Rejected at magic-byte check despite renamed extension | Pass |
+| TC-20 | Idle session timeout | Authenticated session left inactive 30+ minutes | Session auto-expires, requires re-authentication | Session expired at configured 30-minute threshold | Pass |
+| TC-21 | Analytics dashboard rendering | Navigate to /dashboard after several claims resolved | Charts render from existing Context data, no extra Firestore reads | Rendered correctly; no extra reads observed in emulator log | Pass |
+| TC-22 | CI typecheck-and-build gate | Push a commit to the repository | CI job runs tsc --noEmit and vite build successfully | Job completed successfully on current codebase | Pass |

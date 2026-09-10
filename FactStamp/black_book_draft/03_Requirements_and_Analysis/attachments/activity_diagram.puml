@@ -62,8 +62,8 @@ partition "Ingestion (Module 2)" {
 }
 
 partition "Duplicate Detection (Module 3)" {
-  :findDuplicate() on text blur\nJaccard J(A,B) = |A n B| / |A u B|;
-  if (Any existing claim with J >= 0.75?) then (yes - duplicate)
+  :findDuplicate() on text blur\nToken similarity comparison;
+  if (Any matching duplicate claim found?) then (yes - duplicate)
     :Render inline duplicate warning with the\nsimilarity percentage and a link to the\nexisting claim; disable the Submit button;
     :Submission blocked\n(no automatic redirect);
     stop
@@ -91,7 +91,7 @@ partition "Peer Verification (Module 4)" {
 partition "Consensus and Confidence (Module 5)" {
   if (verificationCount >= 3?) then (yes - quorum reached)
     :verdict = majority verdict\nacross the 3 verifications;
-    :calculateConfidenceScore()\nA = agreement ratio, R = average verifier\nreputation, S = average source quality\nC = (A x 0.40) + (R x 0.30) + (S x 0.30);
+    :calculateConfidenceScore()\nEvaluate agreement ratio, average verifier\nreputation, and source quality score\nto determine final consensus confidence;
   else (no - 7-day window expired)
     :expireOverdueClaims() sweep, run every 60 s,\nforce-settles the claim;
     :verdict = 'CONTESTED'\n(system-assigned, never verifier-chosen);\nconfidenceScore from partial verifications, else 30;

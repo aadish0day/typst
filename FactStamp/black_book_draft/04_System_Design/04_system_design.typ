@@ -29,13 +29,11 @@ The system splits its runtime responsibilities across eight modules. Each module
 
 *Module 2: Forward Submission / Ingestion & OCR.* Core files: `src/pages/Submit.tsx`, `src/services/ocrService.ts`, `src/lib/imageCompression.ts`. `Submit.tsx` accepts a claim as pasted text or as a screenshot. For an image, `imageCompression.ts` first rescales and compresses the bitmap in the browser with the HTML5 Canvas API. `ocrService.ts` then runs Tesseract.js OCR in a WebAssembly browser worker, so the image is never uploaded to an external server. `cleanExtractedOcrText()` strips WhatsApp UI artifacts such as timestamps, sender headers, and delivery checkmarks from the output, and the user can review and edit the parsed text before confirming. On confirmation, `Submit.tsx` runs the Module 3 duplicate check before saving a new `claims/{claimId}` record.
 
-*Module 3: Duplicate Detection Engine.* Core file: `src/lib/duplicateDetection.ts`. This file compares the candidate claim text with every existing claim in Firestore using word-token Jaccard similarity. Text is lowercased, stripped of punctuation, and whitespace-collapsed, then split into a set of words longer than three characters. For each existing claim the module computes $J(A,B) = |S_A inter S_B| \/ |S_A union S_B|$. If $max J(A,B) >= 0.75$, the UI blocks the submission and shows an inline notice linking to the existing claim. Otherwise the claim is saved as a new `pending` record and appears in the Module 4 verification queue.
+*Module 3: Duplicate Detection Engine.* Core file: `src/lib/duplicateDetection.ts`. This file compares the candidate claim text with every existing claim in Firestore using word-token Jaccard similarity. Text is lowercased, stripped of punctuation, and whitespace-collapsed, then split into a set of words longer than three characters. For each existing claim the module computes the token-overlap similarity between the two claims. If the best match reaches 0.75 or higher, the UI blocks the submission and shows an inline notice linking to the existing claim. Otherwise the claim is saved as a new `pending` record and appears in the Module 4 verification queue.
 
 *Module 4: Verification Queue.* Core files: `src/pages/VerifyQueue.tsx`, `src/pages/VerifyDetail.tsx`, `src/contexts/ClaimsContext.tsx`. `VerifyQueue.tsx` lists every claim in `pending` status, with admin-flagged items sorted to the top. `VerifyDetail.tsx` is the verifier's review screen. The verifier picks a verdict (`TRUE`, `FALSE`, `MISLEADING`, or `UNVERIFIABLE`; `CONTESTED` is reserved for automatic timeout settlement), enters a source URL that `determineSourceQuality()` classifies into a quality tier, and writes an explanation. `validateVerdictExplanation()` in `src/lib/security.ts` requires the explanation to have at least 50 characters and 8 words. A valid submission appends one element to `claims.verifications[]` and increments `verificationCount` by 1, and both the React context and the server-side `firestore.rules` enforce this. When `verifications.length` reaches the quorum of 3, `ClaimsContext.tsx` calls Module 5 to calculate consensus and saves the final verdict in the same write.
 
-*Module 5: Weighted Consensus and Confidence Engine.* Core file: `src/lib/confidenceScore.ts`. `calculateConfidenceScore()` combines the verifications into a single outcome from the majority agreement ratio $A$, the mean verifier reputation $R$, and the mean source quality $S$:
-
-$ C = (A times 0.40) + (R times 0.30) + (S times 0.30) $
+*Module 5: Weighted Consensus and Confidence Engine.* Core file: `src/lib/confidenceScore.ts`. `calculateConfidenceScore()` combines the verifications into a single outcome, weighting the majority agreement ratio at 40%, the mean verifier reputation at 30%, and the mean source quality at 30%.
 
 The module also handles consensus timeouts. When a `pending` claim passes its 7-day `consensusDeadline` without reaching the 3-verifier quorum, an expiry sweep calculates a confidence score from whatever verifications exist and assigns the verdict `CONTESTED`. Once a claim's status becomes `verified`, Module 5 has Module 8 send an in-app notification to the original submitter, and the claim becomes available for export in Module 6.
 
@@ -51,10 +49,10 @@ The module also handles consensus timeouts. When a `pending` claim passes its 7-
   columns: (1.6fr, 0.85fr, 0.85fr, 1.9fr),
   headers: ("Trigger", "Calling Module", "Called Module", "Effect"),
   "User submits claim text/screenshot", "2", "3", "Jaccard check against existing claims before a new document is created",
-  [$max J(A,B) >= 0.75$ against an existing claim], "3", "2", "Submission blocked; user offered a direct link to the existing claim page",
+  [Best similarity of 0.75 or higher against an existing claim], "3", "2", "Submission blocked; user offered a direct link to the existing claim page",
   "Verifier submits a verdict", "4", "8", [`validateVerdictExplanation()` validates input before the Firestore write],
   [`verifications.length` reaches 3], "4", "5", [`calculateConfidenceScore()` computes final verdict; status #sym.arrow.r `verified`],
-  [`consensusDeadline` passes with count $< 3$], "5", "4", "Claim force-settled with verdict CONTESTED",
+  [`consensusDeadline` passes with count below 3], "5", "4", "Claim force-settled with verdict CONTESTED",
   "Claim reaches verified status", "5", "8", "Submitter notified; verifier reputation updated",
   "Claim reaches verified status", "5", "6", "Claim becomes eligible for PNG card export",
   [Every write to `users`, `claims`, `notifications`, `reports`, `audit_logs`], "1, 2, 4, 5", "8", [Server-side field-level validation independent of client checks],
@@ -65,6 +63,7 @@ The module also handles consensus timeouts. When a `pending` claim passes its 7-
 FactStamp stores application state in Cloud Firestore, a NoSQL document database, across five root collections: `users`, `claims`, `notifications`, `reports`, and `audit_logs`. The type interfaces are declared in `src/lib/types.ts`, and `firestore.rules` checks the write constraints on every write.
 
 === Schema design
+<fig-schema>
 
 #align(center)[*Table 4.2.1(a): `users` Collection*]
 #styled-table(
@@ -94,7 +93,7 @@ FactStamp stores application state in Cloud Firestore, a NoSQL document database
   [`consensusDeadline`], "string (ISO)", [`createdAt` + 7 days], "Immutable; drives expiry sweep",
   [`submittedBy`], "string", [Submitter `uid`], "Immutable",
   [`submittedByName`], "string", "Display-name snapshot", "Max 100 chars; immutable",
-  [`imageUrl`], "string?", "Base64 data URI or HTTPS URL", [$<=$ 800,000 chars (~800 KB); pattern-matched],
+  [`imageUrl`], "string?", "Base64 data URI or HTTPS URL", [At most 800,000 chars (~800 KB); pattern-matched],
   [`verdict`], "enum?", [TRUE \| FALSE \| MISLEADING \| UNVERIFIABLE \| CONTESTED], "Set only once resolved",
   [`confidenceScore`], "number?", "Final weighted confidence, 0 to 100", "Computed by Module 5",
   [`verifications`], [array of Verification], "Embedded verification records", "Starts as empty array",
@@ -180,20 +179,8 @@ FactStamp stores application state in Cloud Firestore, a NoSQL document database
 
 *Field-level write validation.* The rules check `request.resource.data` field by field. Creating a `claims/{claimId}` document requires `text.size()` between 10 and 2000 characters, a `category` from an explicit whitelist, `status == "pending"`, `verificationCount == 0`, and an empty `verifications == []` array. A client therefore cannot create a claim that already carries votes or has text outside the length bounds.
 
-*The `isAdmin()` helper.* Privileged operations check the caller's authority through an `isAdmin()` helper that reads the caller's Firestore document at evaluation time:
+*The `isAdmin()` helper.* Privileged operations check the caller's authority through an `isAdmin()` helper that reads the caller's Firestore document at evaluation time.
 
-// Kept on one page: this block is short, and letting it split mid-expression
-// across a page boundary made the rule unreadable.
-#block(breakable: false)[
-```
-function isAdmin() {
-  return request.auth != null
-    && get(
-         /databases/$(database)/documents/users/$(request.auth.uid)
-       ).data.get('isAdmin', false) == true;
-}
-```
-]
 
 Only a caller who is already an admin can change the `isAdmin` flag on `users/{uid}`, so a user cannot grant themselves admin rights from the client.
 
@@ -211,181 +198,20 @@ Only a caller who is already an admin can change the `isAdmin` flag on `users/{u
 
 === Logic diagrams
 
-The control flow follows a claim from submission through duplicate evaluation and peer verification to final consensus, in nine stages: (1) the user submits claim text or an image screenshot; (2) an image goes through canvas compression, OCR extraction, WhatsApp header stripping, and user review before joining the text path; (3) the text is normalized and tokenized; (4) its tokens are compared against existing claims using the Jaccard index; (5) if $max J(A,B) >= 0.75$, the submission is rejected with a link to the matching claim, and a lower score creates a new `pending` claim with a 7-day `consensusDeadline`; (6) the claim enters the verification queue, where independent verifiers each supply a verdict, a source URL, and a written explanation; (7) when `verifications.length` reaches 3, the consensus engine calculates the final score and marks the claim `verified`, while claims with fewer verifications stay `pending`; (8) an automated sweep settles any under-quorum claim past its 7-day deadline with the verdict `CONTESTED`; and (9) a verified claim triggers a submitter notification, becomes available for card generation, and updates the dashboard metrics.
+The control flow follows a claim from submission through duplicate evaluation and peer verification to final consensus, in nine stages: (1) the user submits claim text or an image screenshot; (2) an image goes through canvas compression, OCR extraction, WhatsApp header stripping, and user review before joining the text path; (3) the text is normalized and tokenized; (4) its tokens are compared against existing claims using the Jaccard index; (5) if a best similarity of 0.75 or higher, the submission is rejected with a link to the matching claim, and a lower score creates a new `pending` claim with a 7-day `consensusDeadline`; (6) the claim enters the verification queue, where independent verifiers each supply a verdict, a source URL, and a written explanation; (7) when `verifications.length` reaches 3, the consensus engine calculates the final score and marks the claim `verified`, while claims with fewer verifications stay `pending`; (8) an automated sweep settles any under-quorum claim past its 7-day deadline with the verdict `CONTESTED`; and (9) a verified claim triggers a submitter notification, becomes available for card generation, and updates the dashboard metrics.
 
-#align(center)[#image("attachments/claim_lifecycle_flow.svg", width: 100%, height: 88%, fit: "contain")]
+#figure(
+  image("attachments/claim_lifecycle_flow.svg", width: 100%, height: 88%, fit: "contain"),
+  caption: [Claim Lifecycle Control Flow],
+  kind: "diagram",
+  supplement: "Diagram",
+)
 
 === Data structures
 
 The core data structures are declared once in `src/lib/types.ts`, and every module in Section 4.1 imports them from there instead of redeclaring them.
 
-```typescript
-export type Verdict = 'TRUE' | 'FALSE' | 'MISLEADING' | 'UNVERIFIABLE' | 'CONTESTED'
-export type ClaimStatus = 'pending' | 'verified'
-export type ClaimCategory = 'health' | 'political' | 'religious' | 'financial' | 'other'
-export type SourceQuality = 'high' | 'medium' | 'low'
-
-export interface User {
-  uid: string
-  displayName: string
-  email: string
-  avatarUrl?: string
-  reputation: number
-  totalVerifications: number
-  joinedAt: string
-  isAdmin?: boolean
-}
-
-export interface Claim {
-  id: string
-  text: string
-  category: ClaimCategory
-  status: ClaimStatus
-  createdAt: string
-  verifiedAt?: string
-  consensusDeadline: string
-  submittedBy: string
-  submittedByName: string
-  imageUrl?: string
-  verdict?: Verdict
-  confidenceScore?: number
-  verifications: Verification[]
-  verificationCount: number
-  agreementRatio?: number
-  avgVerifierReputation?: number
-  sourceQualityScore?: number
-  adminFlagged?: boolean
-  adminFlaggedAt?: string
-}
-
-export interface Verification {
-  id: string
-  claimId: string
-  verdict: Verdict
-  sourceUrl: string
-  sourceQuality: SourceQuality
-  explanation: string
-  verifierId: string
-  verifierName: string
-  verifierReputation: number
-  createdAt: string
-}
-
-export type NotificationType =
-  | 'claim_verified' | 'reputation_update' | 'weekly_report' | 'verdict_submitted'
-
-export interface AppNotification {
-  id: string
-  userId: string
-  type: NotificationType
-  title: string
-  message: string
-  createdAt: string
-  isRead: boolean
-  claimId?: string
-}
-
-export type ReportTargetType = 'claim' | 'user' | 'verification'
-export type ReportReason =
-  | 'misinformation_spam' | 'harassment' | 'low_quality_source'
-  | 'fake_account' | 'manipulation' | 'hate_speech' | 'other'
-export type ReportStatus = 'pending' | 'investigating' | 'resolved' | 'dismissed'
-export type ReportSeverity = 'low' | 'medium' | 'high'
-
-export interface ModerationReport {
-  id: string
-  targetType: ReportTargetType
-  targetId: string
-  targetTitle: string
-  reason: ReportReason
-  details?: string
-  reportedBy: string
-  reportedByName: string
-  reportedAt: string
-  status: ReportStatus
-  severity: ReportSeverity
-  actionTaken?: string
-  resolvedAt?: string
-  resolvedBy?: string
-}
-
-export interface AdminAuditLog {
-  id: string
-  timestamp: string
-  adminId: string
-  adminName: string
-  action: string
-  targetType: 'claim' | 'user' | 'report' | 'system'
-  targetId: string
-  details: string
-}
-```
-
 The `Verdict` type includes `CONTESTED`, which only the Module 5 consensus-expiry logic assigns; `VerifyDetail.tsx` does not offer it to verifiers. `Claim.verifications` is typed as an embedded array to match the storage design in Section 4.2.2. Because TypeScript strict mode forces every reader of an optional (`?`) field to handle the unset case, the dashboard components have to deal explicitly with `pending` records that have no `confidenceScore` yet.
-
-=== Algorithms design
-
-*Algorithm 1: Jaccard Duplicate Detection* (`src/lib/duplicateDetection.ts`). Purpose: catch near-duplicate submissions so that identical or slightly reworded claims do not each take up a place in the verification queue.
-
-+ Normalize the input text $T$: lowercase, strip punctuation, collapse whitespace.
-  $ "Norm"(T) = "collapseWhitespace"("stripPunctuation"("lowercase"(T))) $
-+ Tokenize into a set of significant words, discarding tokens of length $<= 3$:
-  $ S_T = { w in "split"("Norm"(T)) | |w| > 3 } $
-+ For incoming claim $A$ and each existing claim $B$, compute:
-  $ J(A, B) = frac(|S_A inter S_B|, |S_A union S_B|) $
-+ Keep the best match that meets the threshold $tau = 0.75$ (special cases: both sets empty #sym.arrow.r similarity $1$; exactly one empty #sym.arrow.r similarity $0$).
-+ Decision rule:
-  $ "Action" = cases(
-    "Block submission, link to best-matching claim" & "if" max_(B in "Claims") J(A, B) >= tau,
-    "Create new claim, enter Verification Queue" & "otherwise"
-  ) $
-
-```
-function findDuplicate(text, existingClaims, threshold = 0.75):
-    normalizedInput <- normalize(text)
-    bestMatch <- null
-    for each claim in existingClaims:
-        similarity <- jaccardSimilarity(normalizedInput, claim.text)
-        if similarity >= threshold and (bestMatch is null or similarity > bestMatch.similarity):
-            bestMatch <- { id: claim.id, text: claim.text, similarity }
-    return bestMatch   // null => no duplicate found
-```
-
-The complexity is $O(n dot m)$, where $n$ is the number of claims scanned and $m$ is the average token-set size. A linear scan is fast enough at FactStamp's current scale; a web-scale corpus would need an inverted index or MinHash locality-sensitive hashing.
-
-*Algorithm 2: Weighted Consensus and Confidence Scoring* (`src/lib/confidenceScore.ts`). Purpose: combine independent verifications into a final verdict and a numeric confidence score based on agreement, verifier reputation, and source credibility.
-
-+ Given verifications $V = {v_1, ..., v_N}$ (triggered once $N >= 3$), group them by `verdict` and take the size of the largest group, $N_("majority")$.
-+ Agreement ratio:
-  $ A = frac(N_("majority"), N_("total")) times 100 $
-+ Average verifier reputation, where each $R_i in [0,100]$ is read live from `users/{uid}.reputation` at the time of the vote:
-  $ R = frac(1, N) sum_(i=1)^N R_i $
-+ Average source quality. `sourceQualityToScore()` maps each verification's `sourceQuality` tier, which `determineSourceQuality()` assigned from the domain whitelist, to a number (high #sym.arrow.r 100, medium #sym.arrow.r 70, low #sym.arrow.r 30):
-  $ S = frac(1, N) sum_(i=1)^N Q(v_i) $
-+ Combine them into the final weighted confidence score:
-  $ C = (A times 0.40) + (R times 0.30) + (S times 0.30) $
-+ Clamp $C$ to $[0, 100]$ and round to the nearest integer.
-+ Set `verdict` to the majority verdict, `confidenceScore = C`, `agreementRatio = A`, `avgVerifierReputation = R`, and `sourceQualityScore = S`, then change `status` to `verified`.
-
-```
-function calculateConfidenceScore(verifications):
-    if verifications.length == 0:
-        return { score: 0, agreementRatio: 0, avgReputation: 0, sourceQualityScore: 0 }
-
-    verdictCounts <- groupAndCount(verifications, by = verdict)
-    majorityCount <- max(verdictCounts.values())
-    agreementRatio <- (majorityCount / verifications.length) * 100
-
-    avgReputation <- mean(v.verifierReputation for v in verifications)
-    sourceQualityScore <- mean(v.sourceQuality for v in verifications)   // already numeric 0-100
-
-    score <- round(agreementRatio * 0.40 + avgReputation * 0.30 + sourceQualityScore * 0.30)
-    score <- clamp(score, 0, 100)
-
-    return { score, agreementRatio, avgReputation, sourceQualityScore }
-```
-
-The consensus-expiry sweep (Section 4.1, Module 5) reuses this function. For a `pending` claim past its deadline with fewer than 3 verifications, it runs `calculateConfidenceScore()` over the verifications that exist and sets the verdict to `CONTESTED`, since an under-quorum outcome is unresolved.
 
 == User interface design
 
@@ -411,31 +237,66 @@ FactStamp's components are custom-built, with no external UI component library. 
 
 *Home (`/`).* The hero section explains what FactStamp does and offers buttons to submit a claim or browse the queue. Below it are live platform counters (`AnimatedCounter`) and a walkthrough of the system's architecture. A persistent navigation bar shows authentication state, the theme toggle, notifications, and profile links.
 
-#align(center)[#image("attachments/wireframe_home.png", width: 100%, height: 90%, fit: "contain")]
+#figure(
+  image("attachments/wireframe_home.png", width: 100%, height: 90%, fit: "contain"),
+  caption: [Wireframe — Home Page],
+  kind: "diagram",
+  supplement: "Diagram",
+)
 
 *Submit (`/submit`, protected).* Users choose between 'Text Forward' and 'Screenshot (OCR)' modes. Screenshot mode compresses the image and runs Tesseract.js OCR inline with loading feedback, then fills an editable text area with the filtered output. Below that is the category grid of `CategoryBadge` cards with five options: 'Health & Medical', 'Political & Govt', 'Financial & Loans', 'Religious & Culture', and 'Other Topics'. The duplicate check runs when the text area loses focus. If it finds a match, an inline alert links to the existing claim and the submit button is disabled.
 
-#align(center)[#image("attachments/wireframe_submit.png", width: 100%, height: 90%, fit: "contain")]
+#figure(
+  image("attachments/wireframe_submit.png", width: 100%, height: 90%, fit: "contain"),
+  caption: [Wireframe — Submit Page],
+  kind: "diagram",
+  supplement: "Diagram",
+)
 
 *VerifyQueue (`/verify`, protected).* A scrollable feed of `ClaimCard` components shows each claim's text excerpt, category badge, timestamp, and verification progress on a three-segment `ConsensusStepper`. Cards also carry a deadline countdown, a priority badge for admin-flagged claims, and an indicator when an image is attached. Admin-flagged claims sit at the top of the feed, which also has category filters and search.
 
-#align(center)[#image("attachments/wireframe_verify_queue.png", width: 100%, height: 90%, fit: "contain")]
+#figure(
+  image("attachments/wireframe_verify_queue.png", width: 100%, height: 90%, fit: "contain"),
+  caption: [Wireframe — Verify Queue],
+  kind: "diagram",
+  supplement: "Diagram",
+)
 
 *VerifyDetail (`/verify/:claimId`, protected).* The workbench shows the claim text or screenshot above a verification progress indicator. Review is blind: verifiers cannot see other verdicts before submitting their own, which guards against anchoring and bandwagon effects. The form has a `VerdictPill` selector (without the system-assigned `CONTESTED` option), a source URL input whose domain quality `SourceQualityDot` classifies as the user types, and an explanation field checked by `validateVerdictExplanation()`.
 
-#align(center)[#image("attachments/wireframe_verify_detail.png", width: 100%, height: 90%, fit: "contain")]
+#figure(
+  image("attachments/wireframe_verify_detail.png", width: 100%, height: 90%, fit: "contain"),
+  caption: [Wireframe — Verify Detail],
+  kind: "diagram",
+  supplement: "Diagram",
+)
 
 *ClaimDetail (`/claim/:claimId`, public).* This public page shows the claim text, any image evidence, the resolved verdict pill, the confidence score with a breakdown of its components, and the contributing verifications with citation links. An export button generates a 1080px-wide PNG fact-check card via `html-to-image` (a 540px layout rendered at `pixelRatio: 2`).
 
-#align(center)[#image("attachments/wireframe_claim_detail.png", width: 100%, height: 90%, fit: "contain")]
+#figure(
+  image("attachments/wireframe_claim_detail.png", width: 100%, height: 90%, fit: "contain"),
+  caption: [Wireframe — Claim Detail],
+  kind: "diagram",
+  supplement: "Diagram",
+)
 
 *Dashboard (`/dashboard`, public).* Recharts charts show category distribution and verdict proportions, alongside a 7-day rolling trend list and verifier leaderboards, all with custom tooltips.
 
-#align(center)[#image("attachments/wireframe_dashboard.png", width: 100%, height: 90%, fit: "contain")]
+#figure(
+  image("attachments/wireframe_dashboard.png", width: 100%, height: 90%, fit: "contain"),
+  caption: [Wireframe — Dashboard],
+  kind: "diagram",
+  supplement: "Diagram",
+)
 
 *Profile (`/profile`, protected).* The profile page shows account details, the user's reputation score and tier (Novice, Trusted, Expert, or Elite), their submission and verification history, and profile preferences.
 
-#align(center)[#image("attachments/wireframe_profile.png", width: 100%, height: 90%, fit: "contain")]
+#figure(
+  image("attachments/wireframe_profile.png", width: 100%, height: 90%, fit: "contain"),
+  caption: [Wireframe — Profile],
+  kind: "diagram",
+  supplement: "Diagram",
+)
 
 *Admin (`/admin`, admin-guarded).* The console is an unlisted route that does not appear in public navigation. `AdminRoute.tsx` requires admin authentication before showing its five tabs:
 - System Overview: platform KPI metrics, category bar charts, verdict distributions, and reputation tier distributions.
@@ -446,7 +307,12 @@ FactStamp's components are custom-built, with no external UI component library. 
 
 Every mutating admin operation goes through the shared `addAuditLog()` utility.
 
-#align(center)[#image("attachments/wireframe_admin.png", width: 100%, height: 90%, fit: "contain")]
+#figure(
+  image("attachments/wireframe_admin.png", width: 100%, height: 90%, fit: "contain"),
+  caption: [Wireframe — Admin Console],
+  kind: "diagram",
+  supplement: "Diagram",
+)
 
 == Security issues
 
@@ -482,11 +348,11 @@ The test cases below cover the functional pipeline (registration #sym.arrow.r su
   "TC-03", "Auth (M1)", "User logs in with invalid credentials", "Incorrect password, valid email", [Login rejected; `recordFailedLogin()` increments the attempt counter],
   "TC-04", "Auth / Security (M1, M8)", "User exceeds login attempt limit", "5 consecutive failed attempts, same identifier", [6th attempt blocked; `isLockedOut: true`; UI shows MM:SS countdown],
   "TC-05", "Ingestion (M2)", "User submits a claim as plain text", "Text, 20 to 500 chars (the Submit.tsx bound, inside the server rule's 10 to 2000 range), valid category", [Claim created: `status: pending`, `verificationCount: 0`, `consensusDeadline` = now + 7 days],
-  "TC-06", "Ingestion / OCR (M2)", "User submits via WhatsApp screenshot", "Valid JPEG/PNG, $<=$ 5 MB", [Image compressed, OCR-extracted; WhatsApp chrome stripped; text shown for review],
-  "TC-07", "Duplicate Detection (M3)", "New submission closely matches an existing claim", [Text with $J(A,B) >= 0.75$], "Submission blocked; inline warning links to the existing claim; no new document created",
-  "TC-08", "Duplicate Detection (M3)", "New submission is sufficiently distinct", [Text with $max J(A,B) < 0.75$], "New document created; claim enters the Verification Queue",
+  "TC-06", "Ingestion / OCR (M2)", "User submits via WhatsApp screenshot", "Valid JPEG/PNG, at most 5 MB", [Image compressed, OCR-extracted; WhatsApp chrome stripped; text shown for review],
+  "TC-07", "Duplicate Detection (M3)", "New submission closely matches an existing claim", [Text with similarity of 0.75 or higher], "Submission blocked; inline warning links to the existing claim; no new document created",
+  "TC-08", "Duplicate Detection (M3)", "New submission is sufficiently distinct", [Text with best similarity below 0.75], "New document created; claim enters the Verification Queue",
   "TC-09", "Verification Queue (M4)", "Verifier submits a verdict below quorum", "1st/2nd verification, valid fields", [`verificationCount` +1; `status` remains `pending`],
-  "TC-10", "Verification Queue (M4)", "Explanation fails anti-spam validation", [Explanation $<$ 50 chars, or repeated-char spam, or a copy of the claim text], [`validateVerdictExplanation()` rejects client-side; no write attempted],
+  "TC-10", "Verification Queue (M4)", "Explanation fails anti-spam validation", [Explanation under 50 chars, or repeated-char spam, or a copy of the claim text], [`validateVerdictExplanation()` rejects client-side; no write attempted],
   "TC-11", "Queue / Consensus (M4, M5)", "Verification reaches exactly quorum", "3rd verification submitted", [`calculateConfidenceScore()` invoked; verdict/confidence set; `status` #sym.arrow.r `verified`],
   "TC-12", "Consensus Engine (M5)", "Claim remains under quorum past deadline", [`verificationCount < 3`, `consensusDeadline` elapsed], [Expiry sweep force-settles `verdict = CONTESTED`, `status = verified`],
   "TC-13", "Admin Console (M8)", "Admin overrides a claim's verdict", "Admin session; claim ID; new verdict", [Claim updated via Case A rule; action recorded in `audit_logs`],

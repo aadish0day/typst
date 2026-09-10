@@ -74,7 +74,7 @@ usecase "1.4\nNormalise &\nTokenise Claim Text" as S14
 ' #line.dashed marks it as out of scope (PlantUML resets the stroke width when an
 ' inline line style is applied, so this box is deliberately drawn thinner).
 rectangle "2.0  Detect Duplicates\n(Level 1 process — out of scope here)" as P20 #line.dashed
-usecase "1.5\nEvaluate Duplicate\nThreshold (>= 0.75)" as S15
+usecase "1.5\nEvaluate Duplicate\nThreshold" as S15
 usecase "1.6\nAssemble Claim Record\n(pending, 7-day\nconsensusDeadline)" as S16
 usecase "1.7\nPersist Claim\nDocument" as S17
 database "D1  Claims\n(verifications[] embedded)" as D1

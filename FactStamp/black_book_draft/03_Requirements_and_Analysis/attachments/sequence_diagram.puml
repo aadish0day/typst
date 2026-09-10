@@ -93,10 +93,10 @@ CTX -> CTX : count = 3
 group Consensus [count >= 3]
   CTX -> CONF : calculateConfidence\nScore()
   activate CONF
-  CONF -> CONF : A = majority\n/ total x 100
-  CONF -> CONF : R = mean\nreputation
-  CONF -> CONF : S = mean source\nquality
-  CONF -> CONF : C = 0.40A\n+ 0.30R\n+ 0.30S
+  CONF -> CONF : evaluate agreement\nratio
+  CONF -> CONF : determine mean\nreputation
+  CONF -> CONF : evaluate mean\nsource quality
+  CONF -> CONF : Compute weighted\nconfidence score
   CONF --> CTX : { score,\nagreementRatio }
   deactivate CONF
   CTX -> CTX : verdict =\nmajority (FALSE)

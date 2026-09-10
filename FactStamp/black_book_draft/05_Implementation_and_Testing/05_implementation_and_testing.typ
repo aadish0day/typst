@@ -12,7 +12,12 @@ Implementation went module by module. Each of the 8 core modules (Auth #sym.amp 
 
 The architecture diagram below shows how the modules fit together. An incoming WhatsApp forward passes through duplicate detection, the quorum queue, and the consensus engine, and the result feeds the exportable fact-check card and the public analytics dashboard. Cloud Firestore and its security rules sit underneath all of them as the one shared backend.
 
-#align(center)[#image("attachments/system_architecture.svg", width: 92%)]
+#figure(
+  image("attachments/system_architecture.svg", width: 92%),
+  caption: [Overall System Architecture],
+  kind: "diagram",
+  supplement: "Diagram",
+)
 
 === Incremental, agile delivery
 
@@ -61,74 +66,13 @@ Each of the 8 core modules is a small cluster of focused files. Three convention
 
 *Duplicate Detection Engine (`src/lib/duplicateDetection.ts`)*
 
-The engine normalizes text (lowercase, strip punctuation, collapse whitespace), splits it into a set of words longer than 3 characters, which works as a lightweight stop-word filter, and computes the Jaccard index between the incoming claim and every existing claim:
-
-// Short excerpt (24 lines) — kept on one page so the function body is never
-// torn mid-expression across a page boundary.
-#block(breakable: false)[
-```typescript
-function tokenize(text: string): Set<string> {
-  return new Set(
-    normalize(text)
-      .split(/\s+/)
-      .filter((word) => word.length > 3) // ignore short words
-  )
-}
-
-function jaccardSimilarity(a: string, b: string): number {
-  const setA = tokenize(a)
-  const setB = tokenize(b)
-
-  if (setA.size === 0 && setB.size === 0) return 1
-  if (setA.size === 0 || setB.size === 0) return 0
-
-  let intersection = 0
-  for (const word of setA) {
-    if (setB.has(word)) intersection++
-  }
-
-  const union = setA.size + setB.size - intersection
-  return intersection / union
-}
-```
-]
+The engine normalizes text (lowercase, strip punctuation, collapse whitespace), splits it into a set of words longer than 3 characters, which works as a lightweight stop-word filter, and computes the Jaccard index between the incoming claim and every existing claim.
 
 `findDuplicate()` then scans the existing claims one by one, keeps the highest-scoring match at or above the `0.75` threshold, and returns `null` if nothing reaches it. A duplicate submission is only ever redirected to the existing claim and is never merged into it automatically, so the calling code in `ClaimsContext` decides what happens next.
 
 *Weighted Consensus Engine (`src/lib/confidenceScore.ts`)*
 
-Once a claim has verifications, `calculateConfidenceScore()` combines three separately computed components, each on a scale of 0 to 100, into the final confidence percentage:
-
-// Short excerpt (24 lines) — kept on one page. Previously this block split
-// across a page boundary, tearing the "// 3. Source quality score" section
-// away from the weighted calculation it feeds.
-#block(breakable: false)[
-```typescript
-// 1. Agreement ratio: How many verifications agree with the majority verdict
-const verdicts = verifications.map((v) => v.verdict);
-const majorityCount = Math.max(
-  ...Array.from(new Set(verdicts)).map(
-    (v) => verdicts.filter((x) => x === v).length,
-  ),
-);
-const agreementRatio = (majorityCount / verifications.length) * 100;
-
-// 2. Average reputation of all verifiers
-const avgReputation =
-  verifications.reduce((sum, v) => sum + v.verifierReputation, 0) /
-  verifications.length;
-
-// 3. Source quality score (average)
-const sourceQualityScore =
-  verifications.reduce((sum, v) => sum + v.sourceQuality, 0) /
-  verifications.length;
-
-// Weighted calculation
-const score = Math.round(
-  agreementRatio * 0.4 + avgReputation * 0.3 + sourceQualityScore * 0.3,
-);
-```
-]
+Once a claim has verifications, `calculateConfidenceScore()` combines three separately computed components, each on a scale of 0 to 100, into the final confidence percentage.
 
 The function does not care where `verifierReputation` and `sourceQuality` come from. Before calling it, `ClaimsContext.tsx` looks up each verifier's live reputation and turns the cited source URL's domain into a `high` / `medium` / `low` tier with `determineSourceQuality()` (exported from `src/lib/confidenceScore.ts` alongside the scorer), then into a number with `sourceQualityToScore()`. Keeping that lookup out of the scoring math is what lets the math be tested by hand on its own (5.3.1).
 
@@ -144,29 +88,7 @@ The function does not care where `verifierReputation` and `sourceQuality` come f
 
 *Vite manual chunk splitting*
 
-`vite.config.ts` splits the production bundle into six named vendor chunks instead of leaving chunking to Vite's defaults:
-
-// Short excerpt (16 lines) — kept on one page so the nested `manualChunks`
-// object is never split mid-literal across a page boundary.
-#block(breakable: false)[
-```typescript
-build: {
-  chunkSizeWarningLimit: 1000,
-  rollupOptions: {
-    output: {
-      manualChunks: {
-        'vendor-react': ['react', 'react-dom', 'react-router-dom'],
-        'vendor-firebase': ['firebase/app', 'firebase/auth', 'firebase/firestore', 'firebase/storage'],
-        'vendor-ui': ['lucide-react', 'framer-motion'],
-        'vendor-charts': ['recharts'],
-        'vendor-html-to-image': ['html-to-image'],
-        'vendor-ocr': ['tesseract.js'],
-      },
-    },
-  },
-},
-```
-]
+`vite.config.ts` splits the production bundle into six named vendor chunks instead of leaving chunking to Vite's defaults.
 
 Tesseract.js and the Firebase SDK are both large, and they change far less often than the application's own code. Without explicit splitting, any change to the application code would invalidate one large bundle containing everything. With `vendor-ocr` and `vendor-firebase` in their own chunks, a returning user's browser keeps serving them from cache across most deployments. Combined with route-level lazy loading, a user who never opens `/submit`, and so never needs OCR, can also skip downloading the Tesseract WASM chunk on first load.
 
@@ -219,7 +141,7 @@ Case 3 tests the threshold's precision/recall trade-off. The two claims share a 
   "3", [`[]` (empty array, edge case)], "0 / 0 / 0", "Early-return guard, no division by zero", [*0*],
 )
 
-Worked by hand, Case 1 gives $C = (100 times 0.40) + (70 times 0.30) + (90 times 0.30) = 40 + 21 + 27 = 88$, which is exactly what `Math.round()` returns. Case 3 exercises the function's explicit early return (`if (verifications.length === 0) return { score: 0, ... }`), which prevents a division by zero. The guard was added because a claim can in theory be read mid-write with no verifications attached yet, and in that moment the UI has to show `0%`, not `NaN`.
+Worked by hand, Case 1 comes out at 88, which is exactly what `Math.round()` returns. Case 3 exercises the function's explicit early return (`if (verifications.length === 0) return { score: 0, ... }`), which prevents a division by zero. The guard was added because a claim can in theory be read mid-write with no verifications attached yet, and in that moment the UI has to show `0%`, not `NaN`.
 
 === Integration testing
 
@@ -323,14 +245,14 @@ This table is the executed counterpart to the test case design in Chapter 4.6. E
   "TC-03", "Login lockout after repeated failures", "5 consecutive wrong-password attempts, then a 6th", "Locked 15 min after 5th attempt; 6th blocked before hitting Firebase Auth", "Locked exactly at attempt 5; countdown shown; 6th blocked client-side", "Pass",
   "TC-04", "Text claim submission", [Plain-text WhatsApp forward pasted into `Submit.tsx`], [Claim created (`status` = `pending`), added to Verification Queue], "Claim created and visible in queue within one write", "Pass",
   "TC-05", "Screenshot claim + OCR", "WhatsApp forward screenshot (JPEG) uploaded", "Image compressed; text extracted via Tesseract.js; WhatsApp chrome stripped", "Text extracted and chrome removed; shown for confirmation", "Pass",
-  "TC-06", [Duplicate detection: identical claim], "Text identical to existing resolved claim", [`J = 1.00` $>= 0.75$; redirected to existing claim], "Redirected correctly; no new claim created", "Pass",
+  "TC-06", [Duplicate detection: identical claim], "Text identical to existing resolved claim", [`J = 1.00` 0.75 or higher; redirected to existing claim], "Redirected correctly; no new claim created", "Pass",
   "TC-07", [Duplicate detection: near-paraphrase], [Text differing by one word (5.3.1 Case 2, `J = 0.80`)], "Flagged duplicate; redirected", "Redirected correctly", "Pass",
   "TC-08", [Duplicate detection: related but distinct], [Topically similar, below threshold (5.3.1 Case 3, `J = 0.56`)], [*Not* flagged; new claim created independently], "New claim correctly created, not merged", "Pass",
   "TC-09", [Verifier explanation: too short], ["fake", a 4-character explanation], "Rejected client-side before any Firestore write", "Rejected with expected error message", "Pass",
   "TC-10", [Verifier explanation: valid], "50+ char explanation with real citation URL", "Accepted; appended to embedded array; count +1 exactly", "Accepted and appended correctly", "Pass",
   "TC-11", "Self-verification block", "User verifies a claim they submitted themselves", "Blocked client-side with anti-Sybil warning", "Blocked as expected before reaching Firestore", "Pass",
   "TC-12", "3-verifier quorum consensus", "Three distinct verifiers submit a verdict each", [On 3rd verification: `status` #sym.arrow.r `verified`; score matches hand-computed value], "Transition occurred on 3rd verification; score matched exactly", "Pass",
-  "TC-13", [Consensus expiry to `CONTESTED`], [Claim's 7-day consensus deadline passes with $< 3$ verifications], [Claim auto-settles with verdict `CONTESTED` via the local expiry sweep], [Claim correctly settled as `CONTESTED` at deadline], "Pass",
+  "TC-13", [Consensus expiry to `CONTESTED`], [Claim's 7-day consensus deadline passes with below 3 verifications], [Claim auto-settles with verdict `CONTESTED` via the local expiry sweep], [Claim correctly settled as `CONTESTED` at deadline], "Pass",
   "TC-14", "Verification Queue empties after mass expiry", "All pending seed claims expire simultaneously", "Queue should replenish automatically, never empty", [Pre-fix: queue showed 0 claims (root-caused to 5.4 Mod. 1) #sym.arrow.r Fixed: auto-replenishes with dynamic-deadline seeds], [Fail #sym.arrow.r Fixed],
   "TC-15", "Fact-check PNG card export", [Export a resolved claim's fact-check card], [PNG at 1080px width (540px card @ `pixelRatio: 2`), height scaling to card content; OKLCH theme colors render correctly, no black regions], "Exported at 1080px width with correct colors; height varied with claim/source length as expected", "Pass",
   "TC-16", "Firestore rule rejects forged reputation write", "Direct write with an inflated verifier reputation value (bypassing the UI)", "Write rejected by the Firestore security rules", "Write rejected with permission-denied error", "Pass",

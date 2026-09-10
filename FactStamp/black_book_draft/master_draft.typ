@@ -92,6 +92,11 @@
 #include "00_Preliminary_Pages/table_of_contents.typ"
 
 // ==============================================================================
+// 1c. TABLE OF FIGURES (hand-maintained; captions baked into diagram SVGs)
+// ==============================================================================
+#include "00_Preliminary_Pages/list_of_figures.typ"
+
+// ==============================================================================
 // 2. MAIN BODY CHAPTERS: Restart page counter at Arabic 1
 // ==============================================================================
 #pagebreak()

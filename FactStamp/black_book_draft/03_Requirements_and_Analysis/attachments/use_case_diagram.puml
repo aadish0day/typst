@@ -61,7 +61,7 @@ rectangle "FactStamp System Boundary" {
     usecase "Submit Claim" as UC6
     usecase "Enter Claim Text\n(20-500 characters)" as UC7
     usecase "Extract Text from\nScreenshot via OCR" as UC8
-    usecase "Run Jaccard Duplicate\nCheck (J >= 0.75 blocks)" as UC9
+    usecase "Run Duplicate Check\n(match blocks)" as UC9
     usecase "Browse Verification\nQueue" as UC10
     usecase "Cast Verdict on Claim" as UC11
     usecase "Validate Verdict\nExplanation" as UC12

@@ -119,9 +119,8 @@ object "engine : ConfidenceScoreEngine" as engine {
   agreementRatio = 100.0
   avgReputation = 68.5
   sourceQualityScore = 100.0
-  weights = 0.40 / 0.30 / 0.30
-  weighted = 40.00 + 20.55 + 30.00
-  score = round(90.55) = 91
+  weightedEvaluation = completed
+  score = 91
 }
 
 SnapshotNote .. submitter

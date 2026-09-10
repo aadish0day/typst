@@ -320,10 +320,12 @@ Total planned schedule: 8 sprints of 2 weeks each, approximately 4 months from i
 === PERT / Gantt Chart Content
 
 #align(center)[#image("attachments/gantt_chart.svg", width: 100%)]
+<fig-gantt>
 
 The Gantt chart for this section renders the 8-sprint schedule above as a horizontal timeline, each sprint's bar spanning its 2-week duration, with dependency arrows drawn per the Dependencies column above. A complementary PERT network diagram expresses the same sequence as a directed acyclic graph of milestone nodes and precedence edges. Because each module's data depends on the previous module's output, the critical path in this project is the full linear chain Sprint 1 through Sprint 8, with zero slack on any sprint; the critical path length equals the total project duration of 16 weeks.
 
 #align(center)[#image("attachments/pert_chart.svg", width: 100%, height: 88%, fit: "contain")]
+<fig-pert>
 
 === Sprint Velocity and Definition of Done
 
@@ -447,65 +449,78 @@ Each conceptual diagram modeling FactStamp's structural, behavioral, architectur
 Models FactStamp's Firestore data domain as five conceptual entities: *USER* (uid, displayName, reputation, isAdmin), *CLAIM* (id, text, status, verdict, confidence, category, submittedBy), *VERIFICATION* (id, claimId, verifierId, verdict, sourceUrl, sourceQuality), *DUPLICATE_CLUSTER* (canonical claim grouping for near-duplicate submissions), and *CATEGORY_METRIC* (aggregated per-category rollups for the dashboard). USER submits many CLAIMs and casts many VERIFICATIONs; CLAIM receives many VERIFICATIONs (minimum 3 for quorum) and may group duplicates under a DUPLICATE_CLUSTER; CLAIM aggregates many-to-one into a CATEGORY_METRIC.
 
 #align(center)[#image("attachments/er_diagram.svg", width: 100%, height: 86%, fit: "contain")]
+<fig-er>
 
 === Class Diagram
 Models core domain classes independent of implementation detail: an abstract `BaseVerifier` class specialized by a concrete `CommunityVerifier` class (FactStamp has no separate verifier role); a `Claim` class composed of many `Verification` objects; and a `ConsensusEngine` class exposing the weighted-scoring method. Composition reflects that verifications cannot exist independent of their parent claim, matching Firestore's embedded-array denormalization decision.
 
 #align(center)[#image("attachments/class_diagram.svg", width: 100%, height: 88%, fit: "contain")]
+<fig-class>
 
 === Object Diagram
 Provides a concrete instance snapshot at a specific runtime moment, for example an object `verifier_042 : CommunityVerifier` with reputation 78, linked via a "verified" association to an object `claim_017 : Claim` with status "pending" and `verificationCount = 2`, illustrating one verifier's vote against one claim instance mid-quorum.
 
 #align(center)[#image("attachments/object_diagram.svg", width: 88%)]
+<fig-object>
 
 === Use Case Diagram
 Captures three actors: *Public Submitter*, *Community Verifier* (the same user class in a different capacity), and *System Engine* (automated duplicate-detection and consensus logic), against use cases including Submit Claim, Check Duplicate, View Confidence, Export Fact Card, Review Queue, Submit Verdict, and Compute Consensus.
 
 #align(center)[#image("attachments/use_case_diagram.svg", width: 100%, height: 88%, fit: "contain")]
+<fig-usecase>
 
 === Activity Diagram
 Traces the full claim lifecycle: a user submits text or a screenshot; if a screenshot, OCR extraction and cleanup runs; the duplicate-detection engine computes similarity against the existing corpus; a decision branch either redirects to an existing verified claim or creates a new pending claim; the new claim accumulates verifications one at a time; a second decision branch checks whether quorum has been reached or the 7-day deadline has expired; the consensus engine then computes the final verdict, after which the claim becomes eligible for card export.
 
 #align(center)[#image("attachments/activity_diagram.svg", width: 100%, height: 90%, fit: "contain")]
+<fig-activity>
 
 === State Diagram (State Machine)
 Models a Claim's lifecycle as a finite state machine over the two status values the implementation actually defines (`ClaimStatus = 'pending' | 'verified'` in `src/lib/types.ts`): initial state to `pending` on creation, then to `verified` carrying the majority verdict once the third verification arrives, or to `verified` carrying the verdict `CONTESTED` if the 7-day consensus deadline passes while fewer than three verifications exist. `verified` is the terminal state; `CONTESTED` is a verdict value, not a separate status. Verifications accumulating below quorum appear as a self-transition on `pending` rather than a distinct "under review" state.
 
 #align(center)[#image("attachments/state_diagram.svg", width: 85%)]
+<fig-state>
 
 === Sequence Diagram
 Traces the temporal message flow for a single verification-to-consensus event: Verifier to the Verify Detail UI, to the Claims context (submit verdict), to the Firebase service layer (persist verification), to Firestore security rules (server-side validation), back to the Claims context which, once quorum is reached, invokes the confidence-score calculator, persists the settled claim, and triggers a notification to the original submitter.
 
 #align(center)[#image("attachments/sequence_diagram.svg", width: 100%, height: 88%, fit: "contain")]
+<fig-sequence>
 
 === Package Diagram
 Groups the source tree into cohesive packages: `pages` (route-level views), `components` (with a nested `components/ui` primitive package), `contexts` (the five React Context providers), `lib` (pure utility/algorithm modules), and `services` (Firebase and OCR service wrappers), with dependency arrows showing `pages` depends on `contexts`, `contexts` depends on `services` and `lib`, and `services` depends on `lib`, never the reverse.
 
 #align(center)[#image("attachments/package_diagram.svg", width: 88%)]
+<fig-package>
 
 === Component Diagram
 Shows high-level runtime components: a `Frontend` component (the React SPA) communicating with `Firestore` and `FirebaseAuth` over HTTPS, plus a `WasmOCR` component (the in-browser Tesseract.js worker) invoked entirely in-process, because OCR runs client-side rather than through any cloud vision API.
 
 #align(center)[#image("attachments/component_diagram.svg", width: 100%, height: 86%, fit: "contain")]
+<fig-component>
 
 === Deployment Diagram
 Models the physical/logical nodes: a Client Device node hosting the Browser and the in-browser WasmOCR artifact; a hosting node (Firebase Hosting / Vercel Edge / self-hosted Docker + Nginx, shown as alternative deployment targets) serving the static Frontend artifact; and a Google Cloud node hosting the managed Firestore database and Firebase Auth service.
 
 #align(center)[#image("attachments/deployment_diagram.svg", width: 92%)]
+<fig-deployment>
 
 === Data Flow Diagrams (Level 0, Level 1, Level 2)
 
 *Level 0 (Context Diagram):* models FactStamp as a single process bubble with two external entities, User and Admin, and Firestore/Firebase Auth shown as an external data store at the boundary.
 
 #align(center)[#image("attachments/dfd_level_0.svg", width: 85%)]
+<fig-dfd0>
 
 *Level 1:* decomposes the single Level 0 process into major processing stages: Submit Claim, Detect Duplicate, Manage Verification Queue, Compute Consensus, Generate Fact-Check Card, Serve Analytics Dashboard, and Admin Moderation, each reading from and writing to the shared Firestore data store.
 
 #align(center)[#image("attachments/dfd_level_1.svg", width: 100%, height: 86%, fit: "contain")]
+<fig-dfd1>
 
 *Level 2 (drill-down of Submit Claim):* further decomposes claim submission into Accept Text/Screenshot Input, Compress Image, Run Client-Side OCR, Clean WhatsApp Chrome Text, Auto-Classify Category, and Persist Claim Record.
 
 #align(center)[#image("attachments/dfd_level_2.svg", width: 100%, height: 86%, fit: "contain")]
+<fig-dfd2>
 
 === Event Table
 
@@ -520,3 +535,4 @@ The Event Table captures the external, temporal, and state-driven triggers that 
   "Consensus reached (quorum met, majority settled)", "Weighted Consensus Engine (Module 5)", "Compute confidence score; determine final verdict; update reputations (+2 aligned, -1 dissenting)", "Settled verdict, confidence score, updated reputations", "Firestore claims and users collections; Notifications system",
   "Consensus deadline expired (7 days, fewer than 3 verifications)", "Consensus-Deadline Sweep (Module 5, automated)", [Auto-settle the claim: move `status` from `pending` to `verified` and set the verdict to `CONTESTED`; skip reputation adjustment], [Claim status set to `verified`, verdict set to `CONTESTED`], "Firestore claims collection; Notifications system",
 )
+<fig-event-table>

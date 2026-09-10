@@ -31,9 +31,9 @@ endif
 
 :Normalize and tokenize the candidate text\n(keep tokens longer than 3 characters);
 
-:Jaccard-compare against every existing claim;
+:Compare similarity against every existing claim;
 
-if (max J(A,B) >= 0.75 ?) then (yes, duplicate)
+if (Duplicate match found?) then (yes, duplicate)
   :Block submission and show an inline\nwarning linking to the existing claim;
   stop
 else (no, unique)
@@ -48,7 +48,7 @@ split
     :Verifier adds a verdict, a source URL\n(domain auto-classified for quality)\nand a written explanation;
   endwhile (yes, quorum reached)
 
-  :Consensus Engine computes\nC = (A x 0.40) + (R x 0.30) + (S x 0.30);
+  :Consensus Engine computes\nweighted confidence score;
   :Set the majority verdict\nand flip status to verified;
 
 split again

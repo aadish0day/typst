@@ -100,11 +100,11 @@ entity "DUPLICATE_CLUSTER" as DuplicateCluster {
   * id : string <<PK>>
   ..
   derived at runtime by the
-  Jaccard duplicate detector
+  Duplicate detector
   --
   * canonicalClaimId : string <<FK CLAIM.id>>
   * duplicateText : string (normalized)
-  * jaccardScore : float [0.75..1.00]
+  * similarityScore : float
   * detectedAt : timestamp
 }
 

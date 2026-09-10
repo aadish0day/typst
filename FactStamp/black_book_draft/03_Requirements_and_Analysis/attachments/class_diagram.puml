@@ -46,7 +46,7 @@ class ClaimsContext <<orchestrator>> {
 }
 
 class DuplicateDetectionEngine <<service>> {
-  - THRESHOLD : float = 0.75
+  - THRESHOLD : float
   --
   + findDuplicate(text : string, existingClaims : Claim[], threshold : float) : DuplicateMatch?
   - jaccardSimilarity(a : string, b : string) : float
@@ -55,9 +55,9 @@ class DuplicateDetectionEngine <<service>> {
 }
 
 class ConfidenceScoreEngine <<service>> {
-  - W_AGREEMENT : float = 0.40
-  - W_REPUTATION : float = 0.30
-  - W_SOURCE : float = 0.30
+  - W_AGREEMENT : float
+  - W_REPUTATION : float
+  - W_SOURCE : float
   --
   + calculateConfidenceScore(verifications : Verification[]) : ConfidenceResult
   + determineSourceQuality(url : string) : SourceQuality

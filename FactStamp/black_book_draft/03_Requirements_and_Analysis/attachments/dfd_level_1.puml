@@ -92,7 +92,7 @@ P1  --> D1 : "5. New Claim\n    Document"
 
 ' ---------- 2.0 Detect Duplicates ----------
 D1 -[norank]-> P2 : "6. Claim Corpus"
-P2 -[norank]-> P1 : "7. Jaccard >= 0.75"
+P2 -[norank]-> P1 : "7. Duplicate Match"
 
 ' ---------- 3.0 Manage Verification Queue ----------
 D1  --> P3 : "8. Pending Queue"
@@ -103,7 +103,7 @@ P3  --> P4 : "11. 3rd Verification /\n     Deadline Expired"
 ' ---------- 4.0 Compute Weighted Consensus ----------
 D2 -[norank]-> P4 : "12. Reputation\n     Scores"
 P4 -[norank]-> D2 : "13. Reputation Delta"
-P4 -[norank]-> D1 : "14. Verdict + Confidence\n     C = 0.40A + 0.30R + 0.30S\n     (CONTESTED on expiry)"
+P4 -[norank]-> D1 : "14. Verdict + Confidence Score\n     (CONTESTED on expiry)"
 P4 --> D3 : "15. Consensus Alert"
 D3 -[norank]-> VER : "16. Verdict\n     Notification"
 

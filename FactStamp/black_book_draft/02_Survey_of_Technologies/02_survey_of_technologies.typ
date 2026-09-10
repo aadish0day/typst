@@ -129,7 +129,7 @@ Exporting styled DOM nodes into downloadable PNG cards can be accomplished throu
 
 FactStamp uses `html-to-image` to generate shareable fact-check cards (`src/components/FactCheckCard.tsx`). Intermediate canvas parsers like `html2canvas` fail on CSS Color Level 4 syntax, notably the `oklch()` and `oklab()` color functions used throughout Tailwind CSS v4. When applied to such elements, canvas re-parsers produce blank or corrupted backgrounds.
 
-By wrapping the card markup in an SVG `<foreignObject>`, `html-to-image` delegates rendering directly to the browser's native engine, rendering OKLCH colors with full chromatic fidelity. The export routine outputs a 1080#text[ ]px wide PNG card (a 540 CSS-pixel element captured at a $2 times$ pixel ratio), with vertical dimensions scaling dynamically based on claim text and citation lengths.
+By wrapping the card markup in an SVG `<foreignObject>`, `html-to-image` delegates rendering directly to the browser's native engine, rendering OKLCH colors with full chromatic fidelity. The export routine outputs a 1080#text[ ]px wide PNG card (a 540 CSS-pixel element captured at a 2#sym.times pixel ratio), with vertical dimensions scaling dynamically based on claim text and citation lengths.
 
 == Consensus Models
 
@@ -144,14 +144,7 @@ Beyond frontend and database libraries, the consensus model governs how communit
 
 === FactStamp Implementation: Weighted Quorum Consensus
 
-FactStamp implements a weighted quorum model requiring a minimum of three verifications before computing a consensus verdict. The confidence calculation in `src/lib/confidenceScore.ts` applies the following formula:
-
-// Broken across three aligned lines: as a single line this equation was
-// ~19.4 cm wide against a 14.65 cm text block, so it overran BOTH page
-// margins and collided with the black page border on the right.
-$ "Confidence" = & (0.40 times "AgreementRatio") \
-  + thin & (0.30 times "AvgVerifierReputation") \
-  + thin & (0.30 times "SourceQualityScore") $
+FactStamp implements a weighted quorum model requiring a minimum of three verifications before computing a consensus verdict. The confidence calculation is implemented in `src/lib/confidenceScore.ts`.
 
 Enforcing a minimum of three verifications establishes a baseline participation floor. Once quorum is satisfied, the engine derives confidence across three weighted factors:
 
@@ -163,9 +156,7 @@ Unlike BFT protocols designed for anonymous nodes, FactStamp tracks participant 
 
 === Supporting Mechanisms: Duplicate Pre-Filtering and Consensus Expiry
 
-To avoid redundant verification workloads, `findDuplicate()` in `src/lib/duplicateDetection.ts` checks incoming text against the existing claim corpus prior to submission. The routine tokenizes the input text and computes Jaccard similarity across tokens exceeding three characters:
-
-$ J(A, B) = (|S_A inter S_B|) / (|S_A union S_B|) $
+To avoid redundant verification workloads, `findDuplicate()` in `src/lib/duplicateDetection.ts` checks incoming text against the existing claim corpus prior to submission. The routine tokenizes the input text and computes Jaccard similarity across tokens exceeding three characters.
 
 If the computed similarity meets or exceeds 0.75 (the `threshold` setting in `findDuplicate()`), the system redirects the user to the existing claim rather than creating a duplicate entry. This pre-filtering prevents near-identical forwards from fragmenting community review effort.
 
@@ -189,7 +180,7 @@ Claims that fail to reach majority consensus within seven days transition automa
   "OCR", "Tesseract.js 7.0 (client WASM)", "Google Cloud Vision / AWS Textract / LLM vision", "Zero cost, zero data egress, offline-capable; trade-off mitigated by manual correction.",
   "Card Rasterization", "html-to-image (SVG foreignObject)", "Hand-written canvas parser / html2canvas", "Native OKLCH/OKLAB CSS Color 4 support via browser-native rendering.",
   "Consensus Model", "Weighted quorum (3-verifier, 40/30/30)", "Single-moderator / majority vote / BFT consensus", "Combines quorum-floor trust with evidence-quality and reputation weighting.",
-  "Duplicate Handling", [Jaccard token-similarity ($J >= 0.75$)], "No pre-filtering / exact-string matching", "Prevents redundant quorum queues for reworded duplicates.",
+  "Duplicate Handling", [Jaccard token-similarity (0.75 threshold)], "No pre-filtering / exact-string matching", "Prevents redundant quorum queues for reworded duplicates.",
   "Hosting", "Firebase Hosting / Vercel / Docker + Nginx", "AWS / bare-metal VPS", "Zero-ops static hosting matching the BaaS backend; Docker kept as an on-prem escape hatch."
 )
 

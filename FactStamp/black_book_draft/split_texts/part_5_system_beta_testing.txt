@@ -1,0 +1,22 @@
+5.3.3 System / Beta Testing
+System and beta testing meant walking through complete, realistic user journeys by hand on a running copy of the application, both locally with npm run dev against the emulators and separately on a deployed build. The walkthroughs are scripted and repeatable but executed manually: the repository has no Playwright or Cypress configuration, just as package.json has no test script.
+
+Public Submitter Journey:
+1. Sign up through SignUp.tsx with email and password, and confirm that a new users/{uid} Firestore profile is created with a base reputation of 50.
+2. Submit a claim through Submit.tsx as a screenshot upload, and confirm that client-side compression runs, Tesseract.js OCR puts readable text into the form, and cleanExtractedOcrText() removes WhatsApp timestamps and checkmarks from the extracted string.
+3. Confirm that the duplicate check runs against the existing claims before the new claim is queued. Submitting a known near-duplicate redirects to the existing claim’s page and creates nothing new.
+4. Confirm that the new claim appears in VerifyQueue.tsx for other users, and that the submitter gets a real-time in-app notification once three verifications resolve it.
+5. Open ClaimDetail.tsx after resolution, check that the verdict badge, confidence percentage, and source list render properly, and export the fact-check PNG via html-to-image (1080px wide, from a 540px card at pixelRatio: 2, with height growing to fit the claim text and source list). Confirm that the OKLCH theme colors rasterize correctly, which is exactly where the legacy canvas parser failed (see Section 5.4).
+
+Community Verifier Journey:
+1. Sign in as a seeded verifier, open the Verification Queue, and select a pending claim.
+2. Try to submit a verdict with a short, low-effort explanation (“fake”), and confirm that validateVerdictExplanation() rejects it for falling below the 50-character / 8-word minimum, with an error message that says what to fix.
+3. Submit a verdict with a real citation URL, and confirm that determineSourceQuality() derives the right source-quality tier from the domain and that the tier shows up in the eventual confidence score.
+4. Confirm that the verifier’s own reputation changes once the claim reaches consensus, according to whether their verdict matched the majority.
+
+Admin Console Walkthrough:
+1. Go directly to the unlisted /admin route and sign in through the AdminRoute.tsx login gate.
+2. Work through all five tabs: System Overview (KPI cards and Recharts charts), Verifier Directory (search and filter, edit reputation, toggle isAdmin), Claims Moderation (override a verdict, flag a claim for expedited review), Incident Queue (create and resolve a ModerationReport), and Audit & Tools. In the last tab, confirm that every mutating action from the earlier steps produced an AdminAuditLog entry, then run “force-run consensus expiry” and the JSON database export.
+3. Confirm that “Lock Console” clears the session flag and returns to the login gate on the next render.
+
+All of these walkthroughs were re-run by hand after each change described in 5.4, to check that the change had not broken an adjacent journey. Without an automated suite in CI, this is the project’s regression check.
