@@ -205,7 +205,7 @@ The control flow follows a claim from submission through duplicate evaluation an
   caption: [Claim Lifecycle Control Flow],
   kind: "diagram",
   supplement: "Diagram",
-)
+) <fig-lifecycle>
 
 === Data structures
 
@@ -242,7 +242,7 @@ FactStamp's components are custom-built, with no external UI component library. 
   caption: [Wireframe — Home Page],
   kind: "diagram",
   supplement: "Diagram",
-)
+) <fig-wireframe-home>
 
 *Submit (`/submit`, protected).* Users choose between 'Text Forward' and 'Screenshot (OCR)' modes. Screenshot mode compresses the image and runs Tesseract.js OCR inline with loading feedback, then fills an editable text area with the filtered output. Below that is the category grid of `CategoryBadge` cards with five options: 'Health & Medical', 'Political & Govt', 'Financial & Loans', 'Religious & Culture', and 'Other Topics'. The duplicate check runs when the text area loses focus. If it finds a match, an inline alert links to the existing claim and the submit button is disabled.
 
@@ -251,7 +251,7 @@ FactStamp's components are custom-built, with no external UI component library. 
   caption: [Wireframe — Submit Page],
   kind: "diagram",
   supplement: "Diagram",
-)
+) <fig-wireframe-submit>
 
 *VerifyQueue (`/verify`, protected).* A scrollable feed of `ClaimCard` components shows each claim's text excerpt, category badge, timestamp, and verification progress on a three-segment `ConsensusStepper`. Cards also carry a deadline countdown, a priority badge for admin-flagged claims, and an indicator when an image is attached. Admin-flagged claims sit at the top of the feed, which also has category filters and search.
 
@@ -260,7 +260,7 @@ FactStamp's components are custom-built, with no external UI component library. 
   caption: [Wireframe — Verify Queue],
   kind: "diagram",
   supplement: "Diagram",
-)
+) <fig-wireframe-verify-queue>
 
 *VerifyDetail (`/verify/:claimId`, protected).* The workbench shows the claim text or screenshot above a verification progress indicator. Review is blind: verifiers cannot see other verdicts before submitting their own, which guards against anchoring and bandwagon effects. The form has a `VerdictPill` selector (without the system-assigned `CONTESTED` option), a source URL input whose domain quality `SourceQualityDot` classifies as the user types, and an explanation field checked by `validateVerdictExplanation()`.
 
@@ -269,7 +269,7 @@ FactStamp's components are custom-built, with no external UI component library. 
   caption: [Wireframe — Verify Detail],
   kind: "diagram",
   supplement: "Diagram",
-)
+) <fig-wireframe-verify-detail>
 
 *ClaimDetail (`/claim/:claimId`, public).* This public page shows the claim text, any image evidence, the resolved verdict pill, the confidence score with a breakdown of its components, and the contributing verifications with citation links. An export button generates a 1080px-wide PNG fact-check card via `html-to-image` (a 540px layout rendered at `pixelRatio: 2`).
 
@@ -278,7 +278,7 @@ FactStamp's components are custom-built, with no external UI component library. 
   caption: [Wireframe — Claim Detail],
   kind: "diagram",
   supplement: "Diagram",
-)
+) <fig-wireframe-claim-detail>
 
 *Dashboard (`/dashboard`, public).* Recharts charts show category distribution and verdict proportions, alongside a 7-day rolling trend list and verifier leaderboards, all with custom tooltips.
 
@@ -287,7 +287,7 @@ FactStamp's components are custom-built, with no external UI component library. 
   caption: [Wireframe — Dashboard],
   kind: "diagram",
   supplement: "Diagram",
-)
+) <fig-wireframe-dashboard>
 
 *Profile (`/profile`, protected).* The profile page shows account details, the user's reputation score and tier (Novice, Trusted, Expert, or Elite), their submission and verification history, and profile preferences.
 
@@ -296,7 +296,7 @@ FactStamp's components are custom-built, with no external UI component library. 
   caption: [Wireframe — Profile],
   kind: "diagram",
   supplement: "Diagram",
-)
+) <fig-wireframe-profile>
 
 *Admin (`/admin`, admin-guarded).* The console is an unlisted route that does not appear in public navigation. `AdminRoute.tsx` requires admin authentication before showing its five tabs:
 - System Overview: platform KPI metrics, category bar charts, verdict distributions, and reputation tier distributions.
@@ -312,7 +312,7 @@ Every mutating admin operation goes through the shared `addAuditLog()` utility.
   caption: [Wireframe — Admin Console],
   kind: "diagram",
   supplement: "Diagram",
-)
+) <fig-wireframe-admin>
 
 == Security issues
 

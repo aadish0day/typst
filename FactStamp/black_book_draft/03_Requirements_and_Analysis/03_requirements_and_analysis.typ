@@ -317,15 +317,25 @@ Development proceeded in fixed *2-week sprints*, with each sprint incrementally 
 
 Total planned schedule: 8 sprints of 2 weeks each, approximately 4 months from initial scaffolding through documentation finalization and viva.
 
-=== PERT / Gantt Chart Content
+=== Gantt Chart Schedule
+
+The project schedule is structured into an eight-sprint sequence across a 16-week timeline (June 1, 2026 to late September 2026), tracking the incremental development and validation of FactStamp's eight core modules. As illustrated in the Gantt chart below, the timeline is partitioned across four delivery phases: Phase 1 (Foundation: Sprints 1--2, establishing project scaffolding, Firebase infrastructure, authentication, and multimodal ingestion), Phase 2 (Detection Core: Sprints 3--4, delivering Jaccard duplicate detection and the verifier queue), Phase 3 (Consensus and Delivery: Sprints 5--6, implementing the weighted consensus engine, fact-check card rasterization, and analytics), and Phase 4 (Security and Release: Sprints 7--8, covering security hardening, the staff admin console, deployment orchestration, and final handover).
 
 #align(center)[#image("attachments/gantt_chart.svg", width: 100%)]
 <fig-gantt>
 
-The Gantt chart for this section renders the 8-sprint schedule above as a horizontal timeline, each sprint's bar spanning its 2-week duration, with dependency arrows drawn per the Dependencies column above. A complementary PERT network diagram expresses the same sequence as a directed acyclic graph of milestone nodes and precedence edges. Because each module's data depends on the previous module's output, the critical path in this project is the full linear chain Sprint 1 through Sprint 8, with zero slack on any sprint; the critical path length equals the total project duration of 16 weeks.
+#pagebreak()
 
-#align(center)[#image("attachments/pert_chart.svg", width: 100%, height: 88%, fit: "contain")]
+=== PERT Chart and Critical Path Analysis
+
+The Program Evaluation and Review Technique (PERT) network diagram models the project's workflow as a directed acyclic graph (DAG) of milestone events and activity transitions. Milestone nodes represent the project's inception (START at Week 0, June 1) and terminal completion (END at Week 16, September 30), connected by rectangular activity nodes corresponding to Sprints 1 through 8. Each activity block specifies its scheduled duration (2 weeks), Earliest Start (ES), and Earliest Finish (EF).
+
+Precedence edges enforce strict data and architectural dependencies across modules. In FactStamp's architecture, downstream components depend directly on upstream data pipelines: Module 2 (Ingestion) requires authenticated session contexts from Module 1; Module 3 (Duplicate Detection) requires normalized claim tokens from Module 2; Module 4 (Queue) operates exclusively on deduplicated claims; and Module 5 (Consensus Engine) requires three independent verifications from Module 4 before resolving a verdict. Because development is executed by a solo developer, all sprint activities execute in a strict serial sequence without parallel branches. Consequently, every activity lies on the Critical Path ($"START" -> "S1" -> "S2" -> "S3" -> "S4" -> "S5" -> "S6" -> "S7" -> "S8" -> "END"$). Every sprint has zero total float ($"Slack" = 0$), meaning any schedule deviation in an individual sprint directly impacts the final delivery date. The total critical path length equals exactly 16 weeks (112 calendar days).
+
+#align(center)[#image("attachments/pert_chart.svg", width: 100%, height: 48%, fit: "contain")]
 <fig-pert>
+
+#pagebreak()
 
 === Sprint Velocity and Definition of Done
 
@@ -446,62 +456,42 @@ FactStamp's functionality is organized into 8 core modules, each responsible for
 Each conceptual diagram modeling FactStamp's structural, behavioral, architectural, and data flow properties appears below, accompanied by an explanation of what it models for the system.
 
 === Entity-Relationship (E-R) Diagram
-Models FactStamp's Firestore data domain as five conceptual entities: *USER* (uid, displayName, reputation, isAdmin), *CLAIM* (id, text, status, verdict, confidence, category, submittedBy), *VERIFICATION* (id, claimId, verifierId, verdict, sourceUrl, sourceQuality), *DUPLICATE_CLUSTER* (canonical claim grouping for near-duplicate submissions), and *CATEGORY_METRIC* (aggregated per-category rollups for the dashboard). USER submits many CLAIMs and casts many VERIFICATIONs; CLAIM receives many VERIFICATIONs (minimum 3 for quorum) and may group duplicates under a DUPLICATE_CLUSTER; CLAIM aggregates many-to-one into a CATEGORY_METRIC.
-
 #align(center)[#image("attachments/er_diagram.svg", width: 100%, height: 86%, fit: "contain")]
 <fig-er>
 
 === Class Diagram
-Models core domain classes independent of implementation detail: an abstract `BaseVerifier` class specialized by a concrete `CommunityVerifier` class (FactStamp has no separate verifier role); a `Claim` class composed of many `Verification` objects; and a `ConsensusEngine` class exposing the weighted-scoring method. Composition reflects that verifications cannot exist independent of their parent claim, matching Firestore's embedded-array denormalization decision.
-
 #align(center)[#image("attachments/class_diagram.svg", width: 100%, height: 88%, fit: "contain")]
 <fig-class>
 
 === Object Diagram
-Provides a concrete instance snapshot at a specific runtime moment, for example an object `verifier_042 : CommunityVerifier` with reputation 78, linked via a "verified" association to an object `claim_017 : Claim` with status "pending" and `verificationCount = 2`, illustrating one verifier's vote against one claim instance mid-quorum.
-
 #align(center)[#image("attachments/object_diagram.svg", width: 88%)]
 <fig-object>
 
 === Use Case Diagram
-Captures three actors: *Public Submitter*, *Community Verifier* (the same user class in a different capacity), and *System Engine* (automated duplicate-detection and consensus logic), against use cases including Submit Claim, Check Duplicate, View Confidence, Export Fact Card, Review Queue, Submit Verdict, and Compute Consensus.
-
 #align(center)[#image("attachments/use_case_diagram.svg", width: 100%, height: 88%, fit: "contain")]
 <fig-usecase>
 
 === Activity Diagram
-Traces the full claim lifecycle: a user submits text or a screenshot; if a screenshot, OCR extraction and cleanup runs; the duplicate-detection engine computes similarity against the existing corpus; a decision branch either redirects to an existing verified claim or creates a new pending claim; the new claim accumulates verifications one at a time; a second decision branch checks whether quorum has been reached or the 7-day deadline has expired; the consensus engine then computes the final verdict, after which the claim becomes eligible for card export.
-
 #align(center)[#image("attachments/activity_diagram.svg", width: 100%, height: 90%, fit: "contain")]
 <fig-activity>
 
 === State Diagram (State Machine)
-Models a Claim's lifecycle as a finite state machine over the two status values the implementation actually defines (`ClaimStatus = 'pending' | 'verified'` in `src/lib/types.ts`): initial state to `pending` on creation, then to `verified` carrying the majority verdict once the third verification arrives, or to `verified` carrying the verdict `CONTESTED` if the 7-day consensus deadline passes while fewer than three verifications exist. `verified` is the terminal state; `CONTESTED` is a verdict value, not a separate status. Verifications accumulating below quorum appear as a self-transition on `pending` rather than a distinct "under review" state.
-
 #align(center)[#image("attachments/state_diagram.svg", width: 85%)]
 <fig-state>
 
 === Sequence Diagram
-Traces the temporal message flow for a single verification-to-consensus event: Verifier to the Verify Detail UI, to the Claims context (submit verdict), to the Firebase service layer (persist verification), to Firestore security rules (server-side validation), back to the Claims context which, once quorum is reached, invokes the confidence-score calculator, persists the settled claim, and triggers a notification to the original submitter.
-
 #align(center)[#image("attachments/sequence_diagram.svg", width: 100%, height: 88%, fit: "contain")]
 <fig-sequence>
 
 === Package Diagram
-Groups the source tree into cohesive packages: `pages` (route-level views), `components` (with a nested `components/ui` primitive package), `contexts` (the five React Context providers), `lib` (pure utility/algorithm modules), and `services` (Firebase and OCR service wrappers), with dependency arrows showing `pages` depends on `contexts`, `contexts` depends on `services` and `lib`, and `services` depends on `lib`, never the reverse.
-
 #align(center)[#image("attachments/package_diagram.svg", width: 88%)]
 <fig-package>
 
 === Component Diagram
-Shows high-level runtime components: a `Frontend` component (the React SPA) communicating with `Firestore` and `FirebaseAuth` over HTTPS, plus a `WasmOCR` component (the in-browser Tesseract.js worker) invoked entirely in-process, because OCR runs client-side rather than through any cloud vision API.
-
 #align(center)[#image("attachments/component_diagram.svg", width: 100%, height: 86%, fit: "contain")]
 <fig-component>
 
 === Deployment Diagram
-Models the physical/logical nodes: a Client Device node hosting the Browser and the in-browser WasmOCR artifact; a hosting node (Firebase Hosting / Vercel Edge / self-hosted Docker + Nginx, shown as alternative deployment targets) serving the static Frontend artifact; and a Google Cloud node hosting the managed Firestore database and Firebase Auth service.
-
 #align(center)[#image("attachments/deployment_diagram.svg", width: 92%)]
 <fig-deployment>
 

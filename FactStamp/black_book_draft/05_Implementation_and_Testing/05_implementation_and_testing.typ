@@ -17,7 +17,7 @@ The architecture diagram below shows how the modules fit together. An incoming W
   caption: [Overall System Architecture],
   kind: "diagram",
   supplement: "Diagram",
-)
+) <fig-system-arch>
 
 === Incremental, agile delivery
 
