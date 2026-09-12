@@ -25,7 +25,7 @@
 // ==============================================================================
 // TABLE OF FIGURES
 //
-// NOTE: this CANNOT be auto-generated in this book. Rules/Typst_format.md:410
+// NOTE: this CANNOT be auto-generated in this book.
 // mandates "No #figure() wrapper (captions are baked into diagram images as per
 // college format)", and #outline(target: figure...) only finds #figure elements.
 // All 16 diagrams are embedded as bare #image() calls with their titles rendered

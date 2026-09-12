@@ -42,7 +42,7 @@ FactStamp sits between these two failure modes. It keeps the speed and reach of 
 #pagebreak(weak: true)
 == Requirement Specification
 
-This section specifies the software requirements for FactStamp following the IEEE Std 830-1998 structure recommended by `template/srs_template-ieee.md`: Introduction, Overall Description, External Interface Requirements, System Features (Functional Requirements), and Other Nonfunctional Requirements.
+This section specifies the software requirements for FactStamp following the IEEE Std 830-1998 structure: Introduction, Overall Description, External Interface Requirements, System Features (Functional Requirements), and Other Nonfunctional Requirements.
 
 === Introduction
 
@@ -296,7 +296,7 @@ Scrum's three formal roles were held as follows, given the project's single-deve
 - *Scrum Master*: the student developer, self-facilitating sprint cadence and backlog refinement.
 - *Developers*: the student developer (solo development), consulting the project guides (Mr. Wilson Rao, Ms. Bertilla Fernandes) at sprint-boundary reviews in place of a formal Sprint Review stakeholder audience.
 
-The project followed Scrum's core artifacts (Product Backlog, Sprint Backlog, Increment) and events (Sprint Planning, Daily Scrum, Sprint Review, Sprint Retrospective) at a scale appropriate to a single-developer capstone project, per `template/2020-Scrum-Guide-US.md`.
+The project followed Scrum's core artifacts (Product Backlog, Sprint Backlog, Increment) and events (Sprint Planning, Daily Scrum, Sprint Review, Sprint Retrospective) at a scale appropriate to a single-developer capstone project.
 
 === Sprint Cadence and Incremental Module Delivery
 

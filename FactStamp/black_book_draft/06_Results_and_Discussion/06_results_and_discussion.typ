@@ -3,8 +3,7 @@
 = Results and discussion
 
 // Screenshot Placeholder Helper: plain text, no #image() call on a
-// non-existent file. Real screenshots are captured separately per
-// Only_module/how_to.md and wired in later via responsive-image().
+// non-existent file. Real screenshots are captured separately and wired in later via responsive-image().
 #let screenshot(file, width: 92%) = align(center)[
   #image("attachments/" + file, width: width)
 ]

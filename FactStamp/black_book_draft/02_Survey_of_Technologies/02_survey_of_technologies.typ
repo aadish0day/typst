@@ -61,7 +61,7 @@ Framer Motion 12 manages complex JavaScript animations across the interface, inc
 
 === Tailwind CSS v4
 
-Tailwind CSS v4 integrates via `@tailwindcss/vite`, configuring styling rules directly in CSS without `tailwind.config.js` or separate PostCSS tooling. The styling layer defines OKLCH design tokens adhering to the specification in `DESIGN.md`: a cream background, saffron brand accents, and distinct chromatic assignments across the five verdict outcomes (True, False, Misleading, Unverifiable, and Contested). Each verdict badge pairs color with a dedicated Lucide icon, keeping status indicators legible for users with color vision deficiencies.
+Tailwind CSS v4 integrates via `@tailwindcss/vite`, configuring styling rules directly in CSS without `tailwind.config.js` or separate PostCSS tooling. The styling layer defines OKLCH design tokens: a cream background, saffron brand accents, and distinct chromatic assignments across the five verdict outcomes (True, False, Misleading, Unverifiable, and Contested). Each verdict badge pairs color with a dedicated Lucide icon, keeping status indicators legible for users with color vision deficiencies.
 
 === Perceptual Uniformity with OKLCH
 

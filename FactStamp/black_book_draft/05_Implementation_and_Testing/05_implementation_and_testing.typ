@@ -14,7 +14,7 @@ The architecture diagram below shows how the modules fit together. An incoming W
 
 === Incremental, agile delivery
 
-Development was iterative and incremental, following Agile rather than Waterfall, in line with the SDLC model comparison in Chapter 2 and the Scrum framework in `template/2020-Scrum-Guide-US.md` and `template/SCRUM_Model.md`. The work fell into four broad sprint-like phases, matching the milestone schedule in the Project Synopsis:
+Development was iterative and incremental, following Agile rather than Waterfall, in line with the SDLC model comparison in Chapter 2 and the Scrum framework. The work fell into four broad sprint-like phases, matching the milestone schedule in the Project Synopsis:
 
 + *Foundation #sym.amp ingestion pipeline:* React/Vite/Firebase scaffolding, Firebase Auth, the claim submission form, client-side image compression, OCR text extraction, and the Jaccard duplicate-detection algorithm.
 + *Quorum #sym.amp consensus engine:* the public Verification Queue, the 3-verifier voting workbench, the weighted consensus formula, verifier reputation scoring, and the Firestore security rules that enforce all of it on the server.
@@ -177,7 +177,7 @@ All of these walkthroughs were re-run by hand after each change described in 5.4
 
 == Modifications and improvements
 
-Several features were revised after their first delivery, either to fix a defect found during manual testing (5.3) or to replace a weaker first version. The changes below come from the project's `CHANGELOG.md` and the architectural notes in `INDEX.md`.
+Several features were revised after their first delivery, either to fix a defect found during manual testing (5.3) or to replace a weaker first version. The changes below come from the project's changelog and its architectural notes.
 
 *1. Verification queue auto-replenishment (bug fix)*
 
