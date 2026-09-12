@@ -1,6 +1,6 @@
 #import "../lib/helpers.typ": *
 
-= Requirements and Analysis
+= Requirement and Analysis
 
 == Problem Definition
 
@@ -40,7 +40,7 @@ FactStamp sits between these two failure modes. It keeps the speed and reach of 
 *Scope boundary:* FactStamp solves the *verification and re-sharing* problem, not intervention inside WhatsApp itself. It does not hook into WhatsApp's proprietary protocol, does not perform automated AI/LLM truth judgments in place of human verifiers, and does not claim to prevent a claim from being forwarded in the first place.
 
 #pagebreak(weak: true)
-== Requirements Specification
+== Requirement Specification
 
 This section specifies the software requirements for FactStamp following the IEEE Std 830-1998 structure recommended by `template/srs_template-ieee.md`: Introduction, Overall Description, External Interface Requirements, System Features (Functional Requirements), and Other Nonfunctional Requirements.
 
@@ -455,6 +455,21 @@ FactStamp's functionality is organized into 8 core modules, each responsible for
 
 Each conceptual diagram modeling FactStamp's structural, behavioral, architectural, and data flow properties appears below, accompanied by an explanation of what it models for the system.
 
+=== Event Table
+
+The Event Table captures the external, temporal, and state-driven triggers that initiate system actions across the claim lifecycle. The consensus-deadline sweep named in the final row is implemented as `expireOverdueClaims()` in `src/contexts/ClaimsContext.tsx`.
+
+#styled-table(
+  columns: (1.3fr, 1.2fr, 2fr, 1.5fr, 1.3fr),
+  headers: ("Trigger", "Source", "Action / Process", "Output", "Destination"),
+  "Claim submitted (text or screenshot)", "User (Submit page)", "Module 2 ingests input; if screenshot, runs OCR extraction and chrome cleanup; Module 3 computes Jaccard similarity", "New claim record (if unique) or a redirect reference (if duplicate)", "Firestore claims collection / user's browser",
+  "Duplicate match found (similarity 0.75 or higher)", "Duplicate Detection Engine (Module 3)", "Suppress new claim creation; resolve to existing canonical claim", "Redirect payload pointing to existing claim ID", "User's browser (Claim Detail page)",
+  "Verification submitted", "Community Verifier (Verify Detail page)", "Module 4 validates one-vote-per-user and anti-self-verification rules; persists verdict, source, rationale", "Updated Verification record appended to claim", "Firestore claims collection (embedded array)",
+  "Consensus reached (quorum met, majority settled)", "Weighted Consensus Engine (Module 5)", "Compute confidence score; determine final verdict; update reputations (+2 aligned, -1 dissenting)", "Settled verdict, confidence score, updated reputations", "Firestore claims and users collections; Notifications system",
+  "Consensus deadline expired (7 days, fewer than 3 verifications)", "Consensus-Deadline Sweep (Module 5, automated)", [Auto-settle the claim: move `status` from `pending` to `verified` and set the verdict to `CONTESTED`; skip reputation adjustment], [Claim status set to `verified`, verdict set to `CONTESTED`], "Firestore claims collection; Notifications system",
+)
+<fig-event-table>
+
 === Entity-Relationship (E-R) Diagram
 #align(center)[#image("attachments/er_diagram.svg", width: 100%, height: 86%, fit: "contain")]
 <fig-er>
@@ -475,13 +490,13 @@ Each conceptual diagram modeling FactStamp's structural, behavioral, architectur
 #align(center)[#image("attachments/activity_diagram.svg", width: 100%, height: 90%, fit: "contain")]
 <fig-activity>
 
-=== State Diagram (State Machine)
-#align(center)[#image("attachments/state_diagram.svg", width: 85%)]
-<fig-state>
-
 === Sequence Diagram
 #align(center)[#image("attachments/sequence_diagram.svg", width: 100%, height: 88%, fit: "contain")]
 <fig-sequence>
+
+=== State Diagram (State Machine)
+#align(center)[#image("attachments/state_diagram.svg", width: 85%)]
+<fig-state>
 
 === Package Diagram
 #align(center)[#image("attachments/package_diagram.svg", width: 88%)]
@@ -511,18 +526,3 @@ Each conceptual diagram modeling FactStamp's structural, behavioral, architectur
 
 #align(center)[#image("attachments/dfd_level_2.svg", width: 100%, height: 86%, fit: "contain")]
 <fig-dfd2>
-
-=== Event Table
-
-The Event Table captures the external, temporal, and state-driven triggers that initiate system actions across the claim lifecycle. The consensus-deadline sweep named in the final row is implemented as `expireOverdueClaims()` in `src/contexts/ClaimsContext.tsx`.
-
-#styled-table(
-  columns: (1.3fr, 1.2fr, 2fr, 1.5fr, 1.3fr),
-  headers: ("Trigger", "Source", "Action / Process", "Output", "Destination"),
-  "Claim submitted (text or screenshot)", "User (Submit page)", "Module 2 ingests input; if screenshot, runs OCR extraction and chrome cleanup; Module 3 computes Jaccard similarity", "New claim record (if unique) or a redirect reference (if duplicate)", "Firestore claims collection / user's browser",
-  "Duplicate match found (similarity 0.75 or higher)", "Duplicate Detection Engine (Module 3)", "Suppress new claim creation; resolve to existing canonical claim", "Redirect payload pointing to existing claim ID", "User's browser (Claim Detail page)",
-  "Verification submitted", "Community Verifier (Verify Detail page)", "Module 4 validates one-vote-per-user and anti-self-verification rules; persists verdict, source, rationale", "Updated Verification record appended to claim", "Firestore claims collection (embedded array)",
-  "Consensus reached (quorum met, majority settled)", "Weighted Consensus Engine (Module 5)", "Compute confidence score; determine final verdict; update reputations (+2 aligned, -1 dissenting)", "Settled verdict, confidence score, updated reputations", "Firestore claims and users collections; Notifications system",
-  "Consensus deadline expired (7 days, fewer than 3 verifications)", "Consensus-Deadline Sweep (Module 5, automated)", [Auto-settle the claim: move `status` from `pending` to `verified` and set the verdict to `CONTESTED`; skip reputation adjustment], [Claim status set to `verified`, verdict set to `CONTESTED`], "Firestore claims collection; Notifications system",
-)
-<fig-event-table>

@@ -12,12 +12,13 @@
 ]
 #v(6pt)
 
-// depth: 2 → chapters (1) and sections (1.1); subsections omitted to keep TOC compact
+// depth: 3, but level-3 headings are hidden by a show rule in master_draft.typ;
+// only the nine the syllabus lists (1.3.x, 4.2.x, 5.2.1, 5.3.x) opt back in.
 #text(size: 11pt)[
   #outline(
     title: none,
     indent: 1.5em,
-    depth: 2,
+    depth: 3,
   )
 ]
 

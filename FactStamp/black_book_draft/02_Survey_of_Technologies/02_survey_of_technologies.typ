@@ -4,7 +4,7 @@
 
 This chapter examines the architecture patterns, frameworks, libraries, and consensus models evaluated for FactStamp. Several core operational constraints govern technical selections across the stack. The system must operate strictly within the Firebase Spark free tier without dedicated server compute, execute Optical Character Recognition locally to eliminate API fees and prevent cloud data egress, and accurately render modern CSS color functions (`oklch()` and `oklab()`) during PNG card export. Every library version, interface contract, threshold, and formula cited in this chapter reflects the concrete FactStamp codebase.
 
-== Web Architectures
+#heading(level: 2, outlined: false)[Web Architectures]
 
 Application delivery architecture governs how the system manages client state and distributes compute workloads across hosting environments. FactStamp operates as a Single Page Application (SPA) built in React and backed by Firebase as a Backend-as-a-Service (BaaS), omitting any intermediate REST or GraphQL application server.
 
@@ -39,7 +39,7 @@ Static SPA compilation decouples client bundle distribution from database infras
 
 Since application state persists within Firestore rather than host filesystems, shifting between these hosting environments requires zero application code modification.
 
-== Frontend Frameworks
+#heading(level: 2, outlined: false)[Frontend Frameworks]
 
 === UI Framework: React 18.3.1
 
@@ -57,7 +57,7 @@ Vite 5.4 replaced legacy configurations such as Create React App and manual Webp
 
 Framer Motion 12 manages complex JavaScript animations across the interface, including staggered card reveals on the landing page (`src/pages/Home.tsx`, `staggerChildren`), spring-physics panels and progress indicators on the profile view (`src/pages/Profile.tsx`), and interaction states in `LoadingButton` (`src/components/ui/LoadingButton.tsx`). Lightweight transitions remain in pure CSS: the verdict press effect uses `@keyframes stamp-press` in `src/index.css` via `src/components/VerdictStamp.tsx`, while the theme toggle switch (`src/components/ui/ThemeToggle.tsx`) uses standard Tailwind transition utilities. Framer Motion is reserved for physics-based spring easing and sequenced DOM mounts that CSS keyframes cannot coordinate cleanly.
 
-== Styling and Design Tokens
+#heading(level: 2, outlined: false)[Styling and Design Tokens]
 
 === Tailwind CSS v4
 
@@ -71,7 +71,7 @@ FactStamp adopts the OKLCH color space (Lightness, Chroma, Hue in Oklab space) r
 
 Dynamic Tailwind class concatenation often generates conflicting utility assignments when multiple classes target identical CSS properties. To resolve specificity conflicts, the project combines `clsx` and `tailwind-merge` within a centralized `cn()` helper function in `src/lib/utils.ts`. The merge algorithm resolves class namespaces and retains the latest declared property, enabling clean conditional styling across components.
 
-== Cloud Databases
+#heading(level: 2, outlined: false)[Cloud Databases]
 
 === Firebase v12 as Backend Infrastructure
 
@@ -93,7 +93,7 @@ The `firestore.rules` configuration enforces database constraints directly on th
 
 Recharts 2.10 generates visual analytics from Firestore collections. Implementations include the lazy-loaded verdict distribution pie chart on the public dashboard (`src/pages/Dashboard.tsx`, `src/components/DashboardChart.tsx`) and category distribution bar charts in the Admin console (`src/pages/Admin.tsx`). The weekly trend analysis (`src/lib/weeklyReport.ts`) and verifier leaderboard consume the same underlying data formatted into ranked tables. Recharts was selected over D3 because its React component bindings accelerate chart construction while providing sufficient styling flexibility for standard visual metrics.
 
-== OCR Engines
+#heading(level: 2, outlined: false)[OCR Engines]
 
 === Evaluation of Approaches
 
@@ -115,7 +115,7 @@ FactStamp implements Tesseract.js 7.0 locally using WebAssembly (`src/services/o
 
 Client-side WebAssembly OCR delivers lower raw character accuracy than cloud neural models, particularly on low-resolution or compressed mobile screenshots. Two mechanisms counter this limitation. First, `cleanExtractedOcrText()` applies regular expressions to strip mobile UI artifacts such as battery meters and chat timestamps. Second, the user interface places extracted text into an editable input area, allowing submitters to review and correct misread characters manually before submitting.
 
-== Card Export Engines
+#heading(level: 2, outlined: false)[Card Export Engines]
 
 === Evaluation of Approaches
 
@@ -131,7 +131,7 @@ FactStamp uses `html-to-image` to generate shareable fact-check cards (`src/comp
 
 By wrapping the card markup in an SVG `<foreignObject>`, `html-to-image` delegates rendering directly to the browser's native engine, rendering OKLCH colors with full chromatic fidelity. The export routine outputs a 1080#text[ ]px wide PNG card (a 540 CSS-pixel element captured at a 2#sym.times pixel ratio), with vertical dimensions scaling dynamically based on claim text and citation lengths.
 
-== Consensus Models
+#heading(level: 2, outlined: false)[Consensus Models]
 
 === Survey of Consensus Paradigms
 
@@ -162,7 +162,7 @@ If the computed similarity meets or exceeds 0.75 (the `threshold` setting in `fi
 
 Claims that fail to reach majority consensus within seven days transition automatically to the `CONTESTED` state. In volunteer-driven verification workflows, some claims fail to attract three evaluations or reach decisive agreement. Enforcing an automatic deadline guarantees that every claim eventually settles into a final state rather than remaining permanently unresolved in the active queue.
 
-== Technology Selection Matrix
+#heading(level: 2, outlined: false)[Technology Selection Matrix]
 
 === Core Technology Comparison Summary
 

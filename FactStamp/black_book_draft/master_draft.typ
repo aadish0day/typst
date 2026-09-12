@@ -51,6 +51,11 @@
 #show heading.where(level: 3): set text(size: 13pt, weight: "bold")
 #show heading.where(level: 4): set text(size: 12pt, weight: "bold", style: "italic")
 
+// TOC depth control: level-3 headings are hidden from the Table of Contents
+// by default; the nine the syllabus requires (1.3.x, 4.2.x, 5.2.1, 5.3.x) opt
+// back in with an explicit #heading(level: 3, outlined: true)[...] in-chapter.
+#show heading.where(level: 3): set heading(outlined: false)
+
 // Mandatory: Every major section / Level 1 Heading starts on a new page
 #show heading.where(level: 1): it => {
   pagebreak(weak: true)

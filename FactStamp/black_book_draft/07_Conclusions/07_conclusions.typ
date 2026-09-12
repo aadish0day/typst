@@ -1,6 +1,6 @@
-= Conclusions
+= Conclusion
 
-== Fulfillment of project objectives
+== Conclusion
 
 FactStamp set out to close the gap described in Chapter 1: WhatsApp forwards spread misinformation faster than institutional fact-checkers or unstructured group chats can respond. The result is a working web application, and every claim in this report can be traced to a file in its source tree. The evaluation below maps the implementation against the eight objectives in Section 1.2:
 

@@ -26,11 +26,11 @@ The project addresses the following engineering and research objectives:
 
 == Purpose, Scope, and Applicability
 
-=== Purpose
+#heading(level: 3, outlined: true)[Purpose]
 
 FactStamp provides a community-driven verification platform designed specifically for WhatsApp forwards. It reduces the turnaround time between the appearance of an unsubstantiated forward and the availability of a sourced, shareable correction, without requiring dedicated editorial infrastructure.
 
-=== Scope
+#heading(level: 3, outlined: true)[Scope]
 
 *In scope:*
 - Submitting a claim as text or a WhatsApp screenshot using client-side OCR.
@@ -50,7 +50,7 @@ FactStamp provides a community-driven verification platform designed specificall
 - Multi-language OCR beyond the English model. Users can type Devanagari-script forwards manually.
 - Native mobile applications. The system is deployed as a responsive web application.
 
-=== Applicability
+#heading(level: 3, outlined: true)[Applicability]
 
 FactStamp is designed for communities and individuals who rely on WhatsApp as an everyday communications medium. In India, this spans diverse demographics and age groups:
 - Family and neighborhood WhatsApp groups where health remedies, communal rumors, and financial schemes circulate.
@@ -71,7 +71,7 @@ FactStamp is a functional, deployable web application. The codebase (`/home/aadi
 - A security module (`src/lib/security.ts`) covering XSS sanitization, anti-spam heuristics, magic-byte file validation, a 30-minute idle session timeout, and login rate limiting.
 - Production deployment configurations for Firebase Hosting, Vercel, and a self-hosted Docker + Nginx container, each configured with Content-Security-Policy, HSTS, and related HTTP security headers.
 
-== Organisation of Report
+== Organization of Report
 
 This report has seven chapters and follows the `JUSIT-DSCPR503` dissertation structure:
 

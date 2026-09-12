@@ -2,7 +2,7 @@
 
 = Implementation and testing
 
-== Implementation approaches
+== Implementation approach
 
 === Project summary
 
@@ -11,13 +11,6 @@ FactStamp is a single-page web application (SPA) built with React 18.3.1 on Vite
 Implementation went module by module. Each of the 8 core modules (Auth #sym.amp Reputation, Forward Submission/OCR, Duplicate Detection, Verification Queue, Weighted Consensus, Fact-Check Card Generator, Analytics Dashboard, and Security #sym.amp Notifications) was built, connected to its own React Context or `src/lib/*.ts` utility file, and exercised by hand against the Firebase Local Emulator Suite before the next module downstream was attached to it. Because of this order, the two algorithmically complex parts of the system, the Jaccard duplicate-detection engine and the weighted consensus formula, were written and checked by hand as pure functions with no Firebase dependency before they were connected to the stateful `ClaimsContext` that drives the live UI.
 
 The architecture diagram below shows how the modules fit together. An incoming WhatsApp forward passes through duplicate detection, the quorum queue, and the consensus engine, and the result feeds the exportable fact-check card and the public analytics dashboard. Cloud Firestore and its security rules sit underneath all of them as the one shared backend.
-
-#figure(
-  image("attachments/system_architecture.svg", width: 92%),
-  caption: [Overall System Architecture],
-  kind: "diagram",
-  supplement: "Diagram",
-) <fig-system-arch>
 
 === Incremental, agile delivery
 
@@ -56,7 +49,7 @@ With the backend taken care of, effort could go to the parts that are new in thi
 
 == Coding details and code efficiency
 
-=== Coding approach by module
+*Coding approach by module.*
 
 Each of the 8 core modules is a small cluster of focused files. Three conventions apply across all of them:
 
@@ -84,7 +77,7 @@ The function does not care where `verifierReputation` and `sourceQuality` come f
 - *Card Generator* (`FactCheckCard.tsx`) is a plain, deterministic React component laid out at a card width of 540px. On export, `html-to-image` rasterizes it in the browser at `pixelRatio: 2`, producing a 1080px-wide PNG with no server round-trip.
 - *Analytics Dashboard* (`Dashboard.tsx`, `weeklyReport.ts`) builds all of its charts from data already held in `ClaimsContext` and `UsersContext`, and issues no Firestore queries of its own.
 
-=== Code efficiency
+#heading(level: 3, outlined: true)[Code efficiency]
 
 *Vite manual chunk splitting*
 
@@ -108,7 +101,7 @@ Each Context opens exactly one Firestore real-time listener (`onSnapshot`) for i
 
 The FactStamp repository has no automated test runner. `package.json` defines only `dev`, `build`, `preview`, `typecheck`, `emulators` (with its `:persist` and `:export` variants), `seed:db`, `create:admin`, and `create:user`. There is no `test` script, and no `*.test.ts` or `*.spec.ts` file exists anywhere under `src/`. Quality assurance was therefore done by hand, with no Jest or Vitest suite running in CI. The one automated check is the `typecheck-and-build` job in `.github/workflows/ci.yml`, which runs `npm ci`, `npm run typecheck` (`tsc --noEmit`), and `npm run build` (`tsc -b && vite build`) on every push. It catches type errors and broken builds, but not logic or behavior regressions. Within that limit, manual testing was organized in three layers: unit checks of the two pure algorithmic modules, integration tests across the Firebase service boundary using the Local Emulator Suite, and end-to-end system and beta walkthroughs of real user journeys.
 
-=== Unit testing
+#heading(level: 3, outlined: true)[Unit testing]
 
 Since `duplicateDetection.ts` and `confidenceScore.ts` are pure TypeScript functions with no dependencies, they were checked by calling them directly with hand-built inputs and comparing each result with a value worked out by hand. This is the same check an automated `it(...)` block would make, run manually because there is no test runner.
 
@@ -143,7 +136,7 @@ Case 3 tests the threshold's precision/recall trade-off. The two claims share a 
 
 Worked by hand, Case 1 comes out at 88, which is exactly what `Math.round()` returns. Case 3 exercises the function's explicit early return (`if (verifications.length === 0) return { score: 0, ... }`), which prevents a division by zero. The guard was added because a claim can in theory be read mid-write with no verifications attached yet, and in that moment the UI has to show `0%`, not `NaN`.
 
-=== Integration testing
+#heading(level: 3, outlined: true)[Integration testing]
 
 Integration tests cover the boundary between the modules and Firebase itself, which unit checks of `duplicateDetection.ts` and `confidenceScore.ts` cannot reach. All of them ran against the Firebase Local Emulator Suite (`npm run emulators`, or `npm run emulators:persist` to keep state between runs), with Auth on port `9099`, Firestore on `8080`, Storage on `9199`, and the inspection UI on `4000`. This let Auth, Firestore, and Storage rules be tested together without touching the production project or using up quota.
 
@@ -155,7 +148,7 @@ The main scenarios run by hand against the emulator were:
 + *Self-verification lock.* The user who submitted a claim tried to verify that same claim. The anti-Sybil self-verification check in the verification workbench blocked the submission on the client before anything reached Firestore.
 + *Admin dual-layer authorization.* On a non-admin seeded account signed in through the emulator, the documented DevTools bypass `sessionStorage.setItem('fs_admin_session_unlocked', 'true')` was tried. On the next render, `AdminRoute.tsx` re-derived `hasVerifiedAdminRole` from the live Firestore-backed `user.isAdmin` snapshot, discarded the stale session flag, and sent the user back to the login gate.
 
-=== System/beta testing
+#heading(level: 3, outlined: true)[System testing]
 
 System and beta testing meant walking through complete, realistic user journeys by hand on a running copy of the application, both locally with `npm run dev` against the emulators and separately on a deployed build. The walkthroughs are scripted and repeatable but executed manually: the repository has no Playwright or Cypress configuration, just as `package.json` has no `test` script.
 
@@ -223,43 +216,4 @@ The first card exporter used a hand-written canvas-based CSS parser to rasterize
   "Universal theme toggle", "UX consistency improvement", "Inconsistent, bespoke theme controls across pages", [`ThemeContext.tsx`, `ThemeToggle.tsx`, `Navbar.tsx`, `Footer.tsx`, `AuthLayout.tsx`, `Admin.tsx`],
   "Pan-Indic font-stack migration", "Improvement (accessibility + payload)", "No Devanagari support; oversized/misapplied font stack", [`index.html`, `index.css`, `Submit.tsx`],
   [`html-to-image` adoption], "Bug fix / architectural improvement", "Legacy canvas parser could not render OKLCH card colors", [`FactCheckCard.tsx`, `ClaimDetail.tsx`],
-)
-
-== Test cases execution matrix
-
-This table is the executed counterpart to the test case design in Chapter 4.6. Each row was run by hand, following the approach in 5.3, on a running instance of FactStamp against the Firebase Local Emulator Suite, and the Actual Result and Pass columns record what happened on that run. One row is marked as a historical failure: the verification-queue auto-replenishment defect documented and fixed in 5.4. Every other scenario passed on the build that was current when this dissertation was written.
-
-// Every cell carrying markup is a content block [...], not a string. Columns
-// rebalanced (wider ID/Pass so "TC-01" and "Fail -> Fixed" stop spilling into
-// their padding; wider Expected Result for the raw tokens it must hold).
-// Identifiers wider than their column were deliberately shortened rather than
-// left to overprint: `fs_admin_session_unlocked` (25 chars, ~5.3cm),
-// `typecheck-and-build`, `consensusDeadline`, `verifierReputation` and
-// `applyLocalExpiry()` are all described in words here; each is named in full
-// in the prose of 5.3/5.4 and in Chapter 4's schema tables.
-#styled-table(
-  columns: (0.55in, 1.12fr, 1.13fr, 1.28fr, 1.12fr, 0.6in),
-  headers: ("ID", "Test Condition", "Input", "Expected Result", "Actual Result", "Pass"),
-  "TC-01", "New user registration", [Valid email + password via `SignUp.tsx`], "Auth account created; Firestore profile created with base reputation 50", "Account and profile created as expected; auto-signed-in", "Pass",
-  "TC-02", "Duplicate email registration", "Email already registered", "Registration rejected with clear error", "Rejected with expected error, no duplicate profile", "Pass",
-  "TC-03", "Login lockout after repeated failures", "5 consecutive wrong-password attempts, then a 6th", "Locked 15 min after 5th attempt; 6th blocked before hitting Firebase Auth", "Locked exactly at attempt 5; countdown shown; 6th blocked client-side", "Pass",
-  "TC-04", "Text claim submission", [Plain-text WhatsApp forward pasted into `Submit.tsx`], [Claim created (`status` = `pending`), added to Verification Queue], "Claim created and visible in queue within one write", "Pass",
-  "TC-05", "Screenshot claim + OCR", "WhatsApp forward screenshot (JPEG) uploaded", "Image compressed; text extracted via Tesseract.js; WhatsApp chrome stripped", "Text extracted and chrome removed; shown for confirmation", "Pass",
-  "TC-06", [Duplicate detection: identical claim], "Text identical to existing resolved claim", [`J = 1.00` 0.75 or higher; redirected to existing claim], "Redirected correctly; no new claim created", "Pass",
-  "TC-07", [Duplicate detection: near-paraphrase], [Text differing by one word (5.3.1 Case 2, `J = 0.80`)], "Flagged duplicate; redirected", "Redirected correctly", "Pass",
-  "TC-08", [Duplicate detection: related but distinct], [Topically similar, below threshold (5.3.1 Case 3, `J = 0.56`)], [*Not* flagged; new claim created independently], "New claim correctly created, not merged", "Pass",
-  "TC-09", [Verifier explanation: too short], ["fake", a 4-character explanation], "Rejected client-side before any Firestore write", "Rejected with expected error message", "Pass",
-  "TC-10", [Verifier explanation: valid], "50+ char explanation with real citation URL", "Accepted; appended to embedded array; count +1 exactly", "Accepted and appended correctly", "Pass",
-  "TC-11", "Self-verification block", "User verifies a claim they submitted themselves", "Blocked client-side with anti-Sybil warning", "Blocked as expected before reaching Firestore", "Pass",
-  "TC-12", "3-verifier quorum consensus", "Three distinct verifiers submit a verdict each", [On 3rd verification: `status` #sym.arrow.r `verified`; score matches hand-computed value], "Transition occurred on 3rd verification; score matched exactly", "Pass",
-  "TC-13", [Consensus expiry to `CONTESTED`], [Claim's 7-day consensus deadline passes with below 3 verifications], [Claim auto-settles with verdict `CONTESTED` via the local expiry sweep], [Claim correctly settled as `CONTESTED` at deadline], "Pass",
-  "TC-14", "Verification Queue empties after mass expiry", "All pending seed claims expire simultaneously", "Queue should replenish automatically, never empty", [Pre-fix: queue showed 0 claims (root-caused to 5.4 Mod. 1) #sym.arrow.r Fixed: auto-replenishes with dynamic-deadline seeds], [Fail #sym.arrow.r Fixed],
-  "TC-15", "Fact-check PNG card export", [Export a resolved claim's fact-check card], [PNG at 1080px width (540px card @ `pixelRatio: 2`), height scaling to card content; OKLCH theme colors render correctly, no black regions], "Exported at 1080px width with correct colors; height varied with claim/source length as expected", "Pass",
-  "TC-16", "Firestore rule rejects forged reputation write", "Direct write with an inflated verifier reputation value (bypassing the UI)", "Write rejected by the Firestore security rules", "Write rejected with permission-denied error", "Pass",
-  "TC-17", "Admin session-flag bypass attempt", "Manually set the admin unlock flag in browser session storage on a non-admin account", "Bounced back to admin login gate; role re-derived from live snapshot", "Bounced back correctly; stale flag discarded", "Pass",
-  "TC-18", "Admin audit log completeness", "Claim-verdict override in Claims Moderation tab", [Corresponding `AdminAuditLog` entry written], [Audit entry created and visible in Audit #sym.amp Tools tab], "Pass",
-  "TC-19", "File-upload validation (disguised file)", [`.exe` renamed to `.jpg`, uploaded as screenshot], "Rejected by extension + MIME + magic-byte signature check", "Rejected at magic-byte check despite renamed extension", "Pass",
-  "TC-20", "Idle session timeout", "Authenticated session left inactive 30+ minutes", "Session auto-expires, requires re-authentication", "Session expired at the configured 30-minute threshold", "Pass",
-  "TC-21", "Analytics dashboard rendering", [Navigate to `/dashboard` after several claims resolved], "Charts render from existing Context data, no extra Firestore reads", "Rendered correctly; no extra reads observed in emulator log", "Pass",
-  "TC-22", "CI typecheck-and-build gate", "Push a commit to the repository", [CI job runs `tsc --noEmit` and `vite build` successfully], "Job completed successfully on the current codebase", "Pass",
 )

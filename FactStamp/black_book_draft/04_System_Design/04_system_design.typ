@@ -58,122 +58,142 @@ The module also handles consensus timeouts. When a `pending` claim passes its 7-
   [Every write to `users`, `claims`, `notifications`, `reports`, `audit_logs`], "1, 2, 4, 5", "8", [Server-side field-level validation independent of client checks],
 )
 
+*Claim lifecycle control flow.*
+
+The control flow follows a claim from submission through duplicate evaluation and peer verification to final consensus, in nine stages: (1) the user submits claim text or an image screenshot; (2) an image goes through canvas compression, OCR extraction, WhatsApp header stripping, and user review before joining the text path; (3) the text is normalized and tokenized; (4) its tokens are compared against existing claims using the Jaccard index; (5) if a best similarity of 0.75 or higher, the submission is rejected with a link to the matching claim, and a lower score creates a new `pending` claim with a 7-day `consensusDeadline`; (6) the claim enters the verification queue, where independent verifiers each supply a verdict, a source URL, and a written explanation; (7) when `verifications.length` reaches 3, the consensus engine calculates the final score and marks the claim `verified`, while claims with fewer verifications stay `pending`; (8) an automated sweep settles any under-quorum claim past its 7-day deadline with the verdict `CONTESTED`; and (9) a verified claim triggers a submitter notification, becomes available for card generation, and updates the dashboard metrics.
+
+#figure(
+  image("attachments/claim_lifecycle_flow.svg", width: 100%, height: 88%, fit: "contain"),
+  caption: [Claim Lifecycle Control Flow],
+  kind: "diagram",
+  supplement: "Diagram",
+) <fig-lifecycle>
+
 == Data design
 
 FactStamp stores application state in Cloud Firestore, a NoSQL document database, across five root collections: `users`, `claims`, `notifications`, `reports`, and `audit_logs`. The type interfaces are declared in `src/lib/types.ts`, and `firestore.rules` checks the write constraints on every write.
 
-=== Schema design
+#heading(level: 3, outlined: true)[Schema design]
 <fig-schema>
+
+The document and relational schemas for all collections and embedded sub-schemas are detailed in Tables 4.2.1(a) through 4.2.1(f) (*PK = Primary Key*).
 
 #align(center)[*Table 4.2.1(a): `users` Collection*]
 #styled-table(
-  columns: (1.75fr, 0.7fr, 1.55fr, 1.3fr),
-  headers: ("Field", "Type", "Description", "Notes"),
-  [`uid`], "string", "Firebase Auth user ID (document ID)", "Immutable after creation",
-  [`displayName`], "string", "Verifier's display name", "Max 100 characters",
-  [`email`], "string", "Account email address", [Must match the Auth token email; immutable],
-  [`avatarUrl`], "string?", "Profile picture URL", "Optional",
-  [`reputation`], "number", "Verifier reputation score, 0 to 100", "Defaults to 50 at signup; admin-writable only thereafter",
-  [`totalVerifications`], "number", "Lifetime verifications submitted", "Defaults to 0; admin-writable only",
-  [`joinedAt`], "string (ISO 8601)", "Account creation timestamp", "Immutable",
-  [`isAdmin`], "boolean?", "Staff clearance flag", "Defaults to false; only an existing admin can flip it",
+  columns: (1.5fr, 1.1fr, 2.15fr, 0.45fr),
+  headers: ("Field", "Type", "Description", "PK"),
+  [`uid`], "string", "Firebase Auth user ID (document ID)", [*Yes*],
+  [`displayName`], "string", "Verifier's display name (max 100 characters)", "No",
+  [`email`], "string", "Registered account email address (immutable)", "No",
+  [`avatarUrl`], "string?", "Optional profile picture URL", "No",
+  [`reputation`], "number", "Verifier reputation score (0 to 100, default 50)", "No",
+  [`totalVerifications`], "number", "Lifetime verifications submitted (default 0)", "No",
+  [`joinedAt`], "string (ISO 8601)", "Account creation timestamp (immutable)", "No",
+  [`isAdmin`], "boolean?", "Staff clearance / administrator flag", "No",
 )
 
 #v(4pt)
 #align(center)[*Table 4.2.1(b): `claims` Collection*]
 #styled-table(
-  columns: (1.75fr, 0.7fr, 1.55fr, 1.3fr),
-  headers: ("Field", "Type", "Description", "Notes"),
-  [`id`], "string", "Claim document ID", "Firestore auto-ID",
-  [`text`], "string", "Normalized claim text", "10 to 2000 characters, server-enforced",
-  [`category`], "enum", [`health` \| `political` \| `religious` \| `financial` \| `other`], "Fixed whitelist",
-  [`status`], "enum", [`pending` \| `verified`], [`verified` covers quorum and CONTESTED outcomes],
-  [`createdAt`], "string (ISO)", "Submission timestamp", "Immutable",
-  [`verifiedAt`], "string?", "Final-verdict timestamp", "Set once, on resolution",
-  [`consensusDeadline`], "string (ISO)", [`createdAt` + 7 days], "Immutable; drives expiry sweep",
-  [`submittedBy`], "string", [Submitter `uid`], "Immutable",
-  [`submittedByName`], "string", "Display-name snapshot", "Max 100 chars; immutable",
-  [`imageUrl`], "string?", "Base64 data URI or HTTPS URL", [At most 800,000 chars (~800 KB); pattern-matched],
-  [`verdict`], "enum?", [TRUE \| FALSE \| MISLEADING \| UNVERIFIABLE \| CONTESTED], "Set only once resolved",
-  [`confidenceScore`], "number?", "Final weighted confidence, 0 to 100", "Computed by Module 5",
-  [`verifications`], [array of Verification], "Embedded verification records", "Starts as empty array",
-  [`verificationCount`], "number", [`verifications.length`, denormalized], "Must be 0 at creation; increments by exactly 1 per write",
-  [`agreementRatio`], "number?", "Agreement-ratio component", "Denormalized",
-  [`avgVerifierReputation`], "number?", "Avg. reputation component", "Denormalized",
-  [`sourceQualityScore`], "number?", "Avg. source-quality component", "Denormalized",
-  [`adminFlagged`], "boolean?", "Expedited-review flag", "Admin-writable only",
-  [`adminFlaggedAt`], "string?", "Flag timestamp", "Admin-writable only",
+  columns: (1.5fr, 1.1fr, 2.15fr, 0.45fr),
+  headers: ("Field", "Type", "Description", "PK"),
+  [`id`], "string", "Claim document ID (Firestore auto-ID)", [*Yes*],
+  [`text`], "string", "Normalized claim text (10 to 2000 characters)", "No",
+  [`category`], "enum", [`health` \| `political` \| `religious` \| `financial` \| `other`], "No",
+  [`status`], "enum", [`pending` \| `verified` (settled or contested)], "No",
+  [`createdAt`], "string (ISO 8601)", "Submission timestamp (immutable)", "No",
+  [`verifiedAt`], "string?", "Final consensus resolution timestamp", "No",
+  [`consensusDeadline`], "string (ISO 8601)", "Seven-day auto-expiry deadline timestamp", "No",
+  [`consensusDeadlineMs`], "number?", "Deadline epoch millis for server rule evaluation", "No",
+  [`submittedBy`], "string", [Submitter user ID (`users.uid` FK, immutable)], "No",
+  [`submittedByName`], "string", "Submitter display-name snapshot (max 100 chars)", "No",
+  [`imageUrl`], "string?", "Base64 data URI screenshot or HTTPS URL", "No",
+  [`verdict`], "enum?", [TRUE \| FALSE \| MISLEADING \| UNVERIFIABLE \| CONTESTED], "No",
+  [`confidenceScore`], "number?", "Final weighted confidence score (0 to 100)", "No",
+  [`verifications`], [array of Verification], "Embedded verification records (starts empty)", "No",
+  [`verificationCount`], "number", "Denormalized verification count (`verifications.length`)", "No",
+  [`agreementRatio`], "number?", "Agreement-ratio component score", "No",
+  [`avgVerifierReputation`], "number?", "Average verifier reputation component score", "No",
+  [`sourceQualityScore`], "number?", "Average source quality credibility component score", "No",
+  [`adminFlagged`], "boolean?", "Expedited-review priority flag", "No",
+  [`adminFlaggedAt`], "string?", "Timestamp when expedited review flag was set", "No",
 )
 
 #v(4pt)
 #align(center)[*Table 4.2.1(c): Embedded `Verification` Sub-schema (element of `claims.verifications[]`)*]
 #styled-table(
-  columns: (1.75fr, 0.7fr, 1.55fr, 1.3fr),
-  headers: ("Field", "Type", "Description", "Notes"),
-  [`id`], "string", "Verification identifier", "Client-generated",
-  [`claimId`], "string", "Parent claim ID", "Redundant convenience field",
-  [`verdict`], "enum", [TRUE \| FALSE \| MISLEADING \| UNVERIFIABLE], "CONTESTED is system-assigned only",
-  [`sourceUrl`], "string", "Cited source URL", [Max 500 chars; matches `^https?://.+`],
-  [`sourceQuality`], "enum", [`high` \| `medium` \| `low`], "Derived from domain whitelist",
-  [`explanation`], "string", "Verifier's written rationale", "50 to 1500 chars client-side; 50 to 3000 server-side",
-  [`verifierId`], "string", [Voting verifier's `uid`], [Must equal `request.auth.uid`],
-  [`verifierName`], "string", "Verifier display-name snapshot", "Max 100 characters",
-  [`verifierReputation`], "number", "Reputation at moment of voting", [Must equal the live reputation on `users/{uid}`],
-  [`createdAt`], "string (ISO)", "Verification timestamp", "Immutable",
+  columns: (1.5fr, 1.1fr, 2.15fr, 0.45fr),
+  headers: ("Field", "Type", "Description", "PK"),
+  [`id`], "string", "Verification unique identifier (client-generated UUID)", [*Yes*],
+  [`claimId`], "string", [Parent claim document identifier (`claims.id` FK)], "No",
+  [`verdict`], "enum", [TRUE \| FALSE \| MISLEADING \| UNVERIFIABLE], "No",
+  [`sourceUrl`], "string", "Cited evidence source URL (max 500 characters)", "No",
+  [`sourceQuality`], "enum", [`high` \| `medium` \| `low` (domain whitelist tier)], "No",
+  [`explanation`], "string", "Verifier's written rationale (50 to 1500 characters)", "No",
+  [`verifierId`], "string", [Voting verifier's user ID (`users.uid` FK)], "No",
+  [`verifierName`], "string", "Verifier display-name snapshot (max 100 characters)", "No",
+  [`verifierReputation`], "number", "Verifier reputation snapshot at moment of vote", "No",
+  [`createdAt`], "string (ISO 8601)", "Verification submission timestamp (immutable)", "No",
 )
 
 #v(4pt)
 #align(center)[*Table 4.2.1(d): `notifications` Collection*]
 #styled-table(
-  columns: (1.75fr, 0.7fr, 1.55fr, 1.3fr),
-  headers: ("Field", "Type", "Description", "Notes"),
-  [`id`], "string", "Notification document ID", "Firestore auto-ID",
-  [`userId`], "string", [Recipient's `uid`], "Immutable; scoped read access",
-  [`type`], "enum", [`claim_verified` \| `reputation_update` \| `weekly_report` \| `verdict_submitted`], "Immutable after creation",
-  [`title`], "string", "Short heading", "Max 200 characters",
-  [`message`], "string", "Notification body", "Max 2000 characters",
-  [`createdAt`], "string (ISO)", "Creation timestamp", "Immutable",
-  [`isRead`], "boolean", "Read/unread state", "Only field a recipient may self-update",
-  [`claimId`], "string?", "Related claim, if applicable", "Immutable",
+  columns: (1.5fr, 1.1fr, 2.15fr, 0.45fr),
+  headers: ("Field", "Type", "Description", "PK"),
+  [`id`], "string", "Notification document ID (Firestore auto-ID)", [*Yes*],
+  [`userId`], "string", [Recipient user ID (`users.uid` FK, scoped read)], "No",
+  [`type`], "enum", [`claim_verified` \| `reputation_update` \| `weekly_report` \| `verdict_submitted`], "No",
+  [`title`], "string", "Short notification title heading (max 200 characters)", "No",
+  [`message`], "string", "Notification body content (max 2000 characters)", "No",
+  [`createdAt`], "string (ISO 8601)", "Notification creation timestamp (immutable)", "No",
+  [`isRead`], "boolean", "Read/unread status flag (recipient self-mutable)", "No",
+  [`claimId`], "string?", [Associated claim ID if applicable (`claims.id` FK)], "No",
 )
 
 #v(4pt)
 #align(center)[*Table 4.2.1(e): `reports` Collection (Moderation Incident Tickets)*]
 #styled-table(
-  columns: (1.75fr, 0.7fr, 1.55fr, 1.3fr),
-  headers: ("Field", "Type", "Description", "Notes"),
-  [`id`], "string", "Report document ID", "Firestore auto-ID",
-  [`targetType`], "enum", [`claim` \| `user` \| `verification`], "Fixed whitelist",
-  [`targetId`], "string", "ID of the reported entity", "None",
-  [`targetTitle`], "string", "Human-readable target label", "Max 300 characters",
-  [`reason`], "enum", [`misinformation_spam` \| `harassment` \| `low_quality_source` \| `fake_account` \| `manipulation` \| `hate_speech` \| `other`], "Fixed whitelist",
-  [`details`], "string?", "Reporter's free-text description", "Optional in the TS interface; required by the create rule; max 3000 characters",
-  [`reportedBy`], "string", [Reporter's `uid`], [Must equal `request.auth.uid`],
-  [`reportedByName`], "string", "Reporter display-name snapshot", "None",
-  [`reportedAt`], "string (ISO)", "Submission timestamp", "None",
-  [`status`], "enum", [`pending` \| `investigating` \| `resolved` \| `dismissed`], [Must be `pending` at creation],
-  [`severity`], "enum", [`low` \| `medium` \| `high`], "Fixed whitelist",
-  [`actionTaken`], "string?", "Admin's resolution note", "Admin-writable only",
-  [`resolvedAt`], "string?", "Resolution timestamp", "Admin-writable only",
-  [`resolvedBy`], "string?", [Resolving admin's `uid`], "Admin-writable only",
+  columns: (1.5fr, 1.1fr, 2.15fr, 0.45fr),
+  headers: ("Field", "Type", "Description", "PK"),
+  [`id`], "string", "Report document ID (Firestore auto-ID)", [*Yes*],
+  [`targetType`], "enum", [`claim` \| `user` \| `verification` (fixed whitelist)], "No",
+  [`targetId`], "string", "Document ID of the reported entity", "No",
+  [`targetTitle`], "string", "Human-readable target label snapshot (max 300 chars)", "No",
+  [`reason`], "enum", [Violation reason: spam, harassment, fake account, etc.], "No",
+  [`details`], "string?", "Reporter's free-text explanation (max 3000 chars)", "No",
+  [`reportedBy`], "string", [Reporter user ID (`users.uid` FK)], "No",
+  [`reportedByName`], "string", "Reporter display-name snapshot", "No",
+  [`reportedAt`], "string (ISO 8601)", "Report submission timestamp", "No",
+  [`status`], "enum", [`pending` \| `investigating` \| `resolved` \| `dismissed`], "No",
+  [`severity`], "enum", [`low` \| `medium` \| `high` (fixed whitelist)], "No",
+  [`actionTaken`], "string?", "Administrator resolution note (admin-writable)", "No",
+  [`resolvedAt`], "string?", "Resolution timestamp (admin-writable)", "No",
+  [`resolvedBy`], "string?", [Resolving administrator user ID (`users.uid` FK)], "No",
 )
 
 #v(4pt)
 #align(center)[*Table 4.2.1(f): `audit_logs` Collection (Immutable)*]
 #styled-table(
-  columns: (1.75fr, 0.7fr, 1.55fr, 1.3fr),
-  headers: ("Field", "Type", "Description", "Notes"),
-  [`id`], "string", "Log entry ID", "Firestore auto-ID",
-  [`timestamp`], "string (ISO)", "When the admin action occurred", "None",
-  [`adminId`], "string", [Acting admin's `uid`], "None",
-  [`adminName`], "string", "Admin display-name snapshot", "None",
-  [`action`], "string", "Description of the action taken", "Max 200 characters",
-  [`targetType`], "enum", [`claim` \| `user` \| `report` \| `system`], "Fixed whitelist",
-  [`targetId`], "string", "ID of the entity acted upon", "None",
-  [`details`], "string", "Additional context", "Max 2000 characters",
+  columns: (1.5fr, 1.1fr, 2.15fr, 0.45fr),
+  headers: ("Field", "Type", "Description", "PK"),
+  [`id`], "string", "Audit log document ID (Firestore auto-ID)", [*Yes*],
+  [`timestamp`], "string (ISO 8601)", "Timestamp when administrative action occurred", "No",
+  [`adminId`], "string", [Acting administrator user ID (`users.uid` FK)], "No",
+  [`adminName`], "string", "Administrator display-name snapshot", "No",
+  [`action`], "string", "Description of action performed (max 200 characters)", "No",
+  [`targetType`], "enum", [`claim` \| `user` \| `report` \| `system`], "No",
+  [`targetId`], "string", "Document ID of the entity acted upon", "No",
+  [`details`], "string", "Additional structured payload context (max 2000 chars)", "No",
 )
 
-=== Data integrity and constraints
+*Core data structures.*
+
+The core data structures are declared once in `src/lib/types.ts`, and every module in Section 4.1 imports them from there instead of redeclaring them.
+
+The `Verdict` type includes `CONTESTED`, which only the Module 5 consensus-expiry logic assigns; `VerifyDetail.tsx` does not offer it to verifiers. `Claim.verifications` is typed as an embedded array to match the storage design in Section 4.2.2. Because TypeScript strict mode forces every reader of an optional (`?`) field to handle the unset case, the dashboard components have to deal explicitly with `pending` records that have no `confidenceScore` yet.
+
+#heading(level: 3, outlined: true)[Data integrity and constraints]
 
 `firestore.rules` evaluates every incoming write before it is persisted, and the database rejects malformed or unauthorized writes outright.
 
@@ -193,25 +213,6 @@ Only a caller who is already an admin can change the `isAdmin` flag on `users/{u
 *Image payload constraints.* Screenshots are stored as base64 data URIs in `claims/{claimId}.imageUrl`. Base64 inflates binary data by about 33%, so `firestore.rules` enforces `imageUrl.size() <= 800000` characters to keep the whole document, including the `verifications` array, under Firestore's 1 MiB limit. On the client, images are scaled to a maximum dimension of 1280 pixels, and JPEG quality steps down from 0.72 (to no lower than 0.4) until the payload is below 700,000 bytes. The repository also contains a `storage.rules` configuration for authenticated uploads under 10 MB, but the client uses only the embedded data URI path.
 
 *Server-side rule enforcement.* Client-side validation gives the user immediate feedback, but a direct call to the Firestore SDK skips the browser entirely. `firestore.rules` therefore holds the authoritative version of every constraint: enum membership, field length bounds, user ownership, quorum increment arithmetic, immutable fields, and administrator roles. The database applies these rules to every incoming operation regardless of what the client did.
-
-== Procedural design
-
-=== Logic diagrams
-
-The control flow follows a claim from submission through duplicate evaluation and peer verification to final consensus, in nine stages: (1) the user submits claim text or an image screenshot; (2) an image goes through canvas compression, OCR extraction, WhatsApp header stripping, and user review before joining the text path; (3) the text is normalized and tokenized; (4) its tokens are compared against existing claims using the Jaccard index; (5) if a best similarity of 0.75 or higher, the submission is rejected with a link to the matching claim, and a lower score creates a new `pending` claim with a 7-day `consensusDeadline`; (6) the claim enters the verification queue, where independent verifiers each supply a verdict, a source URL, and a written explanation; (7) when `verifications.length` reaches 3, the consensus engine calculates the final score and marks the claim `verified`, while claims with fewer verifications stay `pending`; (8) an automated sweep settles any under-quorum claim past its 7-day deadline with the verdict `CONTESTED`; and (9) a verified claim triggers a submitter notification, becomes available for card generation, and updates the dashboard metrics.
-
-#figure(
-  image("attachments/claim_lifecycle_flow.svg", width: 100%, height: 88%, fit: "contain"),
-  caption: [Claim Lifecycle Control Flow],
-  kind: "diagram",
-  supplement: "Diagram",
-) <fig-lifecycle>
-
-=== Data structures
-
-The core data structures are declared once in `src/lib/types.ts`, and every module in Section 4.1 imports them from there instead of redeclaring them.
-
-The `Verdict` type includes `CONTESTED`, which only the Module 5 consensus-expiry logic assigns; `VerifyDetail.tsx` does not offer it to verifiers. `Claim.verifications` is typed as an embedded array to match the storage design in Section 4.2.2. Because TypeScript strict mode forces every reader of an optional (`?`) field to handle the unset case, the dashboard components have to deal explicitly with `pending` records that have no `confidenceScore` yet.
 
 == User interface design
 
