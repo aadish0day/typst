@@ -129,7 +129,7 @@ Exporting styled DOM nodes into downloadable PNG cards can be accomplished throu
 
 FactStamp uses `html-to-image` to generate shareable fact-check cards (`src/components/FactCheckCard.tsx`). Intermediate canvas parsers like `html2canvas` fail on CSS Color Level 4 syntax, notably the `oklch()` and `oklab()` color functions used throughout Tailwind CSS v4. When applied to such elements, canvas re-parsers produce blank or corrupted backgrounds.
 
-By wrapping the card markup in an SVG `<foreignObject>`, `html-to-image` delegates rendering directly to the browser's native engine, rendering OKLCH colors with full chromatic fidelity. The export routine outputs a 1080#text[ ]px wide PNG card (a 540 CSS-pixel element captured at a 2#sym.times pixel ratio), with vertical dimensions scaling dynamically based on claim text and citation lengths.
+By wrapping the card markup in an SVG `<foreignObject>`, `html-to-image` delegates rendering directly to the browser's native engine, rendering OKLCH colors with full chromatic fidelity. The export routine outputs a 1080 px wide PNG card (a 540 CSS-pixel element captured at a pixel ratio of 2), with vertical dimensions scaling dynamically based on claim text and citation lengths.
 
 #heading(level: 2, outlined: false)[Consensus Models]
 

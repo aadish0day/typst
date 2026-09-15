@@ -183,3 +183,29 @@
 #text(size: 12pt)[
   Finally, I want to thank my friends and seniors who supported me and shared their ideas regarding the technology stack and system design. I also thank my family for their constant support.
 ]
+
+// ==============================================================================
+// PAGE 5: ABSTRACT
+// ==============================================================================
+#pagebreak()
+
+#v(0.4in)
+
+#align(center)[
+  #text(size: 16pt, weight: "bold")[ABSTRACT]
+  #v(6pt)
+]
+
+#v(0.4in)
+
+#{
+  set par(justify: true, leading: 0.85em)
+  [
+    *FactStamp* is a web-based platform designed to collect, verify, and counter misinformation circulating across WhatsApp forwards through community-driven consensus. With over 500 million active users in India, WhatsApp serves as a primary everyday communication channel; however, its private, end-to-end encrypted architecture enables unverified rumors, doctored media, and fraudulent schemes to proliferate unchecked by traditional web search crawlers or centralized fact-checking desks.
+
+    The platform introduces a decentralized, crowdsourced verification ecosystem. Users submit suspicious text forwards or screenshots directly through an unauthenticated intake interface. An in-browser Optical Character Recognition (OCR) pipeline using Tesseract.js WebAssembly extracts text from screenshots, while a token-level Jaccard similarity algorithm identifies previously evaluated claims to provide instant debunks and eliminate redundant queue backlog.
+
+    Unresolved claims enter a public Verification Queue where authenticated community verifiers examine primary evidence and submit categorized verdicts alongside source citations. A weighted consensus scoring engine computes a composite confidence score by evaluating the verifier agreement ratio (40%), verifier reputation ratings (30%), and primary source credibility tiers (30%). Upon consensus, FactStamp automatically generates a standardized, downloadable 1080#text[×]1080px digital counter-card containing the verdict stamp, confidence rating, and citation sources, enabling users to forward evidence-based corrections directly back into messaging threads.
+  ]
+}
+

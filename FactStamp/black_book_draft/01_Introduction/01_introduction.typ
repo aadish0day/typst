@@ -19,7 +19,7 @@ The project addresses the following engineering and research objectives:
 2. Prevent redundant verification effort by calculating Jaccard token-overlap similarity at a threshold of 0.75 against the existing claim corpus, resolving reworded duplicates to existing verdicts.
 3. Enforce a distributed quorum requirement rather than single-moderator authority, mandating at least three independent verifications before a verdict settles.
 4. Weight consensus confidence through verifiable evidence metrics, factoring in verifier agreement, verifier historical reputation, and cited source authority (`src/lib/confidenceScore.ts`).
-5. Provide a shareable counter-artifact in the visual medium of the forward, generating a 1080 px-wide PNG card (540 CSS px at 2#text[×] pixel ratio via `html-to-image`) with content-adaptive height for direct forwarding in chat threads.
+5. Provide a shareable counter-artifact in the visual medium of the forward, generating a 1080 px-wide PNG card (540 CSS px at a pixel ratio of 2 via `html-to-image`) with content-adaptive height for direct forwarding in chat threads.
 6. Minimize submission friction for non-technical users by extracting claim text from screenshots via client-side WebAssembly OCR (Tesseract.js) and stripping WhatsApp interface artifacts such as timestamps and message status indicators.
 7. Maintain verifier accountability through an incentive-aligned reputation mechanism that updates participant scores based on alignment with finalized consensus.
 8. Publish platform-wide misinformation trends through a public analytics dashboard displaying category distributions and weekly debunks.
@@ -67,7 +67,7 @@ FactStamp is a functional, deployable web application. The codebase (`/home/aadi
 - A client-side WebAssembly OCR pipeline (`src/services/ocrService.ts`, Tesseract.js) that normalizes WhatsApp interface noise and categorizes submissions through keyword heuristics.
 - A PNG fact-check card generator (`src/components/FactCheckCard.tsx`) using `html-to-image` with native support for OKLCH and OKLAB CSS color palettes.
 - An analytics dashboard (`src/pages/Dashboard.tsx`, `src/lib/weeklyReport.ts`) using Recharts to compute rolling 7-day category distributions and verifier leaderboards.
-- An Admin Command Center (`src/pages/Admin.tsx`, `/admin` route) with five operational tabs: System Overview, Verifier Directory, Claims Moderation, Incident Queue, and Audit #sym.amp Tools, secured by client route guards and server-side `firestore.rules` `isAdmin()` verification.
+- An Admin Command Center (`src/pages/Admin.tsx`, `/admin` route) with five operational tabs: System Overview, Verifier Directory, Claims Moderation, Incident Queue, and Audit and Tools, secured by client route guards and server-side `firestore.rules` `isAdmin()` verification.
 - A security module (`src/lib/security.ts`) covering XSS sanitization, anti-spam heuristics, magic-byte file validation, a 30-minute idle session timeout, and login rate limiting.
 - Production deployment configurations for Firebase Hosting, Vercel, and a self-hosted Docker + Nginx container, each configured with Content-Security-Policy, HSTS, and related HTTP security headers.
 

@@ -73,7 +73,7 @@
     #text(size: 13pt, style: "italic")[FactStamp: A Community-Powered WhatsApp Misinformation Fact-Checker]
     #v(10pt)
     #text(size: 10.5pt)[Course: Project Dissertation and Implementation (`JUSIT-DSCPR503`), BSc Information Technology, Semester V]\
-    #text(size: 10.5pt)[Student: Aadish Das #sym.dot.c Guides: Mr. Wilson Rao (HOD) #sym.amp Ms. Bertilla Fernandes]\
+    #text(size: 10.5pt)[Student: Aadish Das -- Guides: Mr. Wilson Rao (HOD) and Ms. Bertilla Fernandes]\
     #text(size: 10.5pt)[Jai Hind College (Empowered Autonomous), Mumbai, 2026-27]
   ]
   #v(20pt)

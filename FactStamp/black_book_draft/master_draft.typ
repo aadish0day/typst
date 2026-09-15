@@ -14,7 +14,7 @@
 // every per-chapter .typ file has had its own duplicate copy of this block removed.
 #set page(
   paper: "a4",
-  margin: (left: 1.5in, right: 1in, top: 1in, bottom: 1in), // Standard single-sided binding margin
+  margin: (left: 1in, right: 1in, top: 1in, bottom: 1in), // Symmetric margins (centered within border)
   number-align: center,
   // Mandatory Black Page Border for Black Books and Dissertations
   background: place(

@@ -8,7 +8,7 @@
 
 FactStamp is a single-page web application (SPA) built with React 18.3.1 on Vite 5.4, written in strict TypeScript 5.5, styled with Tailwind CSS v4, and backed entirely by Firebase v12 (Authentication, Cloud Firestore, Storage) as a Backend-as-a-Service. The stack has no custom Node or Express server. Every module (authentication, claim ingestion, duplicate detection, the verification queue, the consensus engine, the PNG card generator, and the analytics dashboard) is client-side TypeScript that reads and writes Firestore directly, and declarative `firestore.rules` control what each write may do. This design was chosen (Chapter 2, Survey of Technologies) so the whole system could run inside Firebase's free Spark tier without any dedicated DevOps work.
 
-Implementation went module by module. Each of the 8 core modules (Auth #sym.amp Reputation, Forward Submission/OCR, Duplicate Detection, Verification Queue, Weighted Consensus, Fact-Check Card Generator, Analytics Dashboard, and Security #sym.amp Notifications) was built, connected to its own React Context or `src/lib/*.ts` utility file, and exercised by hand against the Firebase Local Emulator Suite before the next module downstream was attached to it. Because of this order, the two algorithmically complex parts of the system, the Jaccard duplicate-detection engine and the weighted consensus formula, were written and checked by hand as pure functions with no Firebase dependency before they were connected to the stateful `ClaimsContext` that drives the live UI.
+Implementation went module by module. Each of the 8 core modules (Auth and Reputation, Forward Submission/OCR, Duplicate Detection, Verification Queue, Weighted Consensus, Fact-Check Card Generator, Analytics Dashboard, and Security and Notifications) was built, connected to its own React Context or `src/lib/*.ts` utility file, and exercised by hand against the Firebase Local Emulator Suite before the next module downstream was attached to it. Because of this order, the two algorithmically complex parts of the system, the Jaccard duplicate-detection engine and the weighted consensus formula, were written and checked by hand as pure functions with no Firebase dependency before they were connected to the stateful `ClaimsContext` that drives the live UI.
 
 The architecture diagram below shows how the modules fit together. An incoming WhatsApp forward passes through duplicate detection, the quorum queue, and the consensus engine, and the result feeds the exportable fact-check card and the public analytics dashboard. Cloud Firestore and its security rules sit underneath all of them as the one shared backend.
 
@@ -16,10 +16,10 @@ The architecture diagram below shows how the modules fit together. An incoming W
 
 Development was iterative and incremental, following Agile rather than Waterfall, in line with the SDLC model comparison in Chapter 2 and the Scrum framework. The work fell into four broad sprint-like phases, matching the milestone schedule in the Project Synopsis:
 
-+ *Foundation #sym.amp ingestion pipeline:* React/Vite/Firebase scaffolding, Firebase Auth, the claim submission form, client-side image compression, OCR text extraction, and the Jaccard duplicate-detection algorithm.
-+ *Quorum #sym.amp consensus engine:* the public Verification Queue, the 3-verifier voting workbench, the weighted consensus formula, verifier reputation scoring, and the Firestore security rules that enforce all of it on the server.
-+ *Card generator #sym.amp analytics:* the `html-to-image` export pipeline for 1080px-wide cards, the Recharts misinformation-trends dashboard, and real-time in-app notifications.
-+ *Security hardening #sym.amp documentation:* the OWASP-style client hardening in `src/lib/security.ts` (rate limiting, file-upload validation, anti-spam explanation checks), cross-browser verification, and this dissertation.
++ *Foundation and ingestion pipeline:* React/Vite/Firebase scaffolding, Firebase Auth, the claim submission form, client-side image compression, OCR text extraction, and the Jaccard duplicate-detection algorithm.
++ *Quorum and consensus engine:* the public Verification Queue, the 3-verifier voting workbench, the weighted consensus formula, verifier reputation scoring, and the Firestore security rules that enforce all of it on the server.
++ *Card generator and analytics:* the `html-to-image` export pipeline for 1080px-wide cards, the Recharts misinformation-trends dashboard, and real-time in-app notifications.
++ *Security hardening and documentation:* the OWASP-style client hardening in `src/lib/security.ts` (rate limiting, file-upload validation, anti-spam explanation checks), cross-browser verification, and this dissertation.
 
 Each phase ended with a working increment that could be demonstrated. A claim could already be submitted, deduplicated, and queued for verification before the confidence-score formula or the PNG card generator existed. Algorithmic tuning, such as adjusting the Jaccard stop-word length filter or the 40/30/30 confidence weighting, could then be done against a small but real, running codebase instead of a design document.
 
@@ -61,9 +61,74 @@ Each of the 8 core modules is a small cluster of focused files. Three convention
 
 The engine normalizes text (lowercase, strip punctuation, collapse whitespace), splits it into a set of words longer than 3 characters, which works as a lightweight stop-word filter, and computes the Jaccard index between the incoming claim and every existing claim.
 
+The engine normalizes text (lowercase, strip punctuation, collapse whitespace), splits it into a set of words longer than 3 characters, which works as a lightweight stop-word filter, and computes the Jaccard index between the incoming claim and every existing claim:
+
+// Short excerpt (24 lines) — kept on one page so the function body is never
+// torn mid-expression across a page boundary.
+#block(breakable: false)[
+```typescript
+function tokenize(text: string): Set<string> {
+  return new Set(
+    normalize(text)
+      .split(/\s+/)
+      .filter((word) => word.length > 3) // ignore short words
+  )
+}
+
+function jaccardSimilarity(a: string, b: string): number {
+  const setA = tokenize(a)
+  const setB = tokenize(b)
+
+  if (setA.size === 0 && setB.size === 0) return 1
+  if (setA.size === 0 || setB.size === 0) return 0
+
+  let intersection = 0
+  for (const word of setA) {
+    if (setB.has(word)) intersection++
+  }
+
+  const union = setA.size + setB.size - intersection
+  return intersection / union
+}
+```
+]
+
 `findDuplicate()` then scans the existing claims one by one, keeps the highest-scoring match at or above the `0.75` threshold, and returns `null` if nothing reaches it. A duplicate submission is only ever redirected to the existing claim and is never merged into it automatically, so the calling code in `ClaimsContext` decides what happens next.
 
 *Weighted Consensus Engine (`src/lib/confidenceScore.ts`)*
+
+Once a claim has verifications, `calculateConfidenceScore()` combines three separately computed components, each on a scale of 0 to 100, into the final confidence percentage:
+
+// Short excerpt (24 lines) — kept on one page. Previously this block split
+// across a page boundary, tearing the "// 3. Source quality score" section
+// away from the weighted calculation it feeds.
+#block(breakable: false)[
+```typescript
+// 1. Agreement ratio: How many verifications agree with the majority verdict
+const verdicts = verifications.map((v) => v.verdict);
+const majorityCount = Math.max(
+  ...Array.from(new Set(verdicts)).map(
+    (v) => verdicts.filter((x) => x === v).length,
+  ),
+);
+const agreementRatio = (majorityCount / verifications.length) * 100;
+
+// 2. Average reputation of all verifiers
+const avgReputation =
+  verifications.reduce((sum, v) => sum + v.verifierReputation, 0) /
+  verifications.length;
+
+// 3. Source quality score (average)
+const sourceQualityScore =
+  verifications.reduce((sum, v) => sum + v.sourceQuality, 0) /
+  verifications.length;
+
+// Weighted calculation
+const score = Math.round(
+  agreementRatio * 0.4 + avgReputation * 0.3 + sourceQualityScore * 0.3,
+);
+```
+]
 
 Once a claim has verifications, `calculateConfidenceScore()` combines three separately computed components, each on a scale of 0 to 100, into the final confidence percentage.
 
@@ -71,8 +136,8 @@ The function does not care where `verifierReputation` and `sourceQuality` come f
 
 *Other Modules*
 
-- *Auth #sym.amp Reputation* (`AuthContext.tsx`) wraps Firebase Auth's email/password and Google OAuth flows and copies the signed-in user's Firestore `users/{uid}` profile (including `reputation`, which starts at 50) into React state through a live listener.
-- *Ingestion #sym.amp OCR* (`Submit.tsx`, `ocrService.ts`, `imageCompression.ts`) runs client-side image compression, a Tesseract.js WebAssembly OCR pass, and a regex cleanup of WhatsApp chrome (`cleanExtractedOcrText()`) before the user sees the extracted text for confirmation.
+- *Auth and Reputation* (`AuthContext.tsx`) wraps Firebase Auth's email/password and Google OAuth flows and copies the signed-in user's Firestore `users/{uid}` profile (including `reputation`, which starts at 50) into React state through a live listener.
+- *Ingestion and OCR* (`Submit.tsx`, `ocrService.ts`, `imageCompression.ts`) runs client-side image compression, a Tesseract.js WebAssembly OCR pass, and a regex cleanup of WhatsApp chrome (`cleanExtractedOcrText()`) before the user sees the extracted text for confirmation.
 - *Verification Queue* (`VerifyQueue.tsx`, `VerifyDetail.tsx`) lists pending claims and passes every submitted verdict through `validateVerdictExplanation()` in `src/lib/security.ts` (at least 50 characters and 8 words) before it reaches `ClaimsContext`.
 - *Card Generator* (`FactCheckCard.tsx`) is a plain, deterministic React component laid out at a card width of 540px. On export, `html-to-image` rasterizes it in the browser at `pixelRatio: 2`, producing a 1080px-wide PNG with no server round-trip.
 - *Analytics Dashboard* (`Dashboard.tsx`, `weeklyReport.ts`) builds all of its charts from data already held in `ClaimsContext` and `UsersContext`, and issues no Firestore queries of its own.
@@ -81,7 +146,27 @@ The function does not care where `verifierReputation` and `sourceQuality` come f
 
 *Vite manual chunk splitting*
 
-`vite.config.ts` splits the production bundle into six named vendor chunks instead of leaving chunking to Vite's defaults.
+`vite.config.ts` splits the production bundle into six named vendor chunks instead of leaving chunking to Vite's defaults:
+
+#block(breakable: false)[
+```typescript
+build: {
+  chunkSizeWarningLimit: 1000,
+  rollupOptions: {
+    output: {
+      manualChunks: {
+        'vendor-react': ['react', 'react-dom', 'react-router-dom'],
+        'vendor-firebase': ['firebase/app', 'firebase/auth', 'firebase/firestore', 'firebase/storage'],
+        'vendor-ui': ['lucide-react', 'framer-motion'],
+        'vendor-charts': ['recharts'],
+        'vendor-html-to-image': ['html-to-image'],
+        'vendor-ocr': ['tesseract.js'],
+      },
+    },
+  },
+},
+```
+]
 
 Tesseract.js and the Firebase SDK are both large, and they change far less often than the application's own code. Without explicit splitting, any change to the application code would invalidate one large bundle containing everything. With `vendor-ocr` and `vendor-firebase` in their own chunks, a returning user's browser keeps serving them from cache across most deployments. Combined with route-level lazy loading, a user who never opens `/submit`, and so never needs OCR, can also skip downloading the Tesseract WASM chunk on first load.
 
@@ -108,29 +193,29 @@ Since `duplicateDetection.ts` and `confidenceScore.ts` are pure TypeScript funct
 *Duplicate Detection: `findDuplicate()` / Jaccard Similarity*
 
 // Cells written as content blocks [...], not strings "...": a string cell does
-// not parse markup, so `raw`, *bold*, --- and #sym.* would print literally.
-// Column 4 widened to 1.0in so the unbreakable `J = 0.00` raw token fits.
+// not parse markup, so `raw`, *bold* and --- would print literally.
+// Column 4 widened to 1.0in so the token counts and similarity value fit.
 #styled-table(
   columns: (0.5in, 1.2fr, 1.2fr, 1.0in, 1.25in),
-  headers: ("Case", "Claim A (incoming)", "Claim B (existing)", [Tokens |A|, |B|, |∩|, |∪|], "Expected Outcome"),
-  "1", ["Free COVID vaccine registration open nationwide today"], "(identical string)", [7, 7, 7, 7 #sym.arrow.r `J=1.00`], [Flagged duplicate (`J >= 0.75`); redirected to existing claim.],
-  "2", ["Drinking hot lemon water every morning cures dengue fever immediately"], ["...cures dengue fever instantly" (one word changed)], [9, 9, 8, 10 #sym.arrow.r `J=0.80`], [Flagged duplicate (`J >= 0.75`); redirected to existing claim.],
-  "3", ["Eating raw garlic cures corona virus infection completely"], ["Eating garlic cures corona virus disease naturally"], [7, 7, 5, 9 #sym.arrow.r `J=0.56`], [*Not* flagged (`J < 0.75`); queued as a new, independent claim.],
+  headers: ("Case", "Claim A (incoming)", "Claim B (existing)", [Tokens in A, in B, in both, in either], "Expected Outcome"),
+  "1", ["Free COVID vaccine registration open nationwide today"], "(identical string)", [7, 7, 7, 7; similarity 1.00], [Flagged duplicate (similarity 0.75 or higher); redirected to existing claim.],
+  "2", ["Drinking hot lemon water every morning cures dengue fever immediately"], ["...cures dengue fever instantly" (one word changed)], [9, 9, 8, 10; similarity 0.80], [Flagged duplicate (similarity 0.75 or higher); redirected to existing claim.],
+  "3", ["Eating raw garlic cures corona virus infection completely"], ["Eating garlic cures corona virus disease naturally"], [7, 7, 5, 9; similarity 0.56], [*Not* flagged (similarity below 0.75); queued as a new, independent claim.],
 )
 
-Case 3 tests the threshold's precision/recall trade-off. The two claims share a topic (garlic curing coronavirus) but differ enough in wording that treating them as one claim could fold two separate viral variants into a single verdict. Re-running `findDuplicate()` by hand confirmed that it redirects Cases 1 and 2 and creates a new claim for Case 3, as the `J >= 0.75` threshold in Chapter 4's algorithm design specifies.
+Case 3 tests the threshold's precision/recall trade-off. The two claims share a topic (garlic curing coronavirus) but differ enough in wording that treating them as one claim could fold two separate viral variants into a single verdict. Re-running `findDuplicate()` by hand confirmed that it redirects Cases 1 and 2 and creates a new claim for Case 3, as the 0.75-or-higher similarity threshold in Chapter 4's algorithm design specifies.
 
 *Weighted Consensus: `calculateConfidenceScore()`*
 
-// The Formula column previously held one 35-character raw token
-// (`(66.67×0.4)+(63.33×0.3)+(53.33×0.3)`, ~7.4cm) inside a ~3.4cm column, so it
-// overprinted the Expected column. Each term is now its own raw span, letting
-// the formula wrap at the "+" signs.
+// The weighting column previously held one 35-character unbreakable raw token
+// (the three weighted terms run together, ~7.4cm) inside a ~3.4cm column, so it
+// overprinted the Expected column. Each term is now plain wrapping text, so the
+// column breaks cleanly between the terms.
 #styled-table(
   columns: (0.5in, 1.35fr, 1fr, 1.15fr, 0.7in),
-  headers: ("Case", "Verifications (verdict, reputation, source quality)", "Expected Agreement / Avg Rep / Source Quality", "Formula", [Expected `score`]),
-  "1", [3#sym.times FALSE, reps 80/60/70, quality 100/100/70], "100.00 / 70.00 / 90.00", [`(100×0.4)` + `(70×0.3)` + `(90×0.3)`], [*88*],
-  "2", [FALSE/FALSE/TRUE, reps 50/50/90, quality 30/30/100], "66.67 / 63.33 / 53.33", [`(66.67×0.4)` + `(63.33×0.3)` + `(53.33×0.3)`], [*62*],
+  headers: ("Case", "Verifications (verdict, reputation, source quality)", "Expected Agreement / Avg Rep / Source Quality", "Weighted components", [Expected `score`]),
+  "1", [3 FALSE verdicts, reps 80/60/70, quality 100/100/70], "100.00 / 70.00 / 90.00", [100 weighted 0.4, 70 weighted 0.3, 90 weighted 0.3], [*88*],
+  "2", [FALSE/FALSE/TRUE, reps 50/50/90, quality 30/30/100], "66.67 / 63.33 / 53.33", [66.67 weighted 0.4, 63.33 weighted 0.3, 53.33 weighted 0.3], [*62*],
   "3", [`[]` (empty array, edge case)], "0 / 0 / 0", "Early-return guard, no division by zero", [*0*],
 )
 
@@ -144,7 +229,7 @@ The main scenarios run by hand against the emulator were:
 
 + *End-to-end quorum consensus.* After seeding the emulator (`npm run seed:db`), three different seeded verifier accounts signed in one after another and each submitted a verdict through `VerifyDetail.tsx` on the same pending claim. The test confirmed that (a) each verification was appended to the claim's embedded `verifications` array, and `firestore.rules` rejected any write that tried to increment `verificationCount` by anything other than exactly 1; (b) when the third verification arrived, `ClaimsContext` recomputed the verdict, called `calculateConfidenceScore()`, and moved the claim's `status` from `pending` to `verified` in the same Firestore write; and (c) the confidence score shown in `ClaimDetail.tsx` matched the value worked out by hand for the same three verdicts with the formula from 5.3.1.
 + *Firestore rules rejecting a forged write.* Using the Firestore emulator's REST endpoint to bypass the app's UI, a verification was written with a `verifierReputation` higher than the signed-in user's live profile value. `firestore.rules` rejected the write. The client-side consensus math in `ClaimsContext.tsx` cannot be trusted on its own; this server-side rule is where enforcement actually happens.
-+ *Storage and Auth for screenshot claims.* Submitting a claim with an attached screenshot while signed out was rejected by both `firestore.rules` (`match /claims/{claimId}` #sym.arrow.r `allow create: if request.auth != null`) and `storage.rules` (`match /claim_screenshots/{fileName}` #sym.arrow.r `allow write: if request.auth != null`). Claim submission is therefore an authenticated-only path, consistent with `/submit` being wrapped in `ProtectedRoute` in `src/App.tsx`. The same submission succeeded once signed in, with the file-type and size checks from `src/lib/security.ts` still enforced on the client.
++ *Storage and Auth for screenshot claims.* Submitting a claim with an attached screenshot while signed out was rejected by both `firestore.rules` (`match /claims/{claimId}`, where `allow create: if request.auth != null`) and `storage.rules` (`match /claim_screenshots/{fileName}`, where `allow write: if request.auth != null`). Claim submission is therefore an authenticated-only path, consistent with `/submit` being wrapped in `ProtectedRoute` in `src/App.tsx`. The same submission succeeded once signed in, with the file-type and size checks from `src/lib/security.ts` still enforced on the client.
 + *Self-verification lock.* The user who submitted a claim tried to verify that same claim. The anti-Sybil self-verification check in the verification workbench blocked the submission on the client before anything reached Firestore.
 + *Admin dual-layer authorization.* On a non-admin seeded account signed in through the emulator, the documented DevTools bypass `sessionStorage.setItem('fs_admin_session_unlocked', 'true')` was tried. On the next render, `AdminRoute.tsx` re-derived `hasVerifiedAdminRole` from the live Firestore-backed `user.isAdmin` snapshot, discarded the stale session flag, and sent the user back to the login gate.
 
@@ -170,7 +255,7 @@ System and beta testing meant walking through complete, realistic user journeys 
 *Admin console walkthrough:*
 
 + Go directly to the unlisted `/admin` route and sign in through the `AdminRoute.tsx` login gate.
-+ Work through all five tabs: System Overview (KPI cards and Recharts charts), Verifier Directory (search and filter, edit reputation, toggle `isAdmin`), Claims Moderation (override a verdict, flag a claim for expedited review), Incident Queue (create and resolve a `ModerationReport`), and Audit #sym.amp Tools. In the last tab, confirm that every mutating action from the earlier steps produced an `AdminAuditLog` entry, then run "force-run consensus expiry" and the JSON database export.
++ Work through all five tabs: System Overview (KPI cards and Recharts charts), Verifier Directory (search and filter, edit reputation, toggle `isAdmin`), Claims Moderation (override a verdict, flag a claim for expedited review), Incident Queue (create and resolve a `ModerationReport`), and Audit and Tools. In the last tab, confirm that every mutating action from the earlier steps produced an `AdminAuditLog` entry, then run "force-run consensus expiry" and the JSON database export.
 + Confirm that "Lock Console" clears the session flag and returns to the login gate on the next render.
 
 All of these walkthroughs were re-run by hand after each change described in 5.4, to check that the change had not broken an adjacent journey. Without an automated suite in CI, this is the project's regression check.
@@ -199,7 +284,7 @@ The original setup loaded three Google Font families (`DM Sans`, `JetBrains Mono
 
 *5. `html-to-image` replacing a legacy canvas parser*
 
-The first card exporter used a hand-written canvas-based CSS parser to rasterize `FactCheckCard.tsx` into a PNG. That parser understood only `rgb()` and hex colors, so once the design system moved to Tailwind v4's OKLCH/OKLAB colors it could not read the card's computed styles, and exports came out broken or completely black. The exporter was rewritten around `html-to-image`, which rasterizes DOM nodes through the browser's own SVG `<foreignObject>` rendering instead of a custom CSS interpreter. It resolves `oklch()` and `oklab()` exactly as the page does, which removes this whole class of color-parsing bug. Cards now export at 1080px wide from the 540px card at a 2#sym.times device pixel ratio, with height following the card's content and no layout distortion.
+The first card exporter used a hand-written canvas-based CSS parser to rasterize `FactCheckCard.tsx` into a PNG. That parser understood only `rgb()` and hex colors, so once the design system moved to Tailwind v4's OKLCH/OKLAB colors it could not read the card's computed styles, and exports came out broken or completely black. The exporter was rewritten around `html-to-image`, which rasterizes DOM nodes through the browser's own SVG `<foreignObject>` rendering instead of a custom CSS interpreter. It resolves `oklch()` and `oklab()` exactly as the page does, which removes this whole class of color-parsing bug. Cards now export at 1080px wide from the 540px card at a device pixel ratio of 2, with height following the card's content and no layout distortion.
 
 *Summary comparison*
 
@@ -212,7 +297,7 @@ The first card exporter used a hand-written canvas-based CSS parser to rasterize
   columns: (1.5fr, 1fr, 1.7fr, 1.8fr),
   headers: ("Modification", "Type", "Root Cause / Motivation", "Files Primarily Touched"),
   "Verification queue auto-replenishment", "Bug fix", "Consensus-expiry logic emptied the queue with nothing to backfill it", [`ClaimsContext.tsx`, `seed-db.mjs`, `firebaseService.ts`],
-  [Login rate limiting #sym.amp lockout], "Security hardening", "No brute-force protection on sign-in / admin login", [`security.ts`, `SignIn.tsx`, `AdminRoute.tsx`],
+  [Login rate limiting and lockout], "Security hardening", "No brute-force protection on sign-in / admin login", [`security.ts`, `SignIn.tsx`, `AdminRoute.tsx`],
   "Universal theme toggle", "UX consistency improvement", "Inconsistent, bespoke theme controls across pages", [`ThemeContext.tsx`, `ThemeToggle.tsx`, `Navbar.tsx`, `Footer.tsx`, `AuthLayout.tsx`, `Admin.tsx`],
   "Pan-Indic font-stack migration", "Improvement (accessibility + payload)", "No Devanagari support; oversized/misapplied font stack", [`index.html`, `index.css`, `Submit.tsx`],
   [`html-to-image` adoption], "Bug fix / architectural improvement", "Legacy canvas parser could not render OKLCH card colors", [`FactCheckCard.tsx`, `ClaimDetail.tsx`],

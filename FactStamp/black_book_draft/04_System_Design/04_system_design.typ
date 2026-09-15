@@ -23,7 +23,7 @@ This chapter turns the functional requirements and data models from Chapter 3 in
 
 == Basic modules
 
-The system splits its runtime responsibilities across eight modules. Each module maps to its own source files and handles part of the claim lifecycle (submission #sym.arrow.r duplicate check #sym.arrow.r verification queue #sym.arrow.r consensus #sym.arrow.r card generation #sym.arrow.r analytics aggregation). Module 8 supplies the security and notification services that the others share.
+The system splits its runtime responsibilities across eight modules. Each module maps to its own source files and handles part of the claim lifecycle (submission, then duplicate check, then verification queue, then consensus, then card generation, then analytics aggregation). Module 8 supplies the security and notification services that the others share.
 
 *Module 1: Authentication & Verifier Reputation.* Core files: `src/contexts/AuthContext.tsx`, `src/pages/SignIn.tsx`, `src/pages/SignUp.tsx`, `src/services/firebaseService.ts`. `AuthContext.tsx` wraps the Firebase Authentication SDK in a React Context and exposes session state and the authentication methods (`signIn`, `signUp`, `signInWithGoogle`, `signOut`, `updateUser`) to the whole component tree. Users register with email credentials or Google OAuth. On registration, `firebaseService.ts` creates a `users/{uid}` document in Firestore with `reputation` set to 50 (on a 0 to 100 scale), `totalVerifications` at 0, and `isAdmin` set to false. `firestore.rules` checks these initial values on write, so a client cannot change them. Other modules rely on these authenticated identities: Module 2 records the submitter, Module 4 ties each verification to its author, and Module 5 reads each voter's reputation when it calculates consensus.
 
@@ -51,7 +51,7 @@ The module also handles consensus timeouts. When a `pending` claim passes its 7-
   "User submits claim text/screenshot", "2", "3", "Jaccard check against existing claims before a new document is created",
   [Best similarity of 0.75 or higher against an existing claim], "3", "2", "Submission blocked; user offered a direct link to the existing claim page",
   "Verifier submits a verdict", "4", "8", [`validateVerdictExplanation()` validates input before the Firestore write],
-  [`verifications.length` reaches 3], "4", "5", [`calculateConfidenceScore()` computes final verdict; status #sym.arrow.r `verified`],
+  [`verifications.length` reaches 3], "4", "5", [`calculateConfidenceScore()` computes final verdict; status moves to `verified`],
   [`consensusDeadline` passes with count below 3], "5", "4", "Claim force-settled with verdict CONTESTED",
   "Claim reaches verified status", "5", "8", "Submitter notified; verifier reputation updated",
   "Claim reaches verified status", "5", "6", "Claim becomes eligible for PNG card export",
@@ -191,6 +191,109 @@ The document and relational schemas for all collections and embedded sub-schemas
 
 The core data structures are declared once in `src/lib/types.ts`, and every module in Section 4.1 imports them from there instead of redeclaring them.
 
+
+```typescript
+export type Verdict = 'TRUE' | 'FALSE' | 'MISLEADING' | 'UNVERIFIABLE' | 'CONTESTED'
+export type ClaimStatus = 'pending' | 'verified'
+export type ClaimCategory = 'health' | 'political' | 'religious' | 'financial' | 'other'
+export type SourceQuality = 'high' | 'medium' | 'low'
+
+export interface User {
+  uid: string
+  displayName: string
+  email: string
+  avatarUrl?: string
+  reputation: number
+  totalVerifications: number
+  joinedAt: string
+  isAdmin?: boolean
+}
+
+export interface Claim {
+  id: string
+  text: string
+  category: ClaimCategory
+  status: ClaimStatus
+  createdAt: string
+  verifiedAt?: string
+  consensusDeadline: string
+  submittedBy: string
+  submittedByName: string
+  imageUrl?: string
+  verdict?: Verdict
+  confidenceScore?: number
+  verifications: Verification[]
+  verificationCount: number
+  agreementRatio?: number
+  avgVerifierReputation?: number
+  sourceQualityScore?: number
+  adminFlagged?: boolean
+  adminFlaggedAt?: string
+}
+
+export interface Verification {
+  id: string
+  claimId: string
+  verdict: Verdict
+  sourceUrl: string
+  sourceQuality: SourceQuality
+  explanation: string
+  verifierId: string
+  verifierName: string
+  verifierReputation: number
+  createdAt: string
+}
+
+export type NotificationType =
+  | 'claim_verified' | 'reputation_update' | 'weekly_report' | 'verdict_submitted'
+
+export interface AppNotification {
+  id: string
+  userId: string
+  type: NotificationType
+  title: string
+  message: string
+  createdAt: string
+  isRead: boolean
+  claimId?: string
+}
+
+export type ReportTargetType = 'claim' | 'user' | 'verification'
+export type ReportReason =
+  | 'misinformation_spam' | 'harassment' | 'low_quality_source'
+  | 'fake_account' | 'manipulation' | 'hate_speech' | 'other'
+export type ReportStatus = 'pending' | 'investigating' | 'resolved' | 'dismissed'
+export type ReportSeverity = 'low' | 'medium' | 'high'
+
+export interface ModerationReport {
+  id: string
+  targetType: ReportTargetType
+  targetId: string
+  targetTitle: string
+  reason: ReportReason
+  details?: string
+  reportedBy: string
+  reportedByName: string
+  reportedAt: string
+  status: ReportStatus
+  severity: ReportSeverity
+  actionTaken?: string
+  resolvedAt?: string
+  resolvedBy?: string
+}
+
+export interface AdminAuditLog {
+  id: string
+  timestamp: string
+  adminId: string
+  adminName: string
+  action: string
+  targetType: 'claim' | 'user' | 'report' | 'system'
+  targetId: string
+  details: string
+}
+```
+
 The `Verdict` type includes `CONTESTED`, which only the Module 5 consensus-expiry logic assigns; `VerifyDetail.tsx` does not offer it to verifiers. `Claim.verifications` is typed as an embedded array to match the storage design in Section 4.2.2. Because TypeScript strict mode forces every reader of an optional (`?`) field to handle the unset case, the dashboard components have to deal explicitly with `pending` records that have no `confidenceScore` yet.
 
 #heading(level: 3, outlined: true)[Data integrity and constraints]
@@ -199,7 +302,20 @@ The `Verdict` type includes `CONTESTED`, which only the Module 5 consensus-expir
 
 *Field-level write validation.* The rules check `request.resource.data` field by field. Creating a `claims/{claimId}` document requires `text.size()` between 10 and 2000 characters, a `category` from an explicit whitelist, `status == "pending"`, `verificationCount == 0`, and an empty `verifications == []` array. A client therefore cannot create a claim that already carries votes or has text outside the length bounds.
 
-*The `isAdmin()` helper.* Privileged operations check the caller's authority through an `isAdmin()` helper that reads the caller's Firestore document at evaluation time.
+*The `isAdmin()` helper.* Privileged operations check the caller's authority through an `isAdmin()` helper that reads the caller's Firestore document at evaluation time:
+
+// Kept on one page: this block is short, and letting it split mid-expression
+// across a page boundary made the rule unreadable.
+#block(breakable: false)[
+```
+function isAdmin() {
+  return request.auth != null
+    && get(
+         /databases/$(database)/documents/users/$(request.auth.uid)
+       ).data.get('isAdmin', false) == true;
+}
+```
+]
 
 
 Only a caller who is already an admin can change the `isAdmin` flag on `users/{uid}`, so a user cannot grant themselves admin rights from the client.
@@ -339,7 +455,7 @@ FactStamp uses defense in depth. Client-side controls give immediate feedback an
 
 == Test cases design
 
-The test cases below cover the functional pipeline (registration #sym.arrow.r submission #sym.arrow.r duplicate detection #sym.arrow.r verification #sym.arrow.r consensus) and the security paths (rate-limited authentication, administrative access control) described in Sections 4.2, 4.4, and 4.5. Each expected result traces back to an enforced rule. Chapters 5 and 6 contain the full execution logs and observed outcomes.
+The test cases below cover the functional pipeline (registration, then submission, then duplicate detection, then verification, then consensus) and the security paths (rate-limited authentication, administrative access control) described in Sections 4.2, 4.4, and 4.5. Each expected result traces back to an enforced rule. Chapters 5 and 6 contain the full execution logs and observed outcomes.
 
 #styled-table(
   columns: (0.55fr, 0.85fr, 1.5fr, 1.5fr, 1.9fr),
@@ -354,7 +470,7 @@ The test cases below cover the functional pipeline (registration #sym.arrow.r su
   "TC-08", "Duplicate Detection (M3)", "New submission is sufficiently distinct", [Text with best similarity below 0.75], "New document created; claim enters the Verification Queue",
   "TC-09", "Verification Queue (M4)", "Verifier submits a verdict below quorum", "1st/2nd verification, valid fields", [`verificationCount` +1; `status` remains `pending`],
   "TC-10", "Verification Queue (M4)", "Explanation fails anti-spam validation", [Explanation under 50 chars, or repeated-char spam, or a copy of the claim text], [`validateVerdictExplanation()` rejects client-side; no write attempted],
-  "TC-11", "Queue / Consensus (M4, M5)", "Verification reaches exactly quorum", "3rd verification submitted", [`calculateConfidenceScore()` invoked; verdict/confidence set; `status` #sym.arrow.r `verified`],
+  "TC-11", "Queue / Consensus (M4, M5)", "Verification reaches exactly quorum", "3rd verification submitted", [`calculateConfidenceScore()` invoked; verdict/confidence set; `status` moves to `verified`],
   "TC-12", "Consensus Engine (M5)", "Claim remains under quorum past deadline", [`verificationCount < 3`, `consensusDeadline` elapsed], [Expiry sweep force-settles `verdict = CONTESTED`, `status = verified`],
   "TC-13", "Admin Console (M8)", "Admin overrides a claim's verdict", "Admin session; claim ID; new verdict", [Claim updated via Case A rule; action recorded in `audit_logs`],
   "TC-14", "Security / Admin Access", [Unauthorized `/admin` access attempt], [No valid admin session, or forged session flag with `isAdmin != true`], [Login gate shown; forged flag discarded; access denied],

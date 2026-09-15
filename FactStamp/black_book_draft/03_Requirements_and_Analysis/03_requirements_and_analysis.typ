@@ -34,7 +34,7 @@ FactStamp sits between these two failure modes. It keeps the speed and reach of 
 + *Distributed verification instead of a single editorial gate:* a minimum quorum of three independent, authenticated community verifiers must each cite a real source before consensus is computed.
 + *Evidence-weighted consensus:* the final confidence score is a function of verifier agreement, verifier reputation, and cited-source credibility, so it carries more information than a headcount vote.
 + *A time-bounded resolution guarantee:* claims that fail to reach consensus within 7 days auto-settle as `CONTESTED` rather than sitting unresolved indefinitely.
-+ *A counter-artifact in the medium the misinformation travels in:* a shareable PNG fact-check card 1080#text[ ]px wide with content-dependent height rather than a web article, so a correction can travel back through the exact forward chains the original claim used.
++ *A counter-artifact in the medium the misinformation travels in:* a shareable PNG fact-check card 1080 px wide with content-dependent height rather than a web article, so a correction can travel back through the exact forward chains the original claim used.
 + *A zero-friction submission path:* a user can submit a screenshot exactly as received; client-side OCR extracts the claim text automatically.
 
 *Scope boundary:* FactStamp solves the *verification and re-sharing* problem, not intervention inside WhatsApp itself. It does not hook into WhatsApp's proprietary protocol, does not perform automated AI/LLM truth judgments in place of human verifiers, and does not claim to prevent a claim from being forwarded in the first place.
@@ -150,9 +150,7 @@ Jaccard token-overlap similarity check against the existing claim corpus. Priori
   "FR-DUP-3", "The system shall create a new claim record and enter it into the verification queue when no existing claim matches at or above the 0.75 similarity threshold.", "H",
 )
 
-The duplicate-detection similarity coefficient is formally defined as:
-$ J(A, B) = (|S_A inter S_B|) / (|S_A union S_B|) $
-where $S_A$ and $S_B$ are the significant (length greater than 3) token sets of the incoming claim $A$ and an existing claim $B$ respectively.
+The duplicate-detection similarity coefficient is the Jaccard index: the size of the intersection of the two claims' token sets divided by the size of their union. The token sets are the significant words (length greater than 3 characters) of the incoming claim and of an existing claim respectively.
 
 ==== Module 4: Verification Queue
 Lists claims awaiting community verification and provides the verifier workbench. Priority: High.
@@ -181,12 +179,10 @@ Computes the final verdict and confidence score once quorum is reached. Priority
   "FR-CONSENSUS-5", [The system shall automatically mark a claim `CONTESTED` if it has not reached a settled majority verdict within 7 days of submission.], "H",
 )
 
-The consensus confidence score is formally defined as:
-$ C = 0.40 A + 0.30 R + 0.30 S $
-where $A$ is the agreement ratio, $R$ is the average participating-verifier reputation, and $S$ is the average source-quality score, each normalized to a 0--100 scale.
+The consensus confidence score is a weighted sum of three components: the agreement ratio contributes 40 per cent, the average participating-verifier reputation 30 per cent, and the average source-quality score the remaining 30 per cent. Each component is normalized to a 0--100 scale before weighting, so the final score is also on a 0--100 scale.
 
 ==== Module 6: Fact-Check Card Generator
-Renders a shareable PNG verdict card 1080#text[ ]px wide, with content-dependent height. Priority: Medium.
+Renders a shareable PNG verdict card 1080 px wide, with content-dependent height. Priority: Medium.
 
 #styled-table(
   columns: (1.1fr, 3.3fr, 0.5fr),
@@ -310,7 +306,7 @@ Development proceeded in fixed *2-week sprints*, with each sprint incrementally 
   "Sprint 3", "2 wks (Jul, wk 1-2)", [Module 3: Duplicate Detection Engine (Jaccard similarity); claim corpus data model], "Sprint 2", "Done",
   "Sprint 4", "2 wks (Jul, wk 3-4)", [Module 4: Verification Queue; verifier workbench UI; anti-self-verification rules], "Sprint 3", "Done",
   "Sprint 5", "2 wks (Aug, wk 1-2)", [Module 5: Weighted Consensus & Confidence Engine; quorum logic; 7-day deadline auto-expiry], "Sprint 4", "Done",
-  "Sprint 6", "2 wks (Aug, wk 3-4)", [Module 6: Fact-Check Card Generator (1080 px wide at 2x pixel ratio); Module 7: Analytics Dashboard], "Sprint 5", "Done",
+  "Sprint 6", "2 wks (Aug, wk 3-4)", [Module 6: Fact-Check Card Generator (1080 px wide at a pixel ratio of 2); Module 7: Analytics Dashboard], "Sprint 5", "Done",
   "Sprint 7", "2 wks (Sep, wk 1-2)", [Module 8: System Security & Notifications; Admin Console (`/admin`, 5 tabs)], "Sprints 1-6", "Done",
   "Sprint 8", "2 wks (Sep, wk 3-4)", [Security hardening, cross-browser verification, deployment config, CI, documentation finalization, viva prep], "Sprints 1-7", "Underway",
 )
@@ -330,7 +326,7 @@ The project schedule is structured into an eight-sprint sequence across a 16-wee
 
 The Program Evaluation and Review Technique (PERT) network diagram models the project's workflow as a directed acyclic graph (DAG) of milestone events and activity transitions. Milestone nodes represent the project's inception (START at Week 0, June 1) and terminal completion (END at Week 16, September 30), connected by rectangular activity nodes corresponding to Sprints 1 through 8. Each activity block specifies its scheduled duration (2 weeks), Earliest Start (ES), and Earliest Finish (EF).
 
-Precedence edges enforce strict data and architectural dependencies across modules. In FactStamp's architecture, downstream components depend directly on upstream data pipelines: Module 2 (Ingestion) requires authenticated session contexts from Module 1; Module 3 (Duplicate Detection) requires normalized claim tokens from Module 2; Module 4 (Queue) operates exclusively on deduplicated claims; and Module 5 (Consensus Engine) requires three independent verifications from Module 4 before resolving a verdict. Because development is executed by a solo developer, all sprint activities execute in a strict serial sequence without parallel branches. Consequently, every activity lies on the Critical Path ($"START" -> "S1" -> "S2" -> "S3" -> "S4" -> "S5" -> "S6" -> "S7" -> "S8" -> "END"$). Every sprint has zero total float ($"Slack" = 0$), meaning any schedule deviation in an individual sprint directly impacts the final delivery date. The total critical path length equals exactly 16 weeks (112 calendar days).
+Precedence edges enforce strict data and architectural dependencies across modules. In FactStamp's architecture, downstream components depend directly on upstream data pipelines: Module 2 (Ingestion) requires authenticated session contexts from Module 1; Module 3 (Duplicate Detection) requires normalized claim tokens from Module 2; Module 4 (Queue) operates exclusively on deduplicated claims; and Module 5 (Consensus Engine) requires three independent verifications from Module 4 before resolving a verdict. Because development is executed by a solo developer, all sprint activities execute in a strict serial sequence without parallel branches. Consequently, every activity lies on the Critical Path (START to S1 to S2 to S3 to S4 to S5 to S6 to S7 to S8 to END). Every sprint has zero total float (zero slack), meaning any schedule deviation in an individual sprint directly impacts the final delivery date. The total critical path length equals exactly 16 weeks (112 calendar days).
 
 #align(center)[#image("attachments/pert_chart.svg", width: 100%, height: 48%, fit: "contain")]
 <fig-pert>
@@ -442,7 +438,7 @@ FactStamp's functionality is organized into 8 core modules, each responsible for
 
 *Module 5: Weighted Consensus \& Confidence Engine.* Once a claim has accumulated at least three independent verifications, this module computes the claim's final settled verdict and a numeric confidence score using the 40/30/30 weighted formula. Claims still short of quorum when the 7-day window closes are automatically settled: their status moves from `pending` to `verified` with the verdict `CONTESTED`.
 
-*Module 6: Fact-Check Card Generator.* Once a verdict is settled, this module renders a PNG image 1080#text[ ]px wide (a 540 CSS-pixel card captured at 2#text[×] pixel ratio), its height growing with the length of the claim text and the number of cited sources, styled to WhatsApp's native forwarding format, using `html-to-image` for its native OKLCH/OKLAB color support. The exported card can be downloaded and forwarded back into the originating WhatsApp groups.
+*Module 6: Fact-Check Card Generator.* Once a verdict is settled, this module renders a PNG image 1080 px wide (a 540 CSS-pixel card captured at a pixel ratio of 2), its height growing with the length of the claim text and the number of cited sources, styled to WhatsApp's native forwarding format, using `html-to-image` for its native OKLCH/OKLAB color support. The exported card can be downloaded and forwarded back into the originating WhatsApp groups.
 
 *Module 7: Misinformation Analytics Dashboard.* Provides a public view into platform-wide trends: category distribution, a rolling weekly report of most-contested claims, verdict-outcome proportions, and a top-verifier leaderboard, rendered using Recharts.
 
