@@ -313,9 +313,11 @@ Development proceeded in fixed *2-week sprints*, with each sprint incrementally 
 
 Total planned schedule: 8 sprints of 2 weeks each, approximately 4 months from initial scaffolding through documentation finalization and viva.
 
+#pagebreak()
+
 === Gantt Chart Schedule
 
-The project schedule is structured into an eight-sprint sequence across a 16-week timeline (June 1, 2026 to late September 2026), tracking the incremental development and validation of FactStamp's eight core modules. As illustrated in the Gantt chart below, the timeline is partitioned across four delivery phases: Phase 1 (Foundation: Sprints 1--2, establishing project scaffolding, Firebase infrastructure, authentication, and multimodal ingestion), Phase 2 (Detection Core: Sprints 3--4, delivering Jaccard duplicate detection and the verifier queue), Phase 3 (Consensus and Delivery: Sprints 5--6, implementing the weighted consensus engine, fact-check card rasterization, and analytics), and Phase 4 (Security and Release: Sprints 7--8, covering security hardening, the staff admin console, deployment orchestration, and final handover).
+The 16-week project schedule spans eight two-week sprints partitioned across four delivery phases: Foundation (S1–S2), Detection Core (S3–S4), Consensus & Delivery (S5–S6), and Security & Release (S7–S8).
 
 #align(center)[#image("attachments/gantt_chart.svg", width: 100%)]
 <fig-gantt>
@@ -324,11 +326,9 @@ The project schedule is structured into an eight-sprint sequence across a 16-wee
 
 === PERT Chart and Critical Path Analysis
 
-The Program Evaluation and Review Technique (PERT) network diagram models the project's workflow as a directed acyclic graph (DAG) of milestone events and activity transitions. Milestone nodes represent the project's inception (START at Week 0, June 1) and terminal completion (END at Week 16, September 30), connected by rectangular activity nodes corresponding to Sprints 1 through 8. Each activity block specifies its scheduled duration (2 weeks), Earliest Start (ES), and Earliest Finish (EF).
+The PERT network diagram models the 16-week project workflow (June 1 – September 30) across Sprints 1 to 8 as a directed acyclic graph. Due to sequential architectural dependencies and solo development, all activities lie on the critical path with zero float.
 
-Precedence edges enforce strict data and architectural dependencies across modules. In FactStamp's architecture, downstream components depend directly on upstream data pipelines: Module 2 (Ingestion) requires authenticated session contexts from Module 1; Module 3 (Duplicate Detection) requires normalized claim tokens from Module 2; Module 4 (Queue) operates exclusively on deduplicated claims; and Module 5 (Consensus Engine) requires three independent verifications from Module 4 before resolving a verdict. Because development is executed by a solo developer, all sprint activities execute in a strict serial sequence without parallel branches. Consequently, every activity lies on the Critical Path (START to S1 to S2 to S3 to S4 to S5 to S6 to S7 to S8 to END). Every sprint has zero total float (zero slack), meaning any schedule deviation in an individual sprint directly impacts the final delivery date. The total critical path length equals exactly 16 weeks (112 calendar days).
-
-#align(center)[#image("attachments/pert_chart.svg", width: 100%, height: 48%, fit: "contain")]
+#align(center)[#image("attachments/pert_chart.svg", width: 100%, height: 87%, fit: "contain")]
 <fig-pert>
 
 #pagebreak()
@@ -466,58 +466,72 @@ The Event Table captures the external, temporal, and state-driven triggers that 
 )
 <fig-event-table>
 
+#pagebreak()
 === Entity-Relationship (E-R) Diagram
 #align(center)[#image("attachments/er_diagram.svg", width: 100%, height: 86%, fit: "contain")]
 <fig-er>
 
+#pagebreak()
 === Class Diagram
 #align(center)[#image("attachments/class_diagram.svg", width: 100%, height: 88%, fit: "contain")]
 <fig-class>
 
+#pagebreak()
 === Object Diagram
 #align(center)[#image("attachments/object_diagram.svg", width: 88%)]
 <fig-object>
 
+#pagebreak()
 === Use Case Diagram
 #align(center)[#image("attachments/use_case_diagram.svg", width: 100%, height: 88%, fit: "contain")]
 <fig-usecase>
 
+#pagebreak()
 === Activity Diagram
 #align(center)[#image("attachments/activity_diagram.svg", width: 100%, height: 90%, fit: "contain")]
 <fig-activity>
 
+#pagebreak()
 === Sequence Diagram
 #align(center)[#image("attachments/sequence_diagram.svg", width: 100%, height: 88%, fit: "contain")]
 <fig-sequence>
 
+#pagebreak()
 === State Diagram (State Machine)
 #align(center)[#image("attachments/state_diagram.svg", width: 85%)]
 <fig-state>
 
+#pagebreak()
 === Package Diagram
 #align(center)[#image("attachments/package_diagram.svg", width: 88%)]
 <fig-package>
 
+#pagebreak()
 === Component Diagram
 #align(center)[#image("attachments/component_diagram.svg", width: 100%, height: 86%, fit: "contain")]
 <fig-component>
 
+#pagebreak()
 === Deployment Diagram
 #align(center)[#image("attachments/deployment_diagram.svg", width: 92%)]
 <fig-deployment>
 
 === Data Flow Diagrams (Level 0, Level 1, Level 2)
+#pagebreak()
 
 *Level 0 (Context Diagram):* models FactStamp as a single process bubble with two external entities, User and Admin, and Firestore/Firebase Auth shown as an external data store at the boundary.
 
 #align(center)[#image("attachments/dfd_level_0.svg", width: 85%)]
 <fig-dfd0>
 
+
+#pagebreak()
 *Level 1:* decomposes the single Level 0 process into major processing stages: Submit Claim, Detect Duplicate, Manage Verification Queue, Compute Consensus, Generate Fact-Check Card, Serve Analytics Dashboard, and Admin Moderation, each reading from and writing to the shared Firestore data store.
 
 #align(center)[#image("attachments/dfd_level_1.svg", width: 100%, height: 86%, fit: "contain")]
 <fig-dfd1>
 
+#pagebreak()
 *Level 2 (drill-down of Submit Claim):* further decomposes claim submission into Accept Text/Screenshot Input, Compress Image, Run Client-Side OCR, Clean WhatsApp Chrome Text, Auto-Classify Category, and Persist Claim Record.
 
 #align(center)[#image("attachments/dfd_level_2.svg", width: 100%, height: 86%, fit: "contain")]
