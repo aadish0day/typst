@@ -1,7 +1,7 @@
 ' FactStamp — Data Flow Diagram, Level 1
 ' Tool: PlantUML   Build: plantuml -tsvg dfd_level_1.puml
 ' Decomposes process "0 FactStamp System" from the Level 0 context diagram
-' into processes 1.0 - 7.0 and the five Firestore collections D1 - D5.
+' into processes 1.0 - 7.0 and the six Firestore collections D1 - D6.
 ' NOTE: there is deliberately NO "Verifications" data store — verifications are
 ' an embedded array field on each claim document in D1 Claims.
 '
@@ -12,12 +12,11 @@
 '   external entity-> rectangle (box)
 ' Rule 5: no "left to right direction" — A4 portrait, reads top-to-bottom.
 '
-' LAYOUT: the Graphviz original needed {rank=same}, style=invis spine edges and
-' constraint=false. The PlantUML equivalents used here are:
-'   -[hidden]->  = invisible spine edge (pins a store to the rank below its peer)
-'   -[norank]->  = constraint=false (a flow that must not stretch the spine)
-' Every rank below is therefore produced by exactly one constrained or hidden
-' in-edge, giving a spine never more than two nodes wide.
+' SIMPLIFIED: opposite flows between the same pair of nodes are drawn as one
+' two-headed arrow (<-->), and minor read-backs are folded into them, which cuts
+' the diagram to 21 flows.
+'   -[hidden]->  = invisible spine edge (pins a node to the rank below its peer)
+'   -[norank]->  = a flow that must not stretch the vertical spine
 @startuml
 skinparam style strictuml
 skinparam monochrome true
@@ -56,69 +55,57 @@ skinparam DatabaseFontStyle bold
 
 title FactStamp - Data Flow Diagram (Level 1)
 
-' ---------- External entities ----------
+' ---------- Nodes, declared top to bottom ----------
 rectangle "Registered\nVerifier" as VER
-
-' ---------- Processes (usecase bubbles) ----------
-usecase "1.0\nSubmit Claim" as P1
-' ---------- Data stores (Firestore collections) ----------
-database "D2  Users" as D2
-usecase "2.0\nDetect Duplicates" as P2
-database "D1  Claims\n(verifications[])" as D1
-usecase "3.0\nManage\nVerification Queue" as P3
-usecase "4.0\nCompute Weighted\nConsensus" as P4
-database "D3  Notifications" as D3
-usecase "5.0\nGenerate\nFact-Check Card" as P5
-usecase "6.0\nProduce Analytics" as P6
+usecase "Submit Claim" as P1
+usecase "Detect Duplicates" as P2
+database "Claims\n(verifications[])" as D1
+database "Claim Media" as D6
+usecase "Manage\nVerification Queue" as P3
+usecase "Compute Weighted\nConsensus" as P4
+database "Users" as D2
+database "Notifications" as D3
+usecase "Produce Analytics" as P6
+usecase "Generate\nFact-Check Card" as P5
 rectangle "Visitor\n(Read-Only)" as VIS
-usecase "7.0\nAdminister\n& Audit" as P7
-database "D4  Reports" as D4
+usecase "Administer\n& Audit" as P7
+database "Reports" as D4
+database "Audit Logs" as D5
 rectangle "Administrator" as ADM
-database "D5  Audit Logs" as D5
 
-' ---------- Invisible spine: pins every rank so the graph cannot fan out ----------
-VER -[hidden]-> D2
-D3  -[hidden]-> P5
-P5  -[hidden]-> P6
-VIS -[hidden]-> D4
-P7  -[hidden]-> ADM
+' ---------- Spine ----------
+D1  -[hidden]right- D6
+D2  -[hidden]right- P4
+P4  -[hidden]down- P5
+P4  -[hidden]down- P6
+VIS -[hidden]down- P7
 
-' ---------- 1.0 Submit Claim ----------
-VER --> P1 : "1. Claim Text /\n    Screenshot"
-D2  -[norank]-> P1 : "2. Verifier\n    Profile"
-P1  -[norank]-> VER : "3. Receipt /\n    Duplicate Warning"
-P1  --> P2 : "4. Normalised Text"
-P1  --> D1 : "5. New Claim\n    Document"
+' ---------- 1.0 and 2.0: submission ----------
+P1 <-right-> VER : "Claim /\nReceipt"
+P1  <--> P2 : "Normalised Text /\nDuplicate Match"
+P1  --> D1 : "New Claim"
+P1  --> D6 : "Full Screenshot"
+D1  -left-> P2 : "Claim\nCorpus"
 
-' ---------- 2.0 Detect Duplicates ----------
-D1 -[norank]-> P2 : "6. Claim Corpus"
-P2 -[norank]-> P1 : "7. Duplicate Match"
+' ---------- 3.0 and 4.0: verification and consensus ----------
+VER --> P3 : "Verdict +\nSource URL"
+D1  <--> P3 : "Pending Queue /\nNew Verification"
+D6  --> P3 : "Screenshot"
+P3  --> P4 : "Quorum Reached /\nDeadline Expired"
+D2  <-[norank]-> P4 : "Reputation\n(Cloud Function)"
+D1 <-- P4 : "Verdict +\nConfidence"
+P4  -right-> D3 : "Consensus\nAlert"
+VER <-- D3 : "Verdict\nNotification"
 
-' ---------- 3.0 Manage Verification Queue ----------
-D1  --> P3 : "8. Pending Queue"
-VER -[norank]-> P3 : "9. Verdict +\n    Source URL"
-P3  -[norank]-> D1 : "10. Append to\n     verifications[]"
-P3  --> P4 : "11. 3rd Verification /\n     Deadline Expired"
+' ---------- 5.0 and 6.0: public outputs ----------
+D1  --> P5 : "Settled Claim"
+D1  --> P6 : "Claim Statistics"
+P5  --> VIS : "Fact-Check\nCard (PNG)"
+P6  --> VIS : "Analytics\nDashboard"
 
-' ---------- 4.0 Compute Weighted Consensus ----------
-D2 -[norank]-> P4 : "12. Reputation\n     Scores"
-P4 -[norank]-> D2 : "13. Reputation Delta"
-P4 -[norank]-> D1 : "14. Verdict + Confidence Score\n     (CONTESTED on expiry)"
-P4 --> D3 : "15. Consensus Alert"
-D3 -[norank]-> VER : "16. Verdict\n     Notification"
-
-' ---------- 5.0 / 6.0 Public outputs ----------
-D1 -[norank]-> P5 : "17. Resolved Claim\n     + Confidence"
-D1 -[norank]-> P6 : "18. Claim Statistics"
-P5 --> VIS : "19. Fact-Check Card\n     (1080px PNG)"
-P6 --> VIS : "20. Analytics\n     Dashboard"
-
-' ---------- 7.0 Administer & Audit ----------
-VIS --> P7 : "21. Abuse Report"
-P7  -[norank]-> D4 : "22. Report Record"
-D4  -[norank]-> P7 : "23. Open Reports"
-ADM -[norank]-> P7 : "24. Moderation\n     Action"
-P7  -[norank]-> D1 : "25. Hide / Restore Claim"
-P7  --> D5 : "26. Audit Entry"
-D5  -[norank]-> ADM : "27. Audit Trail"
+' ---------- 7.0: administration ----------
+ADM <-up-> P7 : "Moderation Action /\nAudit Trail"
+P7  <--> D4 : "Incident\nReports"
+P7  --> D5 : "Audit Entry"
+D1 <-- P7 : "Override /\nFlag / Expiry"
 @enduml

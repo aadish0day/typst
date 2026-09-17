@@ -36,74 +36,88 @@ title FactStamp - Activity Diagram (Claim Submission to Consensus Verdict)
 skinparam ActivityBorderColor black
 skinparam ActivityBorderThickness 2.5
 skinparam ActivityBackgroundColor #F8F9FA
-skinparam ActivityFontSize 19
+skinparam ActivityFontSize 30
 skinparam ActivityFontStyle bold
 skinparam ActivityDiamondBorderColor black
 skinparam ActivityDiamondBorderThickness 2.5
-skinparam ActivityDiamondFontSize 19
+skinparam ActivityDiamondFontSize 28
 skinparam ActivityDiamondFontStyle bold
+skinparam ArrowFontSize 26
 skinparam PartitionBorderColor black
 skinparam PartitionBorderThickness 2.5
-skinparam PartitionFontSize 20
+skinparam PartitionFontSize 30
 skinparam PartitionFontStyle bold
+<style>
+activityDiagram {
+  activity {
+    Padding 10
+  }
+  diamond {
+    FontSize 28
+    FontStyle bold
+  }
+  arrow {
+    FontSize 26
+    FontStyle bold
+  }
+}
+title {
+  FontSize 36
+}
+</style>
 
 start
 
 partition "Ingestion (Module 2)" {
-  :Registered Verifier opens /submit;
-  if (Input mode?) then (paste text)
-    :Type or paste claim text;
-  else (upload screenshot)
-    :validateImageUpload() then compress\nextension + MIME + magic bytes, max 5 MB;
-    :Run Tesseract.js WASM OCR in-browser,\nthen cleanExtractedOcrText() to strip\ntimestamps, ticks and status-bar chrome;
-    :Verifier reviews and edits extracted text;
+  :User opens the Submit page;
+  if (Input type?) then (text)
+    :Paste claim text;
+  else (screenshot)
+    :Validate image (type, max 5 MB);
+    :Extract text with in-browser OCR;
+    :User reviews the extracted text;
   endif
-  :Select claim category\n(health / political / religious /\nfinancial / other);
+  :Select claim category;
 }
 
 partition "Duplicate Detection (Module 3)" {
-  :findDuplicate() on text blur\nToken similarity comparison;
-  if (Any matching duplicate claim found?) then (yes - duplicate)
-    :Render inline duplicate warning with the\nsimilarity percentage and a link to the\nexisting claim; disable the Submit button;
-    :Submission blocked\n(no automatic redirect);
+  :Compare with existing claims (Jaccard\nsimilarity);
+  if (Similarity >= 0.75?) then (yes)
+    :Block submission and link the existing claim;
     stop
-  else (no - claim is unique)
+  else (no)
+    :Create pending claim with a 7-day deadline;
   endif
-}
-
-partition "Claim Creation" {
-  :sanitizeTextInput(), then addClaim()\ncreates the Claim document;
-  :status = 'pending', verificationCount = 0,\nconsensusDeadline = now + 7 days;
-  :Persist to Firestore and publish\nto the verification queue;
 }
 
 partition "Peer Verification (Module 4)" {
   repeat
-    :Another Registered Verifier opens\nthe claim from /verify;
-    :Select verdict from TRUE, FALSE,\nMISLEADING, UNVERIFIABLE\n(CONTESTED is not selectable);
-    :Enter source URL and written explanation;
-    :Validate URL protocol (http / https only) and\nvalidateVerdictExplanation(): min 50 characters,\nmin 8 words, anti-spam and anti-copy checks;
-    :determineSourceQuality(url)\nauto-derived from the cited domain;
-    :Append Verification to the embedded array;\nverificationCount = verificationCount + 1;
-  repeat while (verificationCount < 3\nAND consensusDeadline not passed?) is (yes - stay pending) not (no - settle now)
+    :Another verifier opens the claim from the\nqueue;
+    :Choose verdict: TRUE, FALSE, MISLEADING or\nUNVERIFIABLE;
+    :Add source URL and explanation;
+    :Validate explanation and rate source quality;
+    :Save the verification;
+  repeat while (Fewer than 3 verifications\nand not expired?) is (yes) not (no)
 }
 
-partition "Consensus and Confidence (Module 5)" {
-  if (verificationCount >= 3?) then (yes - quorum reached)
-    :verdict = majority verdict\nacross the 3 verifications;
-    :calculateConfidenceScore()\nEvaluate agreement ratio, average verifier\nreputation, and source quality score\nto determine final consensus confidence;
-  else (no - 7-day window expired)
-    :expireOverdueClaims() sweep, run every 60 s,\nforce-settles the claim;
-    :verdict = 'CONTESTED'\n(system-assigned, never verifier-chosen);\nconfidenceScore from partial verifications, else 30;
+partition "Consensus (Module 5)" {
+  if (3 verifications?) then (yes)
+    :Majority verdict and confidence score (40%\nagreement, 30% reputation, 30% source);
+  else (no - deadline passed)
+    :Admin runs consensus expiry: verdict\nCONTESTED;
   endif
-  :status = 'verified', verifiedAt = now;\nWrite the settled claim back to Firestore;
+  :Mark claim verified;
 }
 
 partition "Publication (Modules 6 and 8)" {
-  :Award reputation delta to verifiers\n(+2 agree with consensus, -1 disagree);
-  :Push claim_verified notification to the bell;\nRender verdict stamp and exportable\nfact-check card on the claim detail page;
+  fork
+    :Update reputation (+2 agree, -1 disagree);
+  fork again
+    :Notify the submitter;
+  fork again
+    :Enable fact-check card download;
+  end fork
 }
 
 stop
-
 @enduml

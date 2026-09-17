@@ -104,7 +104,7 @@
 
 #v(0.25in)
 #text(size: 12pt)[
-  This is to certify that the project entitled, *"#project-title"*, is bonafide work of *#student-name* bearing UID / Roll No. : *#student-uid* submitted in partial fulfillment of the requirements for the award of degree of *BACHELOR OF SCIENCE in INFORMATION TECHNOLOGY* from Jai Hind College Empowered Autonomous (University of Mumbai).
+  This is to certify that the project entitled, "#project-title", is bonafide work of #student-name bearing UID / Roll No. : #student-uid submitted in partial fulfillment of the requirements for the award of degree of BACHELOR OF SCIENCE in INFORMATION TECHNOLOGY from Jai Hind College Empowered Autonomous (University of Mumbai).
 ]
 
 #v(0.6in)
@@ -139,13 +139,13 @@
 #v(0.4in)
 
 #text(size: 12pt)[
-  I declare that the project entitled, *"#project-title"*, completed at Jai Hind College (Empowered Autonomous), has not been duplicated and submitted to any other university for the award of a degree. To the best of my knowledge, no one else has submitted this work elsewhere.
+  I declare that the project entitled, "#project-title", completed at Jai Hind College (Empowered Autonomous), has not been duplicated and submitted to any other university for the award of a degree. To the best of my knowledge, no one else has submitted this work elsewhere.
 ]
 
 #v(0.2in)
 
 #text(size: 12pt)[
-  This project is submitted in partial fulfillment of the requirements for the degree of *BACHELOR OF SCIENCE (INFORMATION TECHNOLOGY)* as my #semester project.
+  This project is submitted in partial fulfillment of the requirements for the degree of BACHELOR OF SCIENCE (INFORMATION TECHNOLOGY) as my #semester project.
 ]
 
 #v(1.2in)
@@ -203,9 +203,9 @@
   [
     *FactStamp* is a web-based platform designed to collect, verify, and counter misinformation circulating across WhatsApp forwards through community-driven consensus. With over 500 million active users in India, WhatsApp serves as a primary everyday communication channel; however, its private, end-to-end encrypted architecture enables unverified rumors, doctored media, and fraudulent schemes to proliferate unchecked by traditional web search crawlers or centralized fact-checking desks.
 
-    The platform introduces a decentralized, crowdsourced verification ecosystem. Users submit suspicious text forwards or screenshots directly through an unauthenticated intake interface. An in-browser Optical Character Recognition (OCR) pipeline using Tesseract.js WebAssembly extracts text from screenshots, while a token-level Jaccard similarity algorithm identifies previously evaluated claims to provide instant debunks and eliminate redundant queue backlog.
+    The platform introduces a decentralized, crowdsourced verification ecosystem. Users submit suspicious text forwards or screenshots directly through an authenticated submission interface. An in-browser Optical Character Recognition (OCR) pipeline using Tesseract.js WebAssembly extracts text from screenshots, while a token-level Jaccard similarity algorithm identifies previously evaluated claims to provide instant debunks and eliminate redundant queue backlog.
 
-    Unresolved claims enter a public Verification Queue where authenticated community verifiers examine primary evidence and submit categorized verdicts alongside source citations. A weighted consensus scoring engine computes a composite confidence score by evaluating the verifier agreement ratio (40%), verifier reputation ratings (30%), and primary source credibility tiers (30%). Upon consensus, FactStamp automatically generates a standardized, downloadable 1080#text[×]1080px digital counter-card containing the verdict stamp, confidence rating, and citation sources, enabling users to forward evidence-based corrections directly back into messaging threads.
+    Unresolved claims enter a public Verification Queue where authenticated community verifiers examine primary evidence and submit categorized verdicts alongside source citations. A weighted consensus scoring engine computes a composite confidence score by evaluating the verifier agreement ratio (40%), verifier reputation ratings (30%), and primary source credibility tiers (30%). Upon consensus, FactStamp automatically generates a standardized, downloadable 1080px-wide digital counter-card containing the verdict stamp, confidence rating, and citation sources, enabling users to forward evidence-based corrections directly back into messaging threads.
   ]
 }
 

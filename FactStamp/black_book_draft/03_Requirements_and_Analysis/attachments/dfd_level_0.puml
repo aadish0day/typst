@@ -50,7 +50,7 @@ title FactStamp - Data Flow Diagram (Level 0 / Context)
 rectangle "Registered\nVerifier" as VER
 
 ' ---- The single Level 0 process (usecase bubble) ----
-usecase "\n\n0\nFactStamp\nSystem\n\n" as SYS
+usecase "FactStamp\nSystem" as SYS
 
 rectangle "Visitor\n(Public, Read-Only)" as VIS
 rectangle "Administrator" as ADM
@@ -62,12 +62,12 @@ VIS -[hidden]down-> ADM
 
 ' Return flows are written "upper <-- lower" so the rank order stays vertical
 ' (PlantUML ranks by written order; the arrowhead alone changes direction).
-VER --> SYS : "1. Claim Text,\n    Screenshot, Category,\n    Verdict + Source URL"
-VER <-- SYS : "2. Submission Receipt,\n    Duplicate Warning,\n    Consensus Notification"
+VER --> SYS : "Claim Text,\nScreenshot, Category,\nVerdict + Source URL"
+VER <-- SYS : "Submission Receipt,\nDuplicate Warning,\nConsensus Notification"
 
-SYS --> VIS : "3. Verified Claim Feed,\n    Confidence Score,\n    Fact-Check Card (PNG),\n    Public Analytics"
-SYS <-- VIS : "4. Search Query /\n    Claim Lookup"
+SYS --> VIS : "Verified Claim Feed,\nConfidence Score,\nFact-Check Card (PNG),\nPublic Analytics"
+SYS <-- VIS : "Search Query /\nClaim Lookup"
 
-SYS <-- ADM : "5. Moderation Action,\n    Report Resolution"
-SYS --> ADM : "6. Report Queue,\n    Audit Trail,\n    Platform Metrics"
+SYS <-- ADM : "Moderation Action,\nReport Resolution"
+SYS --> ADM : "Report Queue,\nAudit Trail,\nPlatform Metrics"
 @enduml

@@ -22,7 +22,7 @@ skinparam UsecaseFontStyle bold
 skinparam ActorBorderColor black
 skinparam ActorBorderThickness 2.5
 skinparam ActorBackgroundColor #FFFFFF
-skinparam ActorFontSize 20
+skinparam ActorFontSize 24
 skinparam ActorFontStyle bold
 
 skinparam RectangleBorderColor black
@@ -36,15 +36,18 @@ title FactStamp - Sequence Diagram\n(Third Verification Completes Consensus)
 skinparam ParticipantBorderColor black
 skinparam ParticipantBorderThickness 2.5
 skinparam ParticipantBackgroundColor #F8F9FA
-skinparam ParticipantFontSize 17
+skinparam ParticipantFontSize 24
 skinparam ParticipantFontStyle bold
 skinparam SequenceLifeLineBorderColor black
 skinparam SequenceLifeLineBorderThickness 2.0
 skinparam SequenceMessageAlignment center
-skinparam ArrowFontSize 15
-skinparam NoteFontSize 15
+skinparam ArrowFontSize 24
+skinparam NoteFontSize 17
 skinparam NoteFontStyle bold
-skinparam maxMessageSize 190
+skinparam maxMessageSize 220
+skinparam SequenceGroupHeaderFontSize 22
+skinparam SequenceGroupFontSize 22
+hide footbox
 
 actor "Registered\nVerifier" as V
 participant "VerifyDetail\nUI" as UI
@@ -54,77 +57,43 @@ participant "confidence\nScore.ts" as CONF
 database "Firestore" as FS
 participant "Notifications\nContext" as NOTIF
 
-V -> UI : open\n/verify/:claimId
+V -> UI : open /verify/:claimId
 activate UI
 UI -> CTX : getClaimById()
 activate CTX
-CTX --> UI : Claim\nstatus='pending'\ncount = 2
+CTX --> UI : pending claim (2 of 3 verdicts)
 deactivate CTX
-UI --> V : workbench\n(2 of 3 verdicts)
 
-V -> UI : verdict = FALSE
-V -> UI : sourceUrl =\npib.gov.in
-UI -> CONF : determineSource\nQuality(url)
-activate CONF
-CONF --> UI : 'high'
-deactivate CONF
-UI --> V : "Tier 1 Source"\nread-only,\nauto-derived
-
-V -> UI : explanation\n+ Submit
-UI -> UI : URL protocol\nhttp / https
-
-UI -> SEC : sanitizeText\nInput()
+V -> UI : verdict, source URL, explanation
+UI -> SEC : validateVerdictExplanation()
 activate SEC
-SEC --> UI : clean text
-UI -> SEC : validateVerdict\nExplanation()
-SEC -> SEC : >=50 chars,\n>=8 words,\nanti-spam
-SEC --> UI : { valid: true }
+SEC --> UI : valid
 deactivate SEC
 
-UI -> CTX : addVerification\n(claimId, data)
+UI -> CTX : addVerification()
 activate CTX
-CTX -> CONF : determineSource\nQuality()
-activate CONF
-CONF --> CTX : 'high'
-deactivate CONF
-CTX -> CTX : append to\nverifications[]
-CTX -> CTX : count = 3
+CTX -> CTX : append verification\n(count = 3)
 
 group Consensus [count >= 3]
-  CTX -> CONF : calculateConfidence\nScore()
+  CTX -> CONF : calculateConfidenceScore()
   activate CONF
-  CONF -> CONF : evaluate agreement\nratio
-  CONF -> CONF : determine mean\nreputation
-  CONF -> CONF : evaluate mean\nsource quality
-  CONF -> CONF : Compute weighted\nconfidence score
-  CONF --> CTX : { score,\nagreementRatio }
+  CONF --> CTX : score
   deactivate CONF
-  CTX -> CTX : verdict =\nmajority (FALSE)
-  CTX -> CTX : status =\n'verified'
+  CTX -> CTX : verdict = majority\nstatus = 'verified'
 end
 
-CTX -> FS : updateClaimIn\nFirestore()
+CTX -> FS : updateClaimInFirestore()
 activate FS
-FS --> CTX : write ack
-CTX -> FS : updateUser()\nrep +2, total +1
-FS --> CTX : profile updated
+FS -> FS : Cloud Function\nupdates reputation
+FS --> CTX : updated profile
 deactivate CTX
 
-FS -> NOTIF : onSnapshot:\nclaim_verified
+FS -> NOTIF : claim_verified
 activate NOTIF
-NOTIF -> NOTIF : prepend App\nNotification
-NOTIF --> V : bell badge\n"Consensus\nReached"
+NOTIF --> V : "Consensus Reached"
 deactivate NOTIF
 deactivate FS
 
-UI --> V : toast + verdict\nstamp + score
+UI --> V : verdict stamp + score
 deactivate UI
-
-note over V, NOTIF
-  Quorum is exactly 3 verifications. Had the 7-day
-  consensusDeadline elapsed first, expireOverdueClaims()
-  would instead settle the claim as status = 'verified'
-  with verdict = 'CONTESTED' (system-assigned only).
-end note
-
 @enduml

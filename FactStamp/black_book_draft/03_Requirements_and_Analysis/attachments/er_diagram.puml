@@ -60,7 +60,8 @@ entity "CLAIM" as Claim {
   * category : enum <<FK CATEGORY_METRIC>>
   --
   * text : string (10..2000 chars)
-  imageUrl : string (<= 800 KB)
+  thumbnailUrl : string (<= 60 KB)
+  hasScreenshot : boolean
   * status : enum { pending, verified }
   verdict : enum { TRUE, FALSE, MISLEADING,
   UNVERIFIABLE, CONTESTED }
@@ -96,6 +97,13 @@ entity "VERIFICATION" as Verification {
   * createdAt : timestamp
 }
 
+entity "CLAIM_MEDIA" as ClaimMedia {
+  * claimId : string <<PK, FK CLAIM.id>>
+  --
+  * imageUrl : base64 data URI (<= 900 KB)
+  * createdAt : timestamp
+}
+
 entity "DUPLICATE_CLUSTER" as DuplicateCluster {
   * id : string <<PK>>
   ..
@@ -113,6 +121,7 @@ User ||--o{ Claim : "submits (0..N)"
 Claim ||--o{ Verification : "receives (0..N, quorum >= 3)"
 User ||--o{ Verification : "casts (0..N)"
 Claim ||--o{ DuplicateCluster : "groups (0..N)"
+Claim ||--o| ClaimMedia : "stores screenshot (0..1)"
 
 Verification -[hidden]down-> DuplicateCluster
 

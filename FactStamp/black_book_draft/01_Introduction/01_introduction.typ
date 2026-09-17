@@ -2,83 +2,88 @@
 
 == Background
 
-With hundreds of millions of daily active users across India, WhatsApp is a primary channel for unverified forwarded messages. Because the platform enforces end-to-end encryption and messages circulate across private group chats, false claims concerning public health, politics, government schemes, or financial fraud spread rapidly beyond the observation of search engines, indexers, and platform moderation. Conventional web-based fact-checking requires readers to actively seek out debunking articles on the open web. By the time an investigative article is researched, published, and indexed on search engines, the misleading claim has already propagated through multiple generations of chat forwards.
+WhatsApp is used by hundreds of millions of people in India, and forwarded messages are one of the main ways misinformation spreads. Because chats are end-to-end encrypted and forwards move inside private groups, false claims about health, politics, government schemes, or money spread quickly without search engines or fact-checkers seeing them. By the time a fact-checking article is published, the forward has usually already been shared many times.
 
-Current approaches to addressing WhatsApp misinformation suffer from distinct operational limitations:
+Existing solutions have clear limits. Institutional fact-checkers such as PIB Fact Check and newsrooms are accurate but have small teams, and their long web articles rarely reach the WhatsApp groups where a rumour started. A group member replying "this is fake" is quick, but gives no source, leaves no lasting record, and does not recognise the same claim when it comes back reworded.
 
-1. *Institutional fact-checkers* (such as newsrooms, PIB Fact Check, and independent verification agencies) produce rigorous analyses but operate with small editorial teams. They cannot keep pace with the daily volume of regional forwards, and their long-form web articles rarely circulate back into the private chat channels where the rumor originated.
-2. *Ad-hoc peer debunking* in chat threads (such as a group participant replying that a post is false) is immediate but unstructured. It leaves no durable record, provides no verifiable citations, and cannot recognize previously evaluated claims when rephrased.
+FactStamp is a web application that brings these two approaches together. A user submits a forward as text or as a screenshot, and the system checks whether the claim has already been verified. New claims are reviewed by at least three independent community verifiers who cite sources, and the system calculates a verdict and confidence score. The result can be downloaded as a PNG card and shared back into the WhatsApp group.
 
-FactStamp bridges these two models through a community verification workflow. When a user submits a forwarded message as plain text or as a screenshot, the system checks whether the claim matches an existing entry in the verified corpus. New claims enter an open verification queue where authenticated community participants evaluate evidence, cite authoritative sources, and record verdicts. Once a quorum of three independent verifications is reached, the system computes a weighted consensus confidence score and renders an exportable fact-check card formatted as a PNG image. The submitter can then share this card directly back into the originating WhatsApp group.
+#pagebreak(weak: true)
 
 == Objectives
 
-The project addresses the following engineering and research objectives:
+The main objectives of the FactStamp project are:
 
-1. Shorten the verification cycle for suspicious WhatsApp forwards by enabling direct community submission rather than relying exclusively on centralized editorial desks.
-2. Prevent redundant verification effort by calculating Jaccard token-overlap similarity at a threshold of 0.75 against the existing claim corpus, resolving reworded duplicates to existing verdicts.
-3. Enforce a distributed quorum requirement rather than single-moderator authority, mandating at least three independent verifications before a verdict settles.
-4. Weight consensus confidence through verifiable evidence metrics, factoring in verifier agreement, verifier historical reputation, and cited source authority (`src/lib/confidenceScore.ts`).
-5. Provide a shareable counter-artifact in the visual medium of the forward, generating a 1080 px-wide PNG card (540 CSS px at a pixel ratio of 2 via `html-to-image`) with content-adaptive height for direct forwarding in chat threads.
-6. Minimize submission friction for non-technical users by extracting claim text from screenshots via client-side WebAssembly OCR (Tesseract.js) and stripping WhatsApp interface artifacts such as timestamps and message status indicators.
-7. Maintain verifier accountability through an incentive-aligned reputation mechanism that updates participant scores based on alignment with finalized consensus.
-8. Publish platform-wide misinformation trends through a public analytics dashboard displaying category distributions and weekly debunks.
+1. To let users submit suspicious WhatsApp forwards directly, as text or as a screenshot.
+2. To avoid checking the same claim twice by detecting duplicates with Jaccard similarity (threshold 0.75).
+3. To require at least three independent verifications before a verdict is settled.
+4. To calculate a confidence score from verifier agreement, verifier reputation, and source quality.
+5. To produce a shareable PNG fact-check card that can be forwarded on WhatsApp.
+6. To make submission easy by reading text from screenshots with in-browser OCR.
+7. To keep verifiers accountable with a reputation score that rises or falls with their accuracy.
+8. To show misinformation trends on a public analytics dashboard.
 
+#pagebreak()
 == Purpose, Scope, and Applicability
 
 #heading(level: 3, outlined: true)[Purpose]
 
-FactStamp provides a community-driven verification platform designed specifically for WhatsApp forwards. It reduces the turnaround time between the appearance of an unsubstantiated forward and the availability of a sourced, shareable correction, without requiring dedicated editorial infrastructure.
+The purpose of FactStamp is to give WhatsApp users a quick, community-driven way to check suspicious forwards and receive a sourced, shareable correction, without depending on a professional editorial team.
 
 #heading(level: 3, outlined: true)[Scope]
 
-*In scope:*
-- Submitting a claim as text or a WhatsApp screenshot using client-side OCR.
-- Detecting duplicates against existing claims.
-- A verification queue requiring at least three verifiers.
-- A confidence-scoring engine using agreement ratio, verifier reputation, and source quality.
-- Automatic consensus expiry, settling unresolved claims as `CONTESTED` after 7 days.
-- Generating shareable PNG fact-check cards.
-- A public analytics dashboard for misinformation trends.
-- Firebase Authentication (email/password and Google OAuth) with verifier profiles.
-- A staff `/admin` moderation console for managing users, claims, and incident reports, with an audit log.
-- Client-side security including rate-limited login, file-upload validation, anti-spam filtering, and XSS sanitization, backed by Firestore Security Rules.
+The system supports three kinds of users:
+- Visitor (can browse claims and the dashboard)
+- Registered Verifier (can submit and verify claims)
+- Administrator (moderates the platform)
 
-*Out of scope (current version):*
-- WhatsApp Business API integration. Users submit claims through the web app.
-- Server-side OCR or automated algorithmic fact-checking. Verification relies on human participants.
-- Multi-language OCR beyond the English model. Users can type Devanagari-script forwards manually.
-- Native mobile applications. The system is deployed as a responsive web application.
+Major functionalities include:
+- Sign-in with email/password or Google
+- Claim submission as text or screenshot, with in-browser OCR
+- Duplicate detection
+- A verification queue requiring three verifiers
+- Weighted confidence scoring and verifier reputation
+- Settling overdue claims as `CONTESTED` after 7 days
+- Shareable PNG fact-check cards
+- A public analytics dashboard
+- An admin console for users, claims, incident reports, and the audit log
+
+The current version does not integrate directly with WhatsApp, does not use automated or AI fact-checking, reads only English text from screenshots, and is a web application rather than a native mobile app. It works on desktops, tablets, and mobile phones through a modern browser.
 
 #heading(level: 3, outlined: true)[Applicability]
 
-FactStamp is designed for communities and individuals who rely on WhatsApp as an everyday communications medium. In India, this spans diverse demographics and age groups:
-- Family and neighborhood WhatsApp groups where health remedies, communal rumors, and financial schemes circulate.
-- Civic and journalism collectives requiring a structured, open-source verification pipeline.
-- Educational media-literacy programs demonstrating evidence-based evaluation workflows.
+FactStamp is useful for:
+- Family and neighbourhood WhatsApp groups where health tips, rumours, and financial schemes circulate.
+- Student and civic groups that want a simple, open verification process.
+- Media-literacy programmes that teach people to check claims against evidence.
 
+#pagebreak()
 == Achievements
 
-FactStamp is a functional, deployable web application. The codebase (`/home/aadish/Documents/Github/FactStamp`) provides the following implementations:
+The major achievements of the FactStamp project are:
 
-- A Firebase-backed authentication and verifier-reputation system (`src/contexts/AuthContext.tsx`, `src/services/firebaseService.ts`) with anti-enumeration error messaging and idle-session timeout protection.
-- A Jaccard-similarity duplicate-detection engine (`src/lib/duplicateDetection.ts`) operating at a 0.75 threshold.
-- A confidence-scoring engine (`src/lib/confidenceScore.ts`) that computes a weighted consensus combining agreement ratio, verifier reputation, and source quality. It computes verdicts in real time in `src/contexts/ClaimsContext.tsx` and settles unresolved claims as `CONTESTED` after a 7-day window.
-- A client-side WebAssembly OCR pipeline (`src/services/ocrService.ts`, Tesseract.js) that normalizes WhatsApp interface noise and categorizes submissions through keyword heuristics.
-- A PNG fact-check card generator (`src/components/FactCheckCard.tsx`) using `html-to-image` with native support for OKLCH and OKLAB CSS color palettes.
-- An analytics dashboard (`src/pages/Dashboard.tsx`, `src/lib/weeklyReport.ts`) using Recharts to compute rolling 7-day category distributions and verifier leaderboards.
-- An Admin Command Center (`src/pages/Admin.tsx`, `/admin` route) with five operational tabs: System Overview, Verifier Directory, Claims Moderation, Incident Queue, and Audit and Tools, secured by client route guards and server-side `firestore.rules` `isAdmin()` verification.
-- A security module (`src/lib/security.ts`) covering XSS sanitization, anti-spam heuristics, magic-byte file validation, a 30-minute idle session timeout, and login rate limiting.
-- Production deployment configurations for Firebase Hosting, Vercel, and a self-hosted Docker + Nginx container, each configured with Content-Security-Policy, HSTS, and related HTTP security headers.
+- Developed a working web application deployable on Firebase Hosting, Vercel, or Docker.
+- Implemented sign-in with email/password and Google, with idle-session timeout.
+- Built claim submission with in-browser OCR that removes WhatsApp timestamps and status text.
+- Implemented duplicate detection that blocks near-identical claims.
+- Built a verification queue with one verdict per verifier and no self-verification.
+- Implemented weighted consensus scoring and a reputation system updated by a Cloud Function.
+- Added PNG fact-check card export for sharing on WhatsApp.
+- Built a public analytics dashboard with category trends and the most debunked claims.
+- Built an admin console with five tabs and a permanent audit log.
+- Secured the database with Firestore Security Rules, checked by an automated test script.
+- Added light and dark themes and support for Devanagari text.
 
+#pagebreak()
 == Organization of Report
 
-This report has seven chapters and follows the `JUSIT-DSCPR503` dissertation structure:
+The report is organised into the following chapters:
 
-- *Chapter 1: Introduction* _(this chapter)_ explains the background problem, objectives, purpose, scope, applicability, and features.
-- *Chapter 2: Survey of Technologies* details the technology stack: React 18, Vite 5, TypeScript 5.5, Tailwind CSS v4, Firebase v12, Framer Motion, Recharts, `html-to-image`, Tesseract.js, and the Docker/Vercel/Firebase Hosting deployment targets.
-- *Chapter 3: Requirements and Analysis* contains the problem definition, an IEEE 830-style requirements specification, project scheduling, hardware/software requirements, and conceptual models like DFDs and UML diagrams.
-- *Chapter 4: System Design* outlines the 8 core modules, Firestore data schema, procedural design, UI design, security architecture, and test-case design.
-- *Chapter 5: Implementation and Testing* explains the code structure, testing strategy, and modifications made during development.
-- *Chapter 6: Results and Discussion* contains test reports and user documentation.
-- *Chapter 7: Conclusions* discusses system limitations and future work. The References and a glossary appear after Chapter 7.
+- *Chapter 1: Introduction* explains the background, objectives, scope, and achievements of FactStamp.
+- *Chapter 2: Survey of Technologies* describes the front-end, back-end, and supporting technologies used.
+- *Chapter 3: Requirements and Analysis* covers the problem definition, requirements, planning, hardware and software requirements, module descriptions, and diagrams.
+- *Chapter 4: System Design* presents the modules, database design, user interface design, security, and test cases.
+- *Chapter 5: Implementation and Testing* explains how the system was built and tested.
+- *Chapter 6: Results and Discussion* shows the working application screen by screen.
+- *Chapter 7: Conclusions* summarises the project, its limitations, and future scope.
+- *References and Glossary* list the sources used and explain the main terms.

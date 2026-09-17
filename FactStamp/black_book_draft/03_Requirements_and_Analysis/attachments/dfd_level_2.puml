@@ -58,51 +58,53 @@ skinparam DatabaseBackgroundColor #F8F9FA
 skinparam DatabaseFontSize 19
 skinparam DatabaseFontStyle bold
 
-title FactStamp - Data Flow Diagram (Level 2: 1.0 Submit Claim)
+title FactStamp - Data Flow Diagram (Level 2: Submit Claim)
 
 ' ---------- External entity ----------
 rectangle "Registered\nVerifier" as VER
 
 ' ---------- Sub-processes of 1.0 ----------
-usecase "1.1\nValidate Submitter\n& Claim Form" as S11
+usecase "Validate Submitter\n& Claim Form" as S11
 ' ---------- Data stores ----------
-database "D2  Users" as D2
-usecase "1.2\nCompress Screenshot\nto Base64 Data URI" as S12
-usecase "1.3\nExtract Text\n(Tesseract.js WASM,\n100% Client-Side)" as S13
-usecase "1.4\nNormalise &\nTokenise Claim Text" as S14
+database "Users" as D2
+usecase "Compress Screenshot\nto Base64 Data URI" as S12
+usecase "Extract Text\n(Tesseract.js WASM,\n100% Client-Side)" as S13
+usecase "Normalise &\nTokenise Claim Text" as S14
 ' ---------- Neighbouring Level 1 process, shown only as a boundary ----------
 ' #line.dashed marks it as out of scope (PlantUML resets the stroke width when an
 ' inline line style is applied, so this box is deliberately drawn thinner).
-rectangle "2.0  Detect Duplicates\n(Level 1 process — out of scope here)" as P20 #line.dashed
-usecase "1.5\nEvaluate Duplicate\nThreshold" as S15
-usecase "1.6\nAssemble Claim Record\n(pending, 7-day\nconsensusDeadline)" as S16
-usecase "1.7\nPersist Claim\nDocument" as S17
-database "D1  Claims\n(verifications[] embedded)" as D1
+rectangle "Detect Duplicates\n(Level 1 process — out of scope here)" as P20 #line.dashed
+usecase "Evaluate Duplicate\nThreshold" as S15
+usecase "Assemble Claim Record\n(pending, 7-day\nconsensusDeadline)" as S16
+usecase "Persist Claim\nDocument" as S17
+database "Claims\n(verifications[] embedded)" as D1
+database "Claim Media\n(full screenshots)" as D6
 
 ' ---------- Invisible spine: pins D2 to the rank of 1.1 so the graph stays narrow ----------
 VER -[hidden]-> D2
 
 ' ---------- Boundary inflows ----------
-VER --> S11 : "1. Claim Text / Screenshot /\n    Category / Source URL"
-D2  -[norank]-> S11 : "2. Verifier Profile\n    & Auth Claims"
+VER --> S11 : "Claim Text / Screenshot /\nCategory / Source URL"
+D2  -[norank]-> S11 : "Verifier Profile\n& Auth Claims"
 
 ' ---------- Internal flows ----------
-S11 --> S12 : "3. Accepted Screenshot File"
-S12 --> S13 : "4. Compressed Base64\n    Data URI"
-S13 --> S14 : "5. OCR-Extracted Text\n    + OCR Confidence"
-S11 -[norank]-> S14 : "6. Typed Claim Text\n    (no-image path)"
-S12 -[norank]-> S16 : "7. screenshotUrl\n    (Base64 field)"
+S11 --> S12 : "Accepted Screenshot File"
+S12 --> S13 : "Compressed Base64\nData URI"
+S13 --> S14 : "OCR-Extracted Text\n+ OCR Confidence"
+S11 -[norank]-> S14 : "Typed Claim Text\n(no-image path)"
+S12 -[norank]-> S16 : "Thumbnail\n(Base64, 160 px)"
 
 ' ---------- Boundary flow out to 2.0 and back ----------
-S14 --> P20 : "8. Normalised Claim Text\n    (lowercased token set)"
-P20 --> S15 : "9. Duplicate Match Result\n    (similarity, matched claim)"
+S14 --> P20 : "Normalised Claim Text\n(lowercased token set)"
+P20 --> S15 : "Duplicate Match Result\n(similarity, matched claim)"
 
 ' ---------- Duplicate decision ----------
-S15 -[norank]-> VER : "10. Duplicate Warning +\n     Link to Existing Claim"
-S15 --> S16 : "11. Cleared Unique Claim"
+S15 -[norank]-> VER : "Duplicate Warning +\nLink to Existing Claim"
+S15 --> S16 : "Cleared Unique Claim"
 
 ' ---------- Assemble and persist ----------
-S16 --> S17 : "12. Complete Claim Record"
-S17 --> D1 : "13. New Claim Document"
-S17 -[norank]-> VER : "14. Submission Receipt\n     (claimId)"
+S16 --> S17 : "Complete Claim Record"
+S17 --> D1 : "New Claim Document"
+S17 --> D6 : "Full Screenshot\n(claim_media/{claimId})"
+S17 -[norank]-> VER : "Submission Receipt\n(claimId)"
 @enduml

@@ -32,8 +32,8 @@
   v(3pt)
 }
 
-#fig-entry(1, "Gantt Chart", <fig-gantt>)
-#fig-entry(2, "PERT Chart", <fig-pert>)
+#fig-entry(1, "PERT Chart", <fig-pert>)
+#fig-entry(2, "Gantt Chart", <fig-gantt>)
 #fig-entry(3, "Event Table", <fig-event-table>)
 #fig-entry(4, "ER Diagram", <fig-er>)
 #fig-entry(5, "Class Diagram", <fig-class>)
@@ -49,4 +49,3 @@
 #fig-entry(15, "Data Flow Level 1 Diagram", <fig-dfd1>)
 #fig-entry(16, "Data Flow Level 2 Diagram", <fig-dfd2>)
 #fig-entry(17, "Database Schema Design", <fig-schema>)
-#fig-entry(18, "Claim Lifecycle Control Flow Diagram", <fig-lifecycle>)

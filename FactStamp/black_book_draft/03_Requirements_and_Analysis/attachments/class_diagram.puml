@@ -4,13 +4,13 @@ skinparam monochrome true
 skinparam defaultFontName "Liberation Sans"
 skinparam defaultFontSize 20
 skinparam defaultFontStyle bold
-skinparam titleFontSize 26
+skinparam titleFontSize 32
 skinparam titleFontStyle bold
 
 skinparam backgroundColor white
 skinparam ArrowColor black
 skinparam ArrowThickness 2.5
-skinparam ArrowFontSize 17
+skinparam ArrowFontSize 22
 skinparam ArrowFontStyle bold
 
 skinparam EntityBorderColor black
@@ -22,54 +22,59 @@ skinparam EntityFontStyle bold
 skinparam ClassBorderColor black
 skinparam ClassBorderThickness 2.5
 skinparam ClassBackgroundColor #F8F9FA
-skinparam ClassFontSize 22
+skinparam ClassFontSize 26
 skinparam ClassFontStyle bold
-skinparam ClassAttributeFontSize 18
+skinparam ClassAttributeFontSize 24
 
 title FactStamp - Class Diagram
 
-class ClaimsContext <<orchestrator>> {
+' Members are taken from src/lib/types.ts, src/contexts/ClaimsContext.tsx,
+' src/lib/duplicateDetection.ts, src/lib/confidenceScore.ts and
+' src/services/firebaseService.ts. The TypeScript modules are plain function
+' files, drawn as classes with a <<module>> / <<service>> stereotype.
+
+class ClaimsContext <<context>> {
   - claims : Claim[]
   - isLoading : boolean
-  - CONSENSUS_DEADLINE_DAYS : int = 7
+  - error : Error?
   --
-  + addClaim(input : AddClaimInput) : Promise<Claim>
-  + addVerification(claimId : string, data : AddVerificationInput) : void
-  + getClaimById(id : string) : Claim?
-  + getPendingClaims() : Claim[]
-  + getVerifiedClaims() : Claim[]
-  + expireOverdueClaims() : void
-  + flagClaim(claimId : string, flagged : boolean) : Promise<void>
-  + adminUpdateClaim(claimId : string, updates : Partial<Claim>) : Promise<void>
-  + deleteVerification(claimId : string, verificationId : string) : Promise<void>
-  - computeUpdatedClaim(claim : Claim, data : AddVerificationInput) : Claim
+  + addClaim(input) : Promise<Claim>
+  + addVerification(claimId, data) : Promise<void>
+  + expireOverdueClaims() : Promise<void>
+  + flagClaim(claimId, flagged) : Promise<void>
+  + adminUpdateClaim(claimId, updates) : Promise<void>
+  + deleteVerification(claimId, verificationId) : Promise<void>
 }
 
-class DuplicateDetectionEngine <<service>> {
-  - THRESHOLD : float
-  --
-  + findDuplicate(text : string, existingClaims : Claim[], threshold : float) : DuplicateMatch?
-  - jaccardSimilarity(a : string, b : string) : float
-  - tokenize(text : string) : Set<string>
-  - normalize(text : string) : string
+class firebaseService <<service>> {
+  + subscribeClaimsRealtime(callback, onError) : Unsubscribe
+  + addClaimToFirestore(claim) : Promise<string>
+  + updateClaimInFirestore(claim) : Promise<void>
+  + saveClaimScreenshot(claimId, dataUrl) : Promise<void>
+  + getClaimScreenshot(claimId) : Promise<string?>
 }
 
-class ConfidenceScoreEngine <<service>> {
-  - W_AGREEMENT : float
-  - W_REPUTATION : float
-  - W_SOURCE : float
-  --
-  + calculateConfidenceScore(verifications : Verification[]) : ConfidenceResult
-  + determineSourceQuality(url : string) : SourceQuality
-  + sourceQualityToScore(quality : SourceQuality) : int
-  - majorityVerdict(verifications : Verification[]) : Verdict
+class duplicateDetection <<module>> {
+  + findDuplicate(text, existingClaims, threshold = 0.75) : Match?
+  - jaccardSimilarity(a, b) : number
+  - tokenize(text) : Set<string>
+  - normalize(text) : string
 }
 
-class FirestoreRepository <<repository>> {
-  + subscribeClaimsRealtime(onData : Callback) : Unsubscribe
-  + createClaim(claim : Claim) : Promise<string>
-  + appendVerification(claimId : string, v : Verification) : Promise<void>
-  + updateUserReputation(uid : string, delta : int) : Promise<void>
+class confidenceScore <<module>> {
+  + calculateConfidenceScore(verifications) : Result
+  + determineSourceQuality(url) : SourceQuality
+  + sourceQualityToScore(quality) : number
+}
+
+class User {
+  + uid : string
+  + displayName : string
+  + email : string
+  + reputation : number = 50
+  + totalVerifications : number
+  + isAdmin : boolean?
+  + joinedAt : string
 }
 
 class Claim {
@@ -78,23 +83,17 @@ class Claim {
   + category : ClaimCategory
   + status : ClaimStatus
   + verdict : Verdict?
-  + confidenceScore : int?
-  + agreementRatio : float?
-  + avgVerifierReputation : float?
-  + sourceQualityScore : float?
-  + verificationCount : int
+  + confidenceScore : number?
   + verifications : Verification[]
+  + verificationCount : number
   + submittedBy : string
-  + submittedByName : string
-  + imageUrl : string?
-  + createdAt : string
   + consensusDeadline : string
-  + verifiedAt : string?
+  + consensusDeadlineMs : number?
+  + thumbnailUrl : string?
+  + hasScreenshot : boolean?
   + adminFlagged : boolean?
-  + adminFlaggedAt : string?
-  --
-  + hasQuorum() : boolean
-  + isOverdue() : boolean
+  + createdAt : string
+  + verifiedAt : string?
 }
 
 class Verification {
@@ -105,28 +104,8 @@ class Verification {
   + sourceQuality : SourceQuality
   + explanation : string
   + verifierId : string
-  + verifierName : string
-  + verifierReputation : int
+  + verifierReputation : number
   + createdAt : string
-}
-
-class User {
-  + uid : string
-  + displayName : string
-  + email : string
-  + avatarUrl : string?
-  + reputation : int = 50
-  + totalVerifications : int
-  + joinedAt : string
-  + isAdmin : boolean?
-}
-
-class AdminUser <<role>> {
-  + isAdmin : boolean = true
-  --
-  + flagClaim(claimId : string) : Promise<void>
-  + overrideVerdict(claimId : string, verdict : Verdict) : Promise<void>
-  + resolveReport(reportId : string, action : string) : Promise<void>
 }
 
 class AppNotification {
@@ -136,8 +115,8 @@ class AppNotification {
   + title : string
   + message : string
   + claimId : string?
-  + createdAt : string
   + isRead : boolean
+  + createdAt : string
 }
 
 enum Verdict {
@@ -167,33 +146,42 @@ enum SourceQuality {
   low
 }
 
-ClaimsContext ..> DuplicateDetectionEngine : <<use>> on submit
-ClaimsContext ..> ConfidenceScoreEngine : <<use>> on verify
-ClaimsContext ..> FirestoreRepository : <<use>> persist
+enum NotificationType {
+  claim_verified
+  reputation_update
+  weekly_report
+  verdict_submitted
+}
+
+' ---------- Relationships ----------
+ClaimsContext ..> duplicateDetection : uses
+ClaimsContext ..> confidenceScore : uses
+ClaimsContext ..> firebaseService : persists via
 ClaimsContext o-- "0..*" Claim : manages
 
-DuplicateDetectionEngine ..> Claim : compares
-ConfidenceScoreEngine ..> Verification : reads
-
-User "1" o-- "0..*" Claim : submits
-User "1" o-- "0..*" Verification : casts
-User "1" o-- "0..*" AppNotification : receives
-AdminUser --|> User
-
-Claim *-- "0..*" Verification : embedded array
+User "1" -- "0..*" Claim : submits
+User "1" -- "0..*" Verification : casts
+User "1" -- "0..*" AppNotification : receives
+Claim "1" *-- "0..3" Verification : embedded
 
 Claim ..> ClaimStatus
 Claim ..> ClaimCategory
-Verification ..> Verdict
+Claim ..> Verdict
 Verification ..> SourceQuality
+AppNotification ..> NotificationType
 
-' ── Layout constraints: force a tall, single-column growth (A4 portrait) ──
-DuplicateDetectionEngine -[hidden]down-> ConfidenceScoreEngine
-ConfidenceScoreEngine -[hidden]down-> FirestoreRepository
-FirestoreRepository -[hidden]down-> User
-AdminUser -[hidden]down-> AppNotification
-Verdict -[hidden]down-> ClaimStatus
-ClaimStatus -[hidden]down-> ClaimCategory
-ClaimCategory -[hidden]down-> SourceQuality
-
+' ---------- Layout rows ----------
+ClaimsContext -[hidden]right- firebaseService
+ClaimsContext -[hidden]down- duplicateDetection
+firebaseService -[hidden]down- confidenceScore
+duplicateDetection -[hidden]right- confidenceScore
+duplicateDetection -[hidden]down- User
+confidenceScore -[hidden]down- Claim
+User -[hidden]down- AppNotification
+Claim -[hidden]down- Verification
+AppNotification -[hidden]down- Verdict
+AppNotification -[hidden]down- NotificationType
+Verification -[hidden]down- SourceQuality
+Verification -[hidden]down- ClaimStatus
+Verification -[hidden]down- ClaimCategory
 @enduml

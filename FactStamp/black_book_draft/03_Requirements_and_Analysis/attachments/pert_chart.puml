@@ -2,101 +2,89 @@
 ' Chapter 3.3 - Planning and Scheduling
 ' Build:  plantuml -tsvg pert_chart.puml
 '
-' The schedule is a strictly linear chain of eight 2-week sprints executed by a
-' single developer, so EVERY activity lies on the critical path and every
-' activity has zero slack. Critical path length = 8 x 2 wks = 16 weeks.
-'
-' PlantUML has no native PERT notation, so the network is expressed with the
-' primitives it does have: an ellipse for each START/END milestone, a rectangle
-' for each activity node, and labelled arrows for the precedence edges. The
-' whole network is a single vertical chain, per the portrait-page rule.
+' Activities and dates come from the FactStamp git history
+' (first commit 12 Jul 2026, last committed work 13 Sep 2026); activity A is the
+' pre-code planning month from the Project Synopsis, and K is the testing and
+' documentation work still in progress. Dependencies are logical (what must
+' exist before a task can start), so tasks that could run side by side branch.
+' Earliest/latest times and slack are computed with the critical path method
+' from each activity's duration in days. Critical path: A > B > C > F > G > J > K = 102 days.
 
 @startuml
 skinparam style strictuml
 skinparam monochrome true
 skinparam defaultFontName "Liberation Sans"
-skinparam defaultFontSize 20
-skinparam defaultFontStyle bold
-skinparam titleFontSize 26
+skinparam defaultFontSize 30
+skinparam titleFontSize 36
 skinparam titleFontStyle bold
 skinparam backgroundColor white
 skinparam ArrowColor black
-skinparam ArrowThickness 2.5
-skinparam ArrowFontSize 17
-skinparam ArrowFontStyle bold
+skinparam ArrowThickness 2
 skinparam RectangleBorderColor black
-skinparam RectangleBorderThickness 2.5
-skinparam RectangleBackgroundColor #F8F9FA
-skinparam RectangleFontSize 20
-skinparam RectangleFontStyle bold
-title FactStamp - PERT Chart
+skinparam RectangleFontSize 30
+skinparam ranksep 70
+skinparam nodesep 60
+hide stereotype
+title FactStamp - PERT Chart (from Git History)
 
-' Layout tuning: the chain is 10 nodes deep, so tighten rank spacing to stop the
-' SVG stretching into an unusably thin ribbon on an A4 portrait page.
-skinparam ranksep 22
-skinparam nodesep 22
-
-' Completed activities (S1-S7): solid heavy border, light background.
-skinparam rectangle<<Done>> {
-  BorderStyle solid
-  BorderThickness 2.5
-  BackgroundColor #F8F9FA
+skinparam rectangle<<Crit>> {
+  BorderThickness 5
+  BackgroundColor #D9D9D9
 }
-
-' Activity still in flight (S8): heavy DASHED border + darker fill, so the
-' distinction survives both greyscale printing and the monochrome skinparam.
-skinparam rectangle<<Underway>> {
-  BorderStyle dashed
-  BorderThickness 4
-  BackgroundColor #D0D0D0
+skinparam rectangle<<Norm>> {
+  BorderThickness 2
+  BackgroundColor #FFFFFF
 }
-
-' START / END milestones: ellipse nodes, heavy border.
 skinparam usecase<<Milestone>> {
   BorderThickness 4
   BackgroundColor #FFFFFF
-  FontSize 20
+  FontSize 30
   FontStyle bold
 }
-
-skinparam legendFontSize 18
-skinparam legendFontStyle bold
-skinparam legendBackgroundColor #F8F9FA
+skinparam legendFontSize 26
+skinparam legendBackgroundColor #FFFFFF
 skinparam legendBorderColor black
 skinparam legendBorderThickness 2.5
 
-' ------------------------------------------------------------------ milestones
-usecase "START\nWeek 0 (01 Jun)" as START <<Milestone>>
-usecase "END\nWeek 16 (30 Sep)" as END <<Milestone>>
+usecase "START\n1 Jun 2026" as START <<Milestone>>
+rectangle "<b>A: Planning and Requirements</b>\n1 Jun – 11 Jul\n41 days · Slack 0" as A <<Crit>>
+rectangle "<b>B: UI Prototype and Auth Screens</b>\n12 Jul – 30 Jul\n19 days · Slack 0" as B <<Crit>>
+rectangle "<b>C: TypeScript + Live Firebase</b>\n31 Jul – 3 Aug\n4 days · Slack 0" as C <<Crit>>
+rectangle "<b>D: Claim and Verification Flow</b>\n4 Aug – 7 Aug\n4 days · Slack 8" as D <<Norm>>
+rectangle "<b>E: Analytics Dashboard</b>\n8 Aug – 10 Aug\n3 days · Slack 18" as E <<Norm>>
+rectangle "<b>F: Firestore Rules + CSP</b>\n11 Aug – 15 Aug\n5 days · Slack 0" as F <<Crit>>
+rectangle "<b>G: Admin Console</b>\n16 Aug – 26 Aug\n11 days · Slack 0" as G <<Crit>>
+rectangle "<b>H: Rate Limiting + Queue Fixes</b>\n27 Aug – 4 Sep\n9 days · Slack 2" as H <<Norm>>
+rectangle "<b>I: In-Browser OCR Pipeline</b>\n5 Sep – 8 Sep\n4 days · Slack 8" as I <<Norm>>
+rectangle "<b>J: Rules Hardening + Cloud Function</b>\n9 Sep – 13 Sep\n5 days · Slack 0" as J <<Crit>>
+rectangle "<b>K: Testing and Documentation</b>\n14 Sep – 30 Sep (in progress)\n17 days · Slack 0" as K <<Crit>>
+usecase "END\n30 Sep 2026" as END <<Milestone>>
 
-' --------------------------------------------------------------------- sprints
-' Label lines: short name / calendar slot + earliest start-finish + slack.
-' Status (Done / Underway) is carried by the stereotype and the border style.
-rectangle "S1: Scaffolding + Auth\nJun wk 1-2 | ES 0 - EF 2  |  Slack 0" as S1 <<Done>>
-rectangle "S2: Ingestion + OCR\nJun wk 3-4 | ES 2 - EF 4  |  Slack 0" as S2 <<Done>>
-rectangle "S3: Duplicate Detection\nJul wk 1-2 | ES 4 - EF 6  |  Slack 0" as S3 <<Done>>
-rectangle "S4: Verification Queue\nJul wk 3-4 | ES 6 - EF 8  |  Slack 0" as S4 <<Done>>
-rectangle "S5: Consensus Engine\nAug wk 1-2 | ES 8 - EF 10  |  Slack 0" as S5 <<Done>>
-rectangle "S6: Cards + Analytics\nAug wk 3-4 | ES 10 - EF 12  |  Slack 0" as S6 <<Done>>
-rectangle "S7: Security + Admin\nSep wk 1-2 | ES 12 - EF 14  |  Slack 0" as S7 <<Done>>
-rectangle "S8: Hardening + Deploy\nSep wk 3-4 | ES 14 - EF 16  |  Slack 0" as S8 <<Underway>>
+START -[bold]-> A
+A -[bold]-> B
+B -[bold]-> C
+C --> D
+C --> E
+C -[bold]-> F
+F -[bold]-> G
+F --> H
+D --> I
+G -[bold]-> J
+H --> J
+I --> J
+E --> K
+J -[bold]-> K
+K -[bold]-> END
 
-' ----------------------------------------------------- critical path (all of it)
-' Every edge is on the critical path; there is no non-critical branch to draw.
-START --> S1 : 2 wks
-S1 --> S2 : 2 wks
-S2 --> S3 : 2 wks
-S3 --> S4 : 2 wks
-S4 --> S5 : 2 wks
-S5 --> S6 : 2 wks
-S6 --> S7 : 2 wks
-S7 --> S8 : 2 wks
-S8 --> END : 0 wks
+' side-by-side layout for the parallel tasks
+D -[hidden]right- E
+E -[hidden]right- F
+I -[hidden]right- G
+G -[hidden]right- H
 
 legend bottom
-Critical Path: START -> S1 -> S2 -> S3 -> S4 -> S5 -> S6 -> S7 -> S8 -> END
-Length = 16 weeks | Slack = 0 on every activity
-<<Done>> solid border (S1-S7)  |  <<Underway>> dashed border, shaded (S8)
+  <b>Critical path</b> (shaded, heavy border): START > A > B > C > F > G > J > K > END = 102 days
+  Slack = days a task can slip without delaying the critical path
+  Dates from the commit history; built by one developer, the tasks ran one after another
 end legend
-
 @enduml

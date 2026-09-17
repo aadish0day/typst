@@ -60,7 +60,8 @@ object "c_8f21 : Claim" as claim {
   verificationCount = 2
   submittedBy = "u_a7c3"
   submittedByName = "Priya Nair"
-  imageUrl = "https://.../forward_8f21.jpg"
+  thumbnailUrl = "data:image/jpeg;base64,..."
+  hasScreenshot = true
   createdAt = "2026-03-01T18:22:40Z"
   consensusDeadline = "2026-03-08T18:22:40Z"
   verifiedAt = undefined
@@ -115,12 +116,11 @@ object "anjali : User" as verifier2 {
   isAdmin = false
 }
 
-object "engine : ConfidenceScoreEngine" as engine {
+object "result : calculateConfidenceScore()" as engine {
+  score = 91
   agreementRatio = 100.0
   avgReputation = 68.5
   sourceQualityScore = 100.0
-  weightedEvaluation = completed
-  score = 91
 }
 
 SnapshotNote .. submitter

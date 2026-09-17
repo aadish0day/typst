@@ -75,9 +75,10 @@ node "Static Hosting Tier\n<<one of three interchangeable targets>>" as HOST {
 
 node "Google Cloud Platform\n<<Backend as a Service - no custom server>>" as GCP {
   node "Firebase Authentication\nidentitytoolkit.googleapis.com\nemail/password + Google OAuth" as GAUTH
-  database "Cloud Firestore\nusers, claims, notifications,\nreports, audit_logs" as GDB
+  database "Cloud Firestore\nusers, claims, claim_media,\nnotifications, reports, audit_logs" as GDB
   artifact "firestore.rules\n<<server-side enforcement>>\nrole, ownership and\nfield-immutability checks" as A_RULES
   artifact "firestore.indexes.json\ncomposite indexes" as A_IDX
+  node "Cloud Functions (v2)\nawardVerificationReputation\n<<sole writer of reputation>>" as GFN
 
   GAUTH -[hidden]right- GDB
   A_RULES -[hidden]right- A_IDX
@@ -96,6 +97,7 @@ HOST --> BROWSER : <<HTTPS>>\nSPA shell
 BROWSER --> GAUTH : <<HTTPS>>\nID token
 BROWSER --> GDB : <<HTTPS/WSS>>\nonSnapshot
 GDB ..> A_RULES : checked by
+GDB ..> GFN : claims/{claimId}\nupdate trigger
 GCP ..> DEV : substituted\nlocally by
 
 ' ---- hidden spine: keeps the four tiers vertically aligned ----
