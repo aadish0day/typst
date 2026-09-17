@@ -81,7 +81,7 @@ Copy-paste this single starter block at the top of any standalone submission fil
 | **Headings (Level 1)** | **16pt**, **Bold**, numbered `"1.1"` | `#show heading.where(level: 1): set text(size: 16pt, weight: "bold")` |
 | **Subheadings (Level 2)** | **14pt**, **Bold** | `#show heading.where(level: 2): set text(size: 14pt, weight: "bold")` |
 | **Sub-subheadings (Level 3)** | **13pt**, **Bold** | `#show heading.where(level: 3): set text(size: 13pt, weight: "bold")` |
-| **New Topic on New Page** | **Mandatory** pagebreak before every Level 1 topic | `#show heading.where(level: 1): it => { pagebreak(weak: true); it }` |
+| **Section Page Breaks** | Chapter (`=`) and every section (`==`) start on a new page; subsections (`===`, `====`) never do. See Section 7, "Page Break Rules" | Chapter: master `#show heading.where(level: 1)` rule. Section: explicit `#pagebreak()` on the line above `==` |
 | **Page Border** | Solid black border (`1pt + black`) | `rect(width: 100% - 1.5cm, height: 100% - 1.5cm, stroke: 1pt + black)` |
 | **Binding Margin** | Left: `1.5in`, Right/Top/Bottom: `1in` | `margin: (left: 1.5in, right: 1in, top: 1in, bottom: 1in)` |
 
@@ -402,10 +402,19 @@ REST endpoints documentation...
   - **Sub-subheadings (Level 3):** `13pt`, **Bold** (`#show heading.where(level: 3): set text(size: 13pt, weight: "bold")`).
   - **Content / Body Text:** `12pt`, **Justified** (`#set text(size: 12pt)` with `#set par(justify: true)`).
   - **Font Family:** **Times New Roman** with cross-platform serif fallbacks (`Liberation Serif`, `Nimbus Roman`, `DejaVu Serif`).
-- **New Topic on New Page (Mandatory):** Every new topic or major section (Level 1 Heading) **MUST** start on a fresh new page (`#show heading.where(level: 1): it => { pagebreak(weak: true); it }` or explicit `#pagebreak()`).
+- **Page Break Rules (Mandatory, reference: `black_book_draft/01_Introduction/01_introduction.typ`):**
+  - **Chapter (`=`):** always starts on a new page. The master `#show heading.where(level: 1): it => { pagebreak(weak: true); it }` rule handles this; do not add a manual `#pagebreak()` above `=`.
+  - **First section of a chapter (`==`):** no page break. It follows directly after the `= Chapter` heading (and the chapter's intro paragraph, if any) on the same page.
+  - **Every later section (`==`):** starts on a new page. Put `#pagebreak()` on the line directly above the `==` heading:
+    ```typst
+    #pagebreak()
+    == Achievements
+    ```
+  - **Subsections (`===`, `====`):** never put a page break above them. They flow on from the previous content.
+  - **Only exception:** a `===` subsection whose body is a full-page diagram (for example each diagram in 3.6 Conceptual Models) may have `#pagebreak()` above it, so the image starts on its own page instead of being squeezed or pushed to leave a half-blank page.
 - **Mandatory Black Page Border:** Every Black Book project document and Assignment/Submission **MUST** include a solid black border (`stroke: 1pt + black`) configured in `#set page(background: place(center + horizon, rect(width: 100% - 1.5cm, height: 100% - 1.5cm, stroke: 1pt + black)))`.
 - **Exact Folder & Sub-file Naming Rule:** Submission directory names **MUST EXACTLY MATCH** the user's input/prompt string (e.g. `Submission of Chp 4: 4.2.2 Data Integrity and Constraints, 4.4 Security Issues/`). Inside the directory, `.typ` and `.pdf` files **MUST USE** a descriptive title slug (e.g. `data_integrity_and_security_issues.typ` and `data_integrity_and_security_issues.pdf`).
 - **PDF Metadata:** Prepend `#set document(title: "FactStamp - <Section>", author: "Aadish")` to every `.typ` file.
-- **Orphan Prevention:** Place `#pagebreak(weak: true)` before major section headings if near page bottom.
+- **Orphan Prevention:** Section (`==`) breaks are already covered by the Page Break Rules above. Do not add `#pagebreak(weak: true)` before `===` subsections to avoid orphans; if a subsection heading lands at the bottom of a page, fix it by editing the content, not by adding a break.
 - **Diagram Embedding:** No `#figure()` wrapper (captions are baked into diagram images as per college format). Use `responsive-image("attachments/diagram.svg")`.
 - **Compile Verification:** Always open and inspect the rendered PDF visually after compiling to check for page budget overflow or text clipping.
