@@ -1,0 +1,187 @@
+@startuml
+skinparam style strictuml
+skinparam monochrome true
+skinparam defaultFontName "Liberation Sans"
+skinparam defaultFontSize 20
+skinparam defaultFontStyle bold
+skinparam titleFontSize 32
+skinparam titleFontStyle bold
+
+skinparam backgroundColor white
+skinparam ArrowColor black
+skinparam ArrowThickness 2.5
+skinparam ArrowFontSize 22
+skinparam ArrowFontStyle bold
+
+skinparam EntityBorderColor black
+skinparam EntityBorderThickness 2.5
+skinparam EntityBackgroundColor #F8F9FA
+skinparam EntityFontSize 22
+skinparam EntityFontStyle bold
+
+skinparam ClassBorderColor black
+skinparam ClassBorderThickness 2.5
+skinparam ClassBackgroundColor #F8F9FA
+skinparam ClassFontSize 26
+skinparam ClassFontStyle bold
+skinparam ClassAttributeFontSize 24
+
+title FactStamp - Class Diagram
+
+' Members are taken from src/lib/types.ts, src/contexts/ClaimsContext.tsx,
+' src/lib/duplicateDetection.ts, src/lib/confidenceScore.ts and
+' src/services/firebaseService.ts. The TypeScript modules are plain function
+' files, drawn as classes with a <<module>> / <<service>> stereotype.
+
+class ClaimsContext <<context>> {
+  - claims : Claim[]
+  - isLoading : boolean
+  - error : Error?
+  --
+  + addClaim(input) : Promise<Claim>
+  + addVerification(claimId, data) : Promise<void>
+  + expireOverdueClaims() : Promise<void>
+  + flagClaim(claimId, flagged) : Promise<void>
+  + adminUpdateClaim(claimId, updates) : Promise<void>
+  + deleteVerification(claimId, verificationId) : Promise<void>
+}
+
+class firebaseService <<service>> {
+  + subscribeClaimsRealtime(callback, onError) : Unsubscribe
+  + addClaimToFirestore(claim) : Promise<string>
+  + updateClaimInFirestore(claim) : Promise<void>
+  + saveClaimScreenshot(claimId, dataUrl) : Promise<void>
+  + getClaimScreenshot(claimId) : Promise<string?>
+}
+
+class duplicateDetection <<module>> {
+  + findDuplicate(text, existingClaims, threshold = 0.75) : Match?
+  - jaccardSimilarity(a, b) : number
+  - tokenize(text) : Set<string>
+  - normalize(text) : string
+}
+
+class confidenceScore <<module>> {
+  + calculateConfidenceScore(verifications) : Result
+  + determineSourceQuality(url) : SourceQuality
+  + sourceQualityToScore(quality) : number
+}
+
+class User {
+  + uid : string
+  + displayName : string
+  + email : string
+  + reputation : number = 50
+  + totalVerifications : number
+  + isAdmin : boolean?
+  + joinedAt : string
+}
+
+class Claim {
+  + id : string
+  + text : string
+  + category : ClaimCategory
+  + status : ClaimStatus
+  + verdict : Verdict?
+  + confidenceScore : number?
+  + verifications : Verification[]
+  + verificationCount : number
+  + submittedBy : string
+  + consensusDeadline : string
+  + consensusDeadlineMs : number?
+  + thumbnailUrl : string?
+  + hasScreenshot : boolean?
+  + adminFlagged : boolean?
+  + createdAt : string
+  + verifiedAt : string?
+}
+
+class Verification {
+  + id : string
+  + claimId : string
+  + verdict : Verdict
+  + sourceUrl : string
+  + sourceQuality : SourceQuality
+  + explanation : string
+  + verifierId : string
+  + verifierReputation : number
+  + createdAt : string
+}
+
+class AppNotification {
+  + id : string
+  + userId : string
+  + type : NotificationType
+  + title : string
+  + message : string
+  + claimId : string?
+  + isRead : boolean
+  + createdAt : string
+}
+
+enum Verdict {
+  TRUE
+  FALSE
+  MISLEADING
+  UNVERIFIABLE
+  CONTESTED
+}
+
+enum ClaimStatus {
+  pending
+  verified
+}
+
+enum ClaimCategory {
+  health
+  political
+  religious
+  financial
+  other
+}
+
+enum SourceQuality {
+  high
+  medium
+  low
+}
+
+enum NotificationType {
+  claim_verified
+  reputation_update
+  weekly_report
+  verdict_submitted
+}
+
+' ---------- Relationships ----------
+ClaimsContext ..> duplicateDetection : uses
+ClaimsContext ..> confidenceScore : uses
+ClaimsContext ..> firebaseService : persists via
+ClaimsContext o-- "0..*" Claim : manages
+
+User "1" -- "0..*" Claim : submits
+User "1" -- "0..*" Verification : casts
+User "1" -- "0..*" AppNotification : receives
+Claim "1" *-- "0..3" Verification : embedded
+
+Claim ..> ClaimStatus
+Claim ..> ClaimCategory
+Claim ..> Verdict
+Verification ..> SourceQuality
+AppNotification ..> NotificationType
+
+' ---------- Layout rows ----------
+ClaimsContext -[hidden]right- firebaseService
+ClaimsContext -[hidden]down- duplicateDetection
+firebaseService -[hidden]down- confidenceScore
+duplicateDetection -[hidden]right- confidenceScore
+duplicateDetection -[hidden]down- User
+confidenceScore -[hidden]down- Claim
+User -[hidden]down- AppNotification
+Claim -[hidden]down- Verification
+AppNotification -[hidden]down- Verdict
+AppNotification -[hidden]down- NotificationType
+Verification -[hidden]down- SourceQuality
+Verification -[hidden]down- ClaimStatus
+Verification -[hidden]down- ClaimCategory
+@enduml

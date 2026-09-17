@@ -1,0 +1,154 @@
+<!doctype html><meta charset="utf-8">
+<link rel="stylesheet" href="wireframe.css">
+<style>
+  /* Scoped additions for this screen only — the shared stylesheet is not edited. */
+  .main { flex: 1.55; }
+  .aside { flex: 1; }
+  .col > .card { margin-top: 10px; }
+  .col > .card:first-child { margin-top: 0; }
+  .meta { display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: #555; }
+  .claim { font-size: 15.5px; line-height: 1.5; margin: 10px 0; }
+
+  /* Verdict stamp — double-ring seal, greyscale (colour-coded by verdict in the app) */
+  .stampwrap { text-align: center; padding: 14px 0 6px; }
+  .stamp { width: 158px; height: 158px; border: 3.5px solid #111; border-radius: 50%;
+           margin: 0 auto; display: flex; align-items: center; justify-content: center; background: #f2f2f2; }
+  .stamp > div { width: 124px; height: 124px; border: 2px dashed #111; border-radius: 50%;
+                 display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; }
+  .stamp .gl { font-size: 30px; line-height: 1; }
+  .stamp .vl { font-size: 19px; font-weight: 700; letter-spacing: -.5px; }
+  .conf { font-size: 12px; margin-top: 9px; }
+  .conf b { font-size: 15px; }
+
+  /* Verification entries */
+  .vrow { display: flex; gap: 10px; padding: 9px 0; border-bottom: 1px solid #ccc; }
+  .vrow:last-child { border-bottom: none; padding-bottom: 0; }
+  .av { width: 30px; height: 30px; border: 2px solid #111; border-radius: 50%; flex: none;
+        text-align: center; line-height: 26px; font-weight: 700; font-size: 12px; background: #ececec; }
+  .vhead { display: flex; align-items: center; gap: 7px; font-size: 12px; font-weight: 700; }
+  .vbody { font-size: 11.5px; color: #333; margin: 3px 0 4px; line-height: 1.45; }
+  .src { font-size: 10.5px; color: #555; }
+  .dot { width: 10px; height: 10px; border: 2px solid #111; border-radius: 50%;
+         display: inline-block; vertical-align: -1px; margin-right: 5px; }
+  .dot.hi { background: #111; }
+  .dot.mid { background: #999; }
+
+  /* Sidebar bits */
+  .cardh { font-size: 12.5px; font-weight: 700; margin-bottom: 7px; }
+  .cardh span { float: right; font-weight: 700; }
+  .wbtn { border: 2.5px solid #111; background: #111; color: #fff; padding: 8px 6px;
+          font-weight: 700; text-align: center; font-size: 11.5px; margin-top: 9px; }
+  .bar { height: 7px; border: 1.5px solid #111; background: #fff; margin: 3px 0 9px; }
+  .bar i { display: block; height: 100%; background: #111; }
+  .mrow { display: flex; justify-content: space-between; font-size: 11px; }
+  .mrow em { font-style: normal; color: #666; font-size: 10px; }
+  .slots { display: flex; justify-content: space-around; text-align: center; margin: 10px 0 6px; }
+  .slot small { display: block; font-size: 9.5px; margin-top: 4px; color: #555; }
+  .slot .o { width: 34px; height: 34px; border-radius: 50%; margin: 0 auto; border: 2px solid #111;
+             line-height: 30px; font-weight: 700; font-size: 13px; background: #ececec; }
+  .slot .o.next { border-style: dashed; background: #fff; }
+  .slot .o.open { border-color: #999; color: #999; background: #f7f7f7; }
+
+  /* Contested accordion */
+  .summary { display: flex; justify-content: space-between; border: 1.5px solid #111;
+             background: #ececec; padding: 8px 11px; font-size: 12px; font-weight: 700; margin-top: 10px; }
+  .stateflag { font-size: 10px; font-weight: 700; letter-spacing: .9px; color: #666;
+               text-transform: uppercase; margin: 12px 0 6px; border-top: 1.5px solid #999; padding-top: 9px; }
+  .stateflag:first-child { margin-top: 0; border-top: none; padding-top: 0; }
+</style>
+<div class="title">FactStamp — Claim Detail (/claim/:claimId)</div>
+<div class="frame">
+  <div class="nav"><span class="brand">FactStamp</span><span>Home</span><span>Dashboard</span><span class="sp"></span><span class="pill">☾ Theme</span><span class="pill on">Sign in</span></div>
+
+  <div class="sec">
+    <div class="lbl">Public route — rendered for signed-out visitors, so &ldquo;Verify Claims&rdquo; and &ldquo;My Profile&rdquo; are absent from the navbar</div>
+    <div class="meta"><span class="pill">Health &amp; Medical</span><span>2 days ago</span></div>
+    <div class="claim">Drinking hot lemon water at 5 a.m. cures Stage-3 diabetes in 21 days — the Ministry of AYUSH has confirmed this in circular no. 44/2025.</div>
+    <div class="ph">Attached screenshot (max-height 320&nbsp;px, links to the original in Firebase Storage)</div>
+  </div>
+
+  <div class="sec">
+    <div class="row">
+      <div class="col main">
+        <div class="lbl">Verdict stamp</div>
+        <div class="stampwrap">
+          <div class="stamp"><div><span class="gl">✕</span><span class="vl">FALSE</span></div></div>
+          <div class="conf"><b>90%</b> confidence score</div>
+        </div>
+        <div class="note">The stamp is colour-coded by verdict in the running app; in print it is carried by the label alone. While <code>claim.verdict</code> is null the whole block is simply <b>absent</b> — nothing is drawn in its place.</div>
+
+        <div class="lbl" style="margin-top:14px">Community verifications</div>
+        <div class="vrow">
+          <div class="av">P</div>
+          <div>
+            <div class="vhead">P. Nair <span class="pill">FALSE</span></div>
+            <div class="vbody">Circular 44/2025 does not exist in the ministry's gazette archive — the 2025 numbering series ends at 39.</div>
+            <div class="src"><span class="dot hi"></span>ayush.gov.in/circulars/2025</div>
+          </div>
+        </div>
+        <div class="vrow">
+          <div class="av">R</div>
+          <div>
+            <div class="vhead">R. Mehta <span class="pill">FALSE</span></div>
+            <div class="vbody">The 2024 advisory states plainly that no dietary regimen reverses Stage-3 diabetes; treatment discontinuation is dangerous.</div>
+            <div class="src"><span class="dot hi"></span>icmr.gov.in/advisories/diabetes</div>
+          </div>
+        </div>
+        <div class="vrow">
+          <div class="av">S</div>
+          <div>
+            <div class="vhead">S. Iqbal <span class="pill">FALSE</span></div>
+            <div class="vbody">A national daily traced the same forward to a 2021 wellness blog post and published a rebuttal on 4 March.</div>
+            <div class="src"><span class="dot mid"></span>indianexpress.com/article/fact-check</div>
+          </div>
+        </div>
+        <div class="note">Each row shows the verifier, their verdict pill, the explanation, and the cited source with its auto-classified quality tier.</div>
+        <div class="callout"><b>Empty state — pending claim with no verdicts yet</b>&ldquo;No verifications yet. This claim hasn't been verified yet — be the first to submit a verdict.&rdquo; The accompanying action button is rendered only for a signed-in visitor.</div>
+      </div>
+
+      <div class="col aside">
+        <div class="stateflag">Sidebar — verified claim</div>
+        <div class="card">
+          <div class="cardh">WhatsApp Fact Card</div>
+          <div class="ph" style="padding:26px 10px">Live preview of the exported card<br>(FactCheckCard component)</div>
+          <div class="wbtn">↓ Download WhatsApp Card (PNG)</div>
+          <div class="note">Exported at <b>1080&nbsp;px wide</b> — a 540&nbsp;px card captured at <code>pixelRatio: 2</code>. Height follows the content, so the file is not a fixed square.</div>
+        </div>
+
+        <div class="card">
+          <div class="cardh">Confidence Breakdown <span>90%</span></div>
+          <div class="src" style="margin-bottom:8px"><span class="dot hi"></span>High Confidence &nbsp;·&nbsp; 3 signals</div>
+          <div class="mrow"><span>Verifier consensus</span><span>100% <em>(40%)</em></span></div>
+          <div class="bar"><i style="width:100%"></i></div>
+          <div class="mrow"><span>Contributor reputation</span><span>78% <em>(30%)</em></span></div>
+          <div class="bar"><i style="width:78%"></i></div>
+          <div class="mrow"><span>Source domain authority</span><span>90% <em>(30%)</em></span></div>
+          <div class="bar"><i style="width:90%"></i></div>
+          <div class="note" style="margin-top:0">Weighted verifier agreement (40%) + reviewer trust score (30%) + source domain authority (30%).</div>
+        </div>
+
+        <div class="stateflag">Sidebar — pending claim (replaces both cards above)</div>
+        <div class="card">
+          <div class="cardh">Verification progress</div>
+          <div class="slots">
+            <div class="slot"><div class="o">P</div><small>Priya</small></div>
+            <div class="slot"><div class="o next">+</div><small>Next</small></div>
+            <div class="slot"><div class="o open">•</div><small>Open</small></div>
+          </div>
+          <div class="center" style="font-size:11px">1 of 3 verifications submitted</div>
+          <div class="wbtn">Add your verdict</div>
+          <div class="note">The pending state lives here in the sidebar — the main column keeps the claim card and simply omits the stamp.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="lbl">Main column — contested state (consensus window lapsed with fewer than 3 verdicts)</div>
+    <div class="h">↻ No Consensus Reached</div>
+    <div style="font-size:12px">This claim is marked <b>CONTESTED</b>.</div>
+    <div class="note" style="font-style:normal;color:#333;font-size:11.5px">This claim did not receive the minimum 3 independent verifications within the 7-day consensus window. Only 2 of 3 required verifications were submitted. Consensus deadline was 3 days ago · Confidence score: 34%.</div>
+    <div class="summary"><span>View 2 submitted verifications</span><span>▾</span></div>
+    <div class="note">A native <code>&lt;details&gt;</code> accordion — collapsed by default, so the partial evidence is available without presenting it as a settled verdict.</div>
+  </div>
+</div>

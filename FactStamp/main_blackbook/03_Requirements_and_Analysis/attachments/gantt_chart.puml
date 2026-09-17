@@ -1,0 +1,102 @@
+' FactStamp - Project Gantt Chart
+' Chapter 3.3 - Planning and Scheduling
+' Build:  plantuml -tsvg gantt_chart.puml
+'
+' Activities A-K match the PERT chart (pert_chart.puml). A is the planning
+' month from the Project Synopsis; B-J are dated from the FactStamp git history
+' (first commit 12 Jul 2026, last committed work 13 Sep 2026); K, testing and
+' documentation, is in progress (4 of 17 days done on 17 Sep 2026).
+' Tasks are drawn on the dates they actually ran, one after another.
+'
+' COLOUR POLICY - deliberate, Gantt-only exception to the project-wide
+' "skinparam monochrome true" rule (see Rules/Diagram-rules.md, Rule 6).
+' Colour here encodes information, not decoration:
+'
+'   * One colour family per delivery phase, so the four phases group visually.
+'   * The four families sit on a deliberate LIGHTNESS LADDER (approximate
+'     greyscale luminance in brackets) so the phases stay tellable apart when
+'     the black book is printed in black and white:
+'         Phase 1  Planning               pale green   #C9E4C5  [~217]
+'         Phase 2  Foundation             amber        #E0AE45  [~177]
+'         Phase 3  Core Features          mid blue     #4E93BE  [~131]
+'         Phase 4  Hardening and Release  indigo       #5B4B85  [~ 86]
+'         Handover milestone              deep crimson #8E1B12  [~ 60]
+'     Roughly 40 luminance steps between neighbours - hue alone is never load
+'     bearing.
+'   * Completed activities render as a fully filled bar; the in-progress
+'     activity K is only partly filled, so "done" vs "in progress" reads from
+'     the fill fraction, which survives greyscale untouched.
+
+@startgantt
+
+skinparam defaultFontName "Liberation Sans"
+skinparam defaultFontSize 18
+skinparam defaultFontStyle bold
+skinparam titleFontSize 24
+skinparam titleFontStyle bold
+skinparam taskBorderThickness 2
+
+title FactStamp - Project Gantt Chart (1 Jun - 30 Sep 2026, from Git History)
+
+printscale weekly
+Project starts 2026-06-01
+
+-- Phase 1: Planning --
+
+[A: Planning and Requirements] starts 2026-06-01 and ends 2026-07-11
+[A: Planning and Requirements] is 100% complete
+[A: Planning and Requirements] is colored in #C9E4C5/#3F6B39
+
+-- Phase 2: Foundation --
+
+[B: UI Prototype and Auth Screens] starts 2026-07-12 and ends 2026-07-30
+[B: UI Prototype and Auth Screens] is 100% complete
+[B: UI Prototype and Auth Screens] is colored in #E0AE45/#7A560C
+
+[C: TypeScript + Live Firebase] starts 2026-07-31 and ends 2026-08-03
+[C: TypeScript + Live Firebase] is 100% complete
+[C: TypeScript + Live Firebase] is colored in #E0AE45/#7A560C
+
+-- Phase 3: Core Features --
+
+[D: Claim and Verification Flow] starts 2026-08-04 and ends 2026-08-07
+[D: Claim and Verification Flow] is 100% complete
+[D: Claim and Verification Flow] is colored in #4E93BE/#1B4762
+
+[E: Analytics Dashboard] starts 2026-08-08 and ends 2026-08-10
+[E: Analytics Dashboard] is 100% complete
+[E: Analytics Dashboard] is colored in #4E93BE/#1B4762
+
+[F: Firestore Rules + CSP] starts 2026-08-11 and ends 2026-08-15
+[F: Firestore Rules + CSP] is 100% complete
+[F: Firestore Rules + CSP] is colored in #4E93BE/#1B4762
+
+[G: Admin Console] starts 2026-08-16 and ends 2026-08-26
+[G: Admin Console] is 100% complete
+[G: Admin Console] is colored in #4E93BE/#1B4762
+
+-- Phase 4: Hardening and Release --
+
+[H: Rate Limiting + Queue Fixes] starts 2026-08-27 and ends 2026-09-04
+[H: Rate Limiting + Queue Fixes] is 100% complete
+[H: Rate Limiting + Queue Fixes] is colored in #5B4B85/#2C2444
+
+[I: In-Browser OCR Pipeline] starts 2026-09-05 and ends 2026-09-08
+[I: In-Browser OCR Pipeline] is 100% complete
+[I: In-Browser OCR Pipeline] is colored in #5B4B85/#2C2444
+
+[J: Rules Hardening + Cloud Function] starts 2026-09-09 and ends 2026-09-13
+[J: Rules Hardening + Cloud Function] is 100% complete
+[J: Rules Hardening + Cloud Function] is colored in #5B4B85/#2C2444
+
+[K: Testing and Documentation] starts 2026-09-14 and ends 2026-09-30
+[K: Testing and Documentation] is 24% complete
+[K: Testing and Documentation] is colored in #5B4B85/#2C2444
+
+[First Commit] happens 2026-07-12
+[First Commit] is colored in #8E1B12/#4A0D08
+[Project Handover] happens 2026-09-30
+[Project Handover] is colored in #8E1B12/#4A0D08
+Today is 2026-09-17 and is colored in #F2D7D5
+
+@endgantt

@@ -1,0 +1,201 @@
+<!doctype html><meta charset="utf-8">
+<link rel="stylesheet" href="wireframe.css">
+<style>
+/* Scoped to this screen only — the shared wireframe.css is left untouched.
+   Greyscale throughout: bar and wedge fills differ by LIGHTNESS, never hue,
+   so the figure survives a black-and-white print. */
+.sec { padding: 8px 13px; }
+.nav { padding: 7px 13px; }
+.title { margin-bottom: 7px; }
+.subtitle { margin: -5px 0 8px; }
+.note { margin-top: 3px; font-size: 10px; }
+.h { margin-bottom: 4px; }
+.tiny { font-size: 10.5px; color: #555; }
+.mono { font-family: monospace; }
+.k { font-weight: 700; }
+
+/* Stage captions between the two frames */
+.cap { font-size: 11.5px; font-weight: 700; letter-spacing: .4px; margin: 0 0 5px; }
+.cap span { font-weight: 400; font-style: italic; color: #666; }
+.gap { height: 11px; }
+
+/* ── Login gate ── */
+.scrim { background: repeating-linear-gradient(135deg,#f5f5f5 0 5px,#e9e9e9 5px 10px); padding: 11px; }
+.gate { border: 2.5px solid #111; background: #fff; max-width: 640px; margin: 0 auto;
+        padding: 10px 13px; box-shadow: 7px 7px 0 #d5d5d5; }
+.gate .lock { width: 36px; height: 36px; border: 2px solid #111; margin: 0 auto 6px;
+              display: flex; align-items: center; justify-content: center;
+              font-size: 9px; font-weight: 700; letter-spacing: .5px; }
+.err { border: 1.5px solid #111; background: #ddd; padding: 6px 8px; font-size: 10.5px; margin-top: 8px; }
+.demo { display: flex; flex-direction: column; gap: 5px; margin-top: 5px; }
+.demo div { flex: 1; border: 1px solid #999; background: #fafafa; padding: 5px 7px; font-size: 10px; }
+.demo b { display: block; font-size: 10.5px; }
+
+/* ── Console tab bar — five tabs, deliberately kept on one row ── */
+.tabs { margin-bottom: 9px; }
+.tab { padding: 6px 10px; font-size: 11.5px; }
+.tab i { font-style: normal; font-family: monospace; font-size: 9.5px; border: 1px solid currentColor;
+         border-radius: 8px; padding: 0 4px; margin-left: 5px; }
+
+/* ── Schematic bar chart (Recharts BarChart) ── */
+.bars { display: flex; align-items: flex-end; gap: 11px; height: 92px;
+        border-left: 1.5px solid #111; border-bottom: 1.5px solid #111;
+        padding: 0 8px; margin: 14px 0 0 16px; position: relative; }
+.bars b { flex: 1; border: 1.5px solid #111; position: relative; }
+.bars b u { position: absolute; top: -14px; left: 0; right: 0; text-align: center;
+            font-size: 9.5px; font-family: monospace; text-decoration: none; }
+.yax { position: absolute; left: -16px; top: -6px; bottom: -7px; width: 14px; font-size: 9px;
+       font-family: monospace; color: #666; display: flex; flex-direction: column;
+       justify-content: space-between; align-items: flex-end; }
+.xax { display: flex; gap: 11px; padding: 3px 8px 0; margin-left: 16px; }
+.xax span { flex: 1; text-align: center; font-size: 9.5px; }
+
+/* ── Schematic donut (Recharts PieChart, inner r 55 / outer r 80) ── */
+.donut { width: 112px; height: 112px; border-radius: 50%; flex: 0 0 auto; position: relative;
+  background: conic-gradient(
+    #1a1a1a 0 47.4%,      #fff 47.4% 48.4%,
+    #4d4d4d 48.4% 67.2%,  #fff 67.2% 68.2%,
+    #808080 68.2% 83.7%,  #fff 83.7% 84.7%,
+    #b3b3b3 84.7% 93.6%,  #fff 93.6% 94.6%,
+    #e6e6e6 94.6% 99.1%,  #fff 99.1% 100%);
+  box-shadow: inset 0 0 0 1.5px #111; }
+.donut::after { content: ""; position: absolute; inset: 15.6%; border-radius: 50%;
+                background: #fff; box-shadow: inset 0 0 0 1.5px #111; }
+.pieblock { display: flex; align-items: center; gap: 14px; margin-top: 12px; }
+.lg { display: grid; grid-template-columns: 1fr; gap: 4px; font-size: 10.5px; }
+.lg span { display: flex; align-items: center; }
+.lg em { margin-left: auto; font-style: normal; font-family: monospace; font-weight: 700; padding-left: 10px; }
+.sw { width: 11px; height: 11px; border: 1.5px solid #111; margin-right: 6px; flex: 0 0 auto; }
+.cch { font-size: 9.5px; font-style: italic; color: #777; margin-top: 4px; text-align: center; }
+</style>
+
+<div class="title">FactStamp — Admin Command Center (/admin)</div>
+<div class="subtitle">Unlisted route — absent from the Navbar and Footer; reachable only by typing the URL.</div>
+
+<!-- ══ Stage 1: AdminRoute gate ══ -->
+<div class="cap">Stage 1 — <span>AdminRoute renders this gate before any console tab mounts</span></div>
+<div class="frame">
+  <div class="sec scrim">
+    <div class="gate">
+      <div class="center">
+        <div class="lock">LOCK</div>
+        <span class="pill mono">FIREBASE DB GATE: /admin</span>
+        <div class="h" style="margin-top:6px;margin-bottom:2px">Admin Authentication</div>
+        <div class="tiny">Sign in with administrator credentials to reach the FactStamp Command Center.</div>
+      </div>
+
+      <div class="row" style="margin-top:9px;gap:13px;align-items:flex-start">
+        <div class="col">
+          <div class="err"><span class="k">!</span> Invalid administrator credentials (3 attempts remaining)</div>
+          <div class="lbl" style="margin:8px 0 4px">Username or admin email</div>
+          <div class="field" style="min-height:0;padding:6px 9px">e.g. admin or admin@factstamp.app</div>
+          <div class="lbl" style="margin:7px 0 4px">Password</div>
+          <div class="field" style="min-height:0;padding:6px 9px">••••••••</div>
+          <div class="btn center" style="display:block;margin-top:8px;padding:7px">Sign in to /admin</div>
+        </div>
+        <div class="col" style="border-left:1px solid #ccc;padding-left:13px">
+          <div class="lbl" style="margin-bottom:4px">Authorized demo admins · shared password</div>
+          <div class="demo">
+            <div><b>Priya Sharma</b>priya@factstamp.app</div>
+            <div><b>FactStamp Admin</b>admin@factstamp.app</div>
+          </div>
+          <div class="note" style="margin-top:7px">Rate limited to <span class="k">5 failed attempts</span>, then a <span class="k">15-minute lockout</span>. A valid password is not enough — the Firestore user document must also carry <span class="k mono">isAdmin == true</span>, so a session flag forged in DevTools is rejected.</div>
+          <div class="tiny" style="border-top:1px solid #ccc;margin-top:7px;padding-top:5px">
+            &larr; Back to Public Site <span class="mono" style="float:right">FactStamp v1.0</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="gap"></div>
+
+<!-- ══ Stage 2: unlocked console ══ -->
+<div class="cap">Stage 2 — <span>console unlocked, with the first of its five tabs active</span></div>
+<div class="frame">
+  <div class="nav"><span class="brand">FactStamp</span><span>Admin Command Center</span><span class="pill on">Staff Clearance</span><span class="sp"></span><span class="muted">Live Sync Active</span><span class="muted">Cloud Firestore</span><span class="muted">theme</span><span class="pill">Lock Console</span></div>
+
+  <div class="sec">
+    <div class="tiny" style="margin-bottom:7px">Unlisted console — oversee verifier reputation, override consensus verdicts, triage incidents and manage database integrity.</div>
+
+    <div class="tabs">
+      <div class="tab on">System Overview</div>
+      <div class="tab">Verifier Directory<i>12</i></div>
+      <div class="tab">Claims Moderation<i>128</i></div>
+      <div class="tab">Incident Queue<i>3</i></div>
+      <div class="tab">Audit &amp; Tools</div>
+    </div>
+
+    <div class="lbl" style="margin-bottom:5px">Tab 1 of 5 — system overview</div>
+    <div class="row" style="margin-top:0">
+      <div class="card col"><span style="font-size:19px;font-weight:700">12</span><small>Registered Verifiers</small></div>
+      <div class="card col"><span style="font-size:19px;font-weight:700">128</span><small>Total Claims · 37 pending, 91 verified</small></div>
+      <div class="card col"><span style="font-size:19px;font-weight:700">341</span><small>Verifications Logged</small></div>
+      <div class="card col"><span style="font-size:19px;font-weight:700">3</span><small>Incident Queue · 5 claims flagged</small></div>
+    </div>
+  </div>
+
+  <!-- Charts row: bar + pie, side by side -->
+  <div class="sec">
+    <div class="row" style="margin-top:0;gap:14px;align-items:flex-start">
+
+      <div class="col">
+        <div class="h" style="font-size:13.5px">Claims by Category</div>
+        <div class="tiny">Topic distribution across the repository</div>
+        <div class="bars">
+          <div class="yax"><span>40</span><span>20</span><span>0</span></div>
+          <b style="height:100%;background:#1a1a1a"><u>38</u></b>
+          <b style="height:76%;background:#4d4d4d"><u>29</u></b>
+          <b style="height:63%;background:#808080"><u>24</u></b>
+          <b style="height:50%;background:#b3b3b3"><u>19</u></b>
+          <b style="height:47%;background:#e6e6e6"><u>18</u></b>
+        </div>
+        <div class="xax"><span>Health</span><span>Political</span><span>Financial</span><span>Religious</span><span>Other</span></div>
+        <div class="cch">Recharts BarChart · dashed cartesian grid · hover tooltip</div>
+      </div>
+
+      <div class="col" style="border-left:1.5px solid #999;padding-left:14px">
+        <div class="h" style="font-size:13.5px">Verdict Consensus Breakdown</div>
+        <div class="tiny">Outcome split across evaluated claims</div>
+        <div class="pieblock">
+          <div>
+            <div class="donut"></div>
+            <div class="cch" style="width:112px">inner r 55 / outer r 80</div>
+          </div>
+          <div class="lg">
+            <span><i class="sw" style="background:#1a1a1a"></i>FALSE<em>44</em></span>
+            <span><i class="sw" style="background:#4d4d4d"></i>TRUE<em>18</em></span>
+            <span><i class="sw" style="background:#808080"></i>MISLEADING<em>15</em></span>
+            <span><i class="sw" style="background:#b3b3b3"></i>UNVERIFIABLE<em>9</em></span>
+            <span><i class="sw" style="background:#e6e6e6"></i>CONTESTED<em>5</em></span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+    <div class="note">Both charts are Recharts components imported at the top of <span class="k">Admin.tsx</span> — unlike the public dashboard, this console does not code-split them.</div>
+  </div>
+
+  <!-- Reputation tiers: a counts grid, NOT a chart -->
+  <div class="sec">
+    <div class="h" style="font-size:13.5px">Verifier Reputation Tiers</div>
+    <div class="tiny">Community trust distribution and voting-weight tiers</div>
+    <div class="row">
+      <div class="card col"><span class="pill">Novice (0-30)</span><div style="margin-top:5px"><span class="mono" style="font-size:17px;font-weight:700">2</span> <span class="tiny">users</span></div></div>
+      <div class="card col"><span class="pill">Trusted (31-60)</span><div style="margin-top:5px"><span class="mono" style="font-size:17px;font-weight:700">4</span> <span class="tiny">users</span></div></div>
+      <div class="card col"><span class="pill">Expert (61-85)</span><div style="margin-top:5px"><span class="mono" style="font-size:17px;font-weight:700">5</span> <span class="tiny">users</span></div></div>
+      <div class="card col"><span class="pill">Elite (86-100)</span><div style="margin-top:5px"><span class="mono" style="font-size:17px;font-weight:700">1</span> <span class="tiny">users</span></div></div>
+    </div>
+    <div class="note">A plain <span class="k">counts grid, not a chart</span> — four static cells, no axes and no Recharts container. Admin-side labels use the short form; the profile screen spells the same four tiers out in full.</div>
+  </div>
+
+  <div class="sec">
+    <div class="lbl" style="margin-bottom:5px">Remaining four tabs — bodies not drawn here</div>
+    <div class="row" style="margin-top:0">
+      <div class="card col"><b>Verifier Directory</b><small>Searchable user table; promote / demote the admin role.</small></div>
+      <div class="card col"><b>Claims Moderation</b><small>Every claim, with an administrative verdict override.</small></div>
+      <div class="card col"><b>Incident Queue</b><small>User reports awaiting triage; resolve or dismiss.</small></div>
+      <div class="card col"><b>Audit &amp; Tools</b><small>Admin action trail and DB-integrity utilities.</small></div>
+    </div>
+  </div>
+</div>

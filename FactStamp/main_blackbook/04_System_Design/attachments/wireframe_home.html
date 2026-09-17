@@ -1,0 +1,214 @@
+<!doctype html><meta charset="utf-8">
+<link rel="stylesheet" href="wireframe.css">
+<style>
+/* Scoped extras for this screen only — the shared wireframe.css is untouched
+   because sibling screens are rendered from it concurrently. Greyscale only. */
+.hero-h  { font-size: 20px; font-weight: 800; line-height: 1.24; margin: 6px 0 5px; }
+.lede    { font-size: 12px; color: #444; }
+.sub     { font-size: 10.5px; color: #666; }
+.hr      { border-top: 1px solid #bbb; margin: 5px 0; }
+.kv      { display: flex; justify-content: space-between; gap: 6px; font-size: 11px; padding: 2px 0; }
+.bubble  { border: 1.5px solid #111; border-radius: 10px 10px 10px 2px; background: #efefef; padding: 8px; }
+.stamp   { border: 2.5px solid #111; background: #fff; padding: 8px; }
+.seal    { border: 1.5px solid #111; background: #e0e0e0; text-align: center; padding: 4px; margin: 5px 0; }
+.seal b  { font-size: 17px; letter-spacing: 1.2px; display: block; }
+.acol    { flex: 0 0 30px; display: flex; flex-direction: column; align-items: center;
+           justify-content: center; font-size: 16px; font-weight: 700; color: #555; }
+.tick    { border: 1.5px solid #111; background: #f4f4f4; padding: 7px 9px; display: flex;
+           align-items: center; gap: 8px; }
+.tick .pill { white-space: nowrap; font-weight: 400; font-style: italic; }
+.num     { font-size: 25px; font-weight: 800; line-height: 1; }
+.cap     { font-size: 9.5px; font-weight: 700; letter-spacing: .8px; }
+.brk     { border-left: 1px solid #999; padding-left: 11px; min-width: 152px; }
+.stepcard{ border: 1.5px solid #111; border-left: 5px solid #111; padding: 6px 9px;
+           margin-top: 6px; display: flex; gap: 9px; align-items: baseline; }
+.stepcard .n { font-size: 15px; font-weight: 800; color: #777; flex: 0 0 22px; }
+.off     { margin-left: 24px; }
+.xitem   { display: flex; gap: 7px; font-size: 11px; margin-top: 5px; line-height: 1.3; }
+.xitem b { flex: 0 0 11px; }
+.bar     { display: inline-block; vertical-align: middle; width: 62px; height: 7px;
+           border: 1px solid #111; background: #fff; }
+.bar i   { display: block; height: 100%; background: #111; }
+.vs      { flex: 0 0 30px; display: flex; align-items: center; justify-content: center; }
+.vs span { border: 1.5px solid #111; border-radius: 50%; width: 28px; height: 28px; line-height: 25px;
+           text-align: center; font-size: 10px; font-weight: 700; background: #fff; }
+.cta .btn{ padding: 7px 10px; font-size: 11.5px; margin-top: 9px; }
+.hdrow   { display: flex; align-items: flex-end; justify-content: space-between; }
+.pil     { border: 1.5px solid #111; padding: 4px 6px; text-align: center; font-size: 10.5px; font-weight: 700; }
+.pil span{ display: block; font-weight: 400; font-style: italic; color: #666; margin-top: 3px; }
+</style>
+
+<div class="title">FactStamp — Home / Landing (/)</div>
+<div class="frame">
+
+  <div class="nav">
+    <span class="brand">⛨ FactStamp</span><span>Home</span><span>Dashboard</span>
+    <span class="muted">Verify Claims &amp; My Profile not rendered — protected routes</span>
+    <span class="sp"></span><span class="pill">☾ Theme</span><span class="pill on">Sign in</span>
+  </div>
+
+  <!-- 1. HERO ------------------------------------------------------------ -->
+  <div class="sec">
+    <div class="lbl">Hero — signature “forward → stamped verdict” transformation</div>
+    <div class="row" style="margin-top:0">
+
+      <div class="col" style="flex:6">
+        <span class="pill">● WhatsApp Misinformation Debunker</span>
+        <div class="hero-h">Stop <span class="pill" style="font-size:13px">✕ FORWARDS</span> and
+          <u>WhatsApp fake news</u> before they spread</div>
+        <div class="lede">Paste suspicious messages, get <b>community-verified verdicts</b> with
+          transparent confidence scores, and send <b>downloadable fact-check cards</b> back into group chats.</div>
+        <div class="cta"><span class="btn">Submit a Forward →</span><span class="btn ghost" style="margin-left:6px">Explore Verification Queue</span></div>
+        <div class="note">Public route, no auth guard · CTAs route to /submit and /verify.</div>
+      </div>
+
+      <div style="flex:4">
+        <div class="sub"><b>State A</b> — on mount</div>
+        <div class="bubble">
+          <div style="font-size:10.5px;font-weight:700">▤ Forwarded many times</div>
+          <div class="hr"></div>
+          <div style="font-style:italic;font-size:11px">“Drinking hot water with lemon cures dengue
+            fever completely in 24 hours, confirmed by AIIMS doctors.”</div>
+          <div class="kv" style="color:#666"><span>10:42 AM</span><span><u>Click to verify →</u></span></div>
+        </div>
+      </div>
+
+      <div class="acol">→<span style="font-size:8.5px;font-weight:400;font-style:italic">1.2 s</span></div>
+
+      <div style="flex:4">
+        <div class="sub"><b>State B</b> — stamped verdict card</div>
+        <div class="stamp">
+          <div class="kv" style="font-weight:700"><span>▣ FACTSTAMP</span><span>94%</span></div>
+          <div class="hr"></div>
+          <div style="font-size:10px;color:#555;font-style:italic">“Hot water with lemon cures dengue…”</div>
+          <div class="seal">✕ <b>FALSE</b><span style="font-size:9px">CONSENSUS 3/3 VERIFIERS</span></div>
+          <div style="font-size:10px">WHO &amp; MoHFW: dengue needs fluid management, not lemon water.</div>
+          <div class="hr"></div>
+          <div class="kv"><span>who.int · mohfw.gov.in</span><span>↺</span></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- 2. BENTO + TICKER --------------------------------------------------- -->
+  <div class="sec">
+    <div class="lbl">Live statistics bento + recent-claims ticker</div>
+    <div class="row" style="margin-top:0">
+      <div class="card" style="flex:2">
+        <div class="row" style="margin-top:0;align-items:center">
+          <div class="col">
+            <span class="pill" style="font-size:9.5px">LIVE DATABASE</span>
+            <div class="cap" style="margin-top:4px">CLAIMS VERIFIED</div>
+            <div class="num">32</div>
+            <small>Forwards debunked by the network.</small>
+          </div>
+          <div class="brk">
+            <div class="cap" style="color:#666">CONSENSUS VERDICTS</div>
+            <div class="kv"><span>◼ False</span><b>68%</b></div>
+            <div class="kv"><span>◪ Misleading</span><b>22%</b></div>
+            <div class="kv"><span>◻ True</span><b>10%</b></div>
+          </div>
+        </div>
+      </div>
+      <div class="card" style="flex:1">
+        <span class="pill" style="font-size:9.5px">QUORUM INDEX</span>
+        <div class="num" style="margin-top:6px">81%</div>
+        <div class="cap" style="margin-top:3px">AVG CONSENSUS SCORE</div>
+        <small>Agreement accuracy, source-validated.</small>
+      </div>
+      <div class="card" style="flex:1">
+        <span class="pill" style="font-size:9.5px">NETWORK STRENGTH</span>
+        <div class="num" style="margin-top:6px">21</div>
+        <div class="cap" style="margin-top:3px">ACTIVE VERIFIERS</div>
+        <small>Ⓐ Ⓡ Ⓟ Ⓥ overlapping avatars</small>
+      </div>
+    </div>
+    <div class="tick" style="margin-top:10px">
+      <span class="pill">“Dengue cured by lemon water…” <b>FALSE</b></span>
+      <span class="pill">“₹5,000 UPI loan waiver…” <b>PENDING</b></span>
+      <span class="pill">“ISRO changed eclipse timings…” <b>MISLEADING</b></span>
+      <span style="font-weight:700;margin-left:auto">→</span>
+    </div>
+    <div class="note">Counters animate from zero · marquee pauses on hover; pills deep-link to /claim/&lt;id&gt;.</div>
+  </div>
+
+  <!-- 3. VERIFICATION LOOP ------------------------------------------------ -->
+  <div class="sec">
+    <div class="lbl">The verification loop — asymmetric timeline</div>
+    <div class="row" style="margin-top:0">
+      <div class="col" style="flex:4">
+        <div class="h" style="font-size:14px">How FactStamp Reverses Misinformation</div>
+        <div class="lede">A decentralised protocol producing visual truth indicators that travel
+          backward through the same WhatsApp groups that spread the original message.</div>
+        <div class="note"><u>Get started by submitting a forward →</u> (sticky on scroll)</div>
+      </div>
+      <div class="col" style="flex:8">
+        <div class="stepcard"><div class="n">01</div><div><b>Submit suspicious forward</b>
+          <span class="sub"> — paste text or a screenshot; the duplicate engine runs.</span></div></div>
+        <div class="stepcard off"><div class="n">02</div><div><b>Community independent review</b>
+          <span class="sub"> — three verifiers submit verdicts with source links.</span></div></div>
+        <div class="stepcard"><div class="n">03</div><div><b>Share PNG card back</b>
+          <span class="sub"> — download the card and send it back into the group.</span></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. COMPARISON -------------------------------------------------------- -->
+  <div class="sec">
+    <div class="lbl">Architectural distinction — why community consensus beats a single AI answer</div>
+    <div class="row" style="margin-top:0;align-items:stretch">
+      <div class="card" style="flex:5;background:#f4f4f4">
+        <div class="cap" style="color:#666">⚠ TRADITIONAL PORTALS &amp; PLAIN AI</div>
+        <div style="font-weight:700;margin-top:4px">Centralised, Slow &amp; Hallucination-Prone</div>
+        <div class="xitem"><b>✕</b><span><b>24–48 h latency</b> — portals take days to debunk.</span></div>
+        <div class="xitem"><b>✕</b><span><b>Uncited hallucinations</b> — one LLM, no sources cited.</span></div>
+        <div class="xitem"><b>✕</b><span><b>Low distribution</b> — text never re-enters chat groups.</span></div>
+        <div class="hr"></div>
+        <div class="sub">Single point of failure • Legacy databases</div>
+      </div>
+      <div class="vs"><span>VS</span></div>
+      <div class="card" style="flex:6;border-width:2.5px">
+        <div class="cap">⛨ FACTSTAMP MULTI-VERIFIER CONSENSUS</div>
+        <div style="font-weight:800;font-size:14px;margin-top:3px">Weighted 3-Verifier Quorum Engine</div>
+        <div class="sub" style="margin-top:3px">No single actor dictates truth — every submission is
+          scored across three trust pillars:</div>
+        <div class="row" style="margin-top:7px;gap:7px">
+          <div class="col pil">1. Agreement Ratio<span>40% weight</span></div>
+          <div class="col pil">2. Reputation Tier<span>30% weight</span></div>
+          <div class="col pil">3. Source Verification<span>30% weight</span></div>
+        </div>
+        <div class="hr"></div>
+        <div class="kv" style="font-weight:700"><span>✓ 3/3 independent reviews required</span><span>✓ Zero single-AI hallucinations</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. FEED -------------------------------------------------------------- -->
+  <div class="sec">
+    <div class="hdrow">
+      <div><div class="h" style="margin-bottom:1px;font-size:14px">Recently Debunked Claims</div>
+        <div class="sub">Browse claims already fact-checked by the community</div></div>
+      <span class="pill">View all claims →</span>
+    </div>
+    <div class="row">
+      <div class="card col">
+        <div class="kv"><span class="pill" style="font-size:9.5px">♥ Health</span><span class="sub">2 h ago</span></div>
+        <div style="font-size:11px;margin:5px 0">“Hot water with lemon cures dengue…”</div>
+        <div class="kv"><b>✕ FALSE</b><span><span class="bar"><i style="width:94%"></i></span> 94%</span></div>
+      </div>
+      <div class="card col">
+        <div class="kv"><span class="pill" style="font-size:9.5px">$ Financial</span><span class="sub">6 h ago</span></div>
+        <div style="font-size:11px;margin:5px 0">“Govt crediting ₹5,000 to every UPI account…”</div>
+        <div class="kv"><b>✕ FALSE</b><span><span class="bar"><i style="width:88%"></i></span> 88%</span></div>
+      </div>
+      <div class="card col">
+        <div class="kv"><span class="pill" style="font-size:9.5px">⌂ Political</span><span class="sub">1 d ago</span></div>
+        <div style="font-size:11px;margin:5px 0">“Voter ID cancelled without Aadhaar link…”</div>
+        <div class="kv"><b>◪ MISLEADING</b><span><span class="bar"><i style="width:76%"></i></span> 76%</span></div>
+      </div>
+    </div>
+    <div class="note">Auto-fit grid, min 280 px per card — up to the 6 most recent verified claims.</div>
+  </div>
+
+</div>

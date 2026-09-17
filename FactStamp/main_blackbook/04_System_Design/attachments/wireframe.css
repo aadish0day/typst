@@ -1,0 +1,92 @@
+/* ==========================================================================
+   FactStamp black book — shared wireframe stylesheet
+   Used by every wireframe_*.html in this folder so all screens render as one
+   consistent visual system. Greyscale only: the black book is often printed
+   in B&W, so nothing may depend on hue.
+   Build: ./build_wireframes.sh   (headless chromium -> 2x PNG)
+   ========================================================================== */
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  width: 900px;                       /* fixed so every screen scales identically */
+  background: #fff;
+  font: 13px/1.45 "Liberation Sans", Arial, Helvetica, sans-serif;
+  color: #111;
+  padding: 26px;
+}
+
+/* Diagram caption — baked into the image, since the book forbids #figure() */
+.title { font-size: 19px; font-weight: 700; text-align: center; margin-bottom: 16px; }
+.subtitle { font-size: 11.5px; font-style: italic; color: #666; text-align: center; margin: -10px 0 16px; }
+
+/* Screen frame + top navigation ------------------------------------------ */
+.frame { border: 2.5px solid #111; border-radius: 3px; overflow: hidden; }
+.nav {
+  display: flex; align-items: center; gap: 18px;
+  background: #ececec; border-bottom: 2.5px solid #111;
+  padding: 9px 14px; font-weight: 700;
+}
+.nav .brand { font-size: 15px; }
+.nav .sp { flex: 1; }
+.nav .muted { color: #777; font-weight: 400; font-style: italic; }
+
+/* Sections ---------------------------------------------------------------- */
+.sec { border-bottom: 1.5px solid #999; padding: 14px; }
+.sec:last-child { border-bottom: none; }
+.lbl {
+  font-size: 10px; font-weight: 700; letter-spacing: .9px;
+  color: #666; text-transform: uppercase; margin-bottom: 8px;
+}
+.h { font-size: 15px; font-weight: 700; margin-bottom: 6px; }
+.note { font-size: 10.5px; font-style: italic; color: #666; margin-top: 6px; }
+
+/* Controls ---------------------------------------------------------------- */
+.tabs { display: flex; margin-bottom: 12px; }
+.tab { border: 1.5px solid #111; padding: 7px 16px; font-weight: 700; background: #fff; }
+.tab.on { background: #111; color: #fff; }
+
+.field {
+  border: 1.5px solid #111; background: #fafafa; padding: 11px;
+  min-height: 46px; color: #555; font-style: italic;
+}
+.pill {
+  border: 1.5px solid #111; border-radius: 11px; padding: 2px 10px;
+  font-size: 11px; font-weight: 700; background: #fff; display: inline-block;
+}
+.pill.on { background: #111; color: #fff; }
+.btn {
+  border: 2.5px solid #111; background: #111; color: #fff;
+  padding: 10px 18px; font-weight: 700; display: inline-block; margin-top: 12px;
+}
+.btn.ghost { background: #fff; color: #111; }
+.btn.off { background: #e4e4e4; color: #8a8a8a; border-color: #8a8a8a; }
+
+/* Layout helpers ---------------------------------------------------------- */
+.row { display: flex; gap: 10px; margin-top: 10px; }
+.col { flex: 1; }
+.card { border: 1.5px solid #111; padding: 9px; background: #fff; }
+.card.on { background: #111; color: #fff; }
+.card small { display: block; font-weight: 400; font-style: italic; color: #777; margin-top: 3px; }
+.card.on small { color: #ccc; }
+.center { text-align: center; }
+
+/* Emphasis blocks --------------------------------------------------------- */
+.callout { border: 2.5px solid #111; background: #f2f2f2; padding: 11px; margin-top: 12px; }
+.callout b { display: block; margin-bottom: 4px; }
+
+/* Placeholder for imagery the wireframe only represents schematically */
+.ph {
+  border: 1.5px dashed #777; background: #f7f7f7; color: #777;
+  font-style: italic; text-align: center; padding: 18px;
+}
+
+/* Data table -------------------------------------------------------------- */
+table.wf { width: 100%; border-collapse: collapse; margin-top: 8px; }
+table.wf th, table.wf td { border: 1px solid #666; padding: 6px 8px; text-align: left; font-size: 11.5px; }
+table.wf th { background: #ececec; font-weight: 700; }
+
+/* Stepper (verification progress) ----------------------------------------- */
+.step { display: inline-flex; gap: 4px; vertical-align: middle; }
+.step i { width: 22px; height: 8px; border: 1.5px solid #111; background: #fff; display: block; }
+.step i.done { background: #111; }

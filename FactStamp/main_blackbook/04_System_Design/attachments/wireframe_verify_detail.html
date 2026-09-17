@@ -1,0 +1,109 @@
+<!doctype html><meta charset="utf-8">
+<link rel="stylesheet" href="wireframe.css">
+<style>
+  /* Scoped additions for this screen only — the shared stylesheet is not edited. */
+  .eq { display: flex; gap: 10px; margin-top: 10px; }
+  .eq > * { flex: 1; }
+  .meta { display: flex; justify-content: space-between; font-size: 11px; color: #555; }
+  .meta.top { border-bottom: 1.5px solid #999; padding-bottom: 8px; margin-bottom: 10px; }
+  .meta.bot { border-top: 1.5px solid #ccc; padding-top: 8px; margin-top: 10px; }
+  .quote { font-size: 16px; font-weight: 700; line-height: 1.5; }
+  .steplbl { font-size: 12px; font-weight: 700; letter-spacing: .8px; text-transform: uppercase; }
+  .steprow { display: flex; justify-content: space-between; align-items: baseline; }
+  .bar { height: 7px; border: 1.5px solid #111; background: #fff; margin-top: 8px; }
+  .bar i { display: block; height: 100%; background: #111; }
+  .checks { display: flex; gap: 18px; align-items: center; margin-top: 7px; font-size: 11px; }
+  .checks .sp { flex: 1; }
+  .tick { border: 1.5px solid #111; width: 13px; height: 13px; display: inline-block;
+          text-align: center; line-height: 11px; font-size: 10px; font-weight: 700; margin-right: 5px; vertical-align: -2px; }
+  .tick.done { background: #111; color: #fff; }
+  .dot { width: 11px; height: 11px; border: 2px solid #111; border-radius: 50%;
+         display: inline-block; vertical-align: -1px; margin-right: 6px; }
+  .dot.hi { background: #111; }
+  .dot.mid { background: #999; }
+  .qbox { display: flex; align-items: center; gap: 8px; border: 1.5px solid #111;
+          background: #f2f2f2; padding: 8px 10px; margin-top: 8px; font-size: 11.5px; }
+  .qbox .sp { flex: 1; }
+  .actionbar { display: flex; align-items: center; justify-content: space-between;
+               gap: 14px; border-top: 1.5px solid #999; margin-top: 14px; padding-top: 12px; }
+  .actionbar .btn { margin-top: 0; }
+  .mini { border: 2px solid #111; padding: 12px; text-align: center; background: #fff; }
+  .mini .seal { width: 40px; height: 40px; border: 2.5px solid #111; border-radius: 50%;
+                margin: 0 auto 7px; line-height: 36px; font-weight: 700; font-size: 15px; }
+  .mini h4 { font-size: 13px; margin-bottom: 4px; }
+  .mini p { font-size: 10.5px; color: #555; line-height: 1.45; }
+  .mini .pill { margin-top: 8px; }
+</style>
+<div class="title">FactStamp — Verify Detail (/verify/:claimId)</div>
+<div class="frame">
+  <div class="nav"><span class="brand">FactStamp</span><span>Home</span><span>Verify Claims</span><span>Dashboard</span><span>My Profile</span><span class="sp"></span><span class="pill">Submit claim</span><span class="pill">AD · 72%</span></div>
+
+  <div class="sec">
+    <div class="lbl">Case dossier — claim under review</div>
+    <div class="meta top"><span><b>Case #FS-2417</b> &nbsp;·&nbsp; Health &amp; Medical</span><span>⏱ 3d 4h remaining</span></div>
+    <div class="quote">&ldquo;Drinking hot lemon water at 5 a.m. cures Stage-3 diabetes in 21 days — the Ministry of AYUSH has confirmed this in circular no. 44/2025.&rdquo;</div>
+    <div class="ph" style="margin-top:11px">Attached WhatsApp forward screenshot (max-height 320&nbsp;px, click to open original)</div>
+    <div class="meta bot"><span>1 of 3 verifications recorded</span><span>Reported by Citizen · 2 days ago</span></div>
+    <div class="note">Peer verdicts already submitted are deliberately <b>not</b> displayed on this route — review is blind, so a verifier cannot anchor on another's answer. The full verification list is public on /claim/:claimId.</div>
+  </div>
+
+  <div class="sec">
+    <div class="steplbl">Step 1: Select verdict rating *</div>
+    <div class="note" style="margin-top:4px">Cast your independent assessment based on the factual evidence you located:</div>
+    <div class="eq">
+      <div class="card center">◯<br>TRUE</div>
+      <div class="card on center">✕<br>FALSE</div>
+      <div class="card center">△<br>MISLEADING</div>
+      <div class="card center">?<br>UNVERIFIABLE</div>
+    </div>
+    <div class="note"><b>CONTESTED is never offered here.</b> It is assigned by the system when the 7-day consensus window expires with fewer than 3 verifications.</div>
+  </div>
+
+  <div class="sec">
+    <div class="steplbl">Step 2: Source evidence URL *</div>
+    <div class="note" style="margin-top:4px">Link to an official government circular, press release, WHO alert, or credible investigative report:</div>
+    <div class="field" style="min-height:0;padding:10px 11px">https://ayush.gov.in/circulars/2025/…<span style="float:right"><span class="dot hi"></span></span></div>
+    <div class="qbox"><span class="dot hi"></span><b>Tier 1 Authoritative Source</b><span>·</span><span>Government portal, WHO, official gazette, or academic study</span><span class="sp"></span><span class="pill">HIGH WEIGHT</span></div>
+    <div class="note">The tier is <b>auto-classified from the URL's domain</b> by <code>determineSourceQuality()</code> — the verifier never picks it. Tier 2 Established Press (<span class="dot mid" style="width:9px;height:9px"></span>standard) and Secondary / Community Reference (<span class="dot" style="width:9px;height:9px"></span>low weight) are the other two outcomes.</div>
+  </div>
+
+  <div class="sec">
+    <div class="steprow">
+      <div class="steplbl">Step 3: Explanation &amp; findings *</div>
+      <div style="font-size:11px;color:#555">412 / 1500 characters</div>
+    </div>
+    <div class="note" style="margin-top:4px">Explain in plain language what you found in the source and why it proves or disproves the viral forward.</div>
+    <div class="field" style="min-height:76px">e.g., The official gazette notification published on the Ministry portal contradicts this viral claim. The forwarded circular quotes an invalid order number and does not appear in the gazette archives…</div>
+    <div class="bar"><i style="width:100%"></i></div>
+    <div class="checks">
+      <span><span class="tick done">✓</span>50+ characters (412/50)</span>
+      <span><span class="tick done">✓</span>8+ words (63/8)</span>
+      <span class="sp"></span>
+      <span><b>Ready</b></span>
+    </div>
+    <div class="note">The bar tracks the 50-character floor only; the field itself accepts up to the 1500-character <code>maxLength</code>. Both live checks must pass before the submit button leaves its disabled state.</div>
+    <div class="actionbar">
+      <div style="font-size:11px;color:#555">Recorded under your verified verifier ID.<br>Requires 3 independent peer verifications to establish final community consensus.</div>
+      <div class="btn">Submit Verification Verdict →</div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="lbl">Same route, two full-page interstitial states — these replace the entire form above</div>
+    <div class="eq">
+      <div class="mini">
+        <div class="seal">↻</div>
+        <h4>Consensus Window Closed</h4>
+        <p>Rendered instead of the form when the 7-day deadline has passed. &ldquo;This claim did not receive the required 3 independent peer verifications within the 7-day period. It has been marked as <b>CONTESTED</b>.&rdquo;</p>
+        <span class="pill">Return to Queue</span> <span class="pill">View Claim Details</span>
+      </div>
+      <div class="mini">
+        <div class="seal">✓</div>
+        <h4>Verdict Recorded</h4>
+        <p>Rendered after a successful submit. Shows the verdict stamp with the label &ldquo;Pending consensus&rdquo; and the count of further verdicts still needed.</p>
+        <span class="pill">Verify Another Claim</span> <span class="pill">View Live Claim Page</span>
+      </div>
+    </div>
+    <div class="note">A third variant exists for signed-out visitors: the form is replaced by a &ldquo;Sign In to Verify&rdquo; gate, since /verify/:claimId is a protected route.</div>
+  </div>
+</div>

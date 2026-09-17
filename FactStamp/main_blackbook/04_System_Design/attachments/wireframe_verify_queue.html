@@ -1,0 +1,187 @@
+<!doctype html><meta charset="utf-8">
+<link rel="stylesheet" href="wireframe.css">
+<style>
+/* Scoped extras for this screen only — the shared wireframe.css is untouched
+   because sibling screens are rendered from it concurrently. Greyscale only. */
+.nav     { gap: 13px; }
+.nav span{ white-space: nowrap; }
+.crumb   { font-size: 10.5px; color: #666; padding: 6px 14px; border-bottom: 1px solid #ccc; background: #fafafa; }
+.sub     { font-size: 10.5px; color: #666; }
+.hr      { border-top: 1px solid #bbb; margin: 7px 0; }
+.kv      { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.banner  { border: 1.5px solid #111; background: #f2f2f2; padding: 11px 12px; display: flex;
+           align-items: center; justify-content: space-between; gap: 14px; }
+.h1      { font-size: 20px; font-weight: 800; letter-spacing: -.2px; margin: 5px 0 3px; }
+.count   { border: 1.5px solid #111; background: #fff; padding: 8px 11px; display: flex;
+           align-items: center; gap: 10px; flex-shrink: 0; }
+.count b { font-size: 22px; border: 1.5px solid #111; border-radius: 50%; width: 34px; height: 34px;
+           line-height: 31px; text-align: center; display: block; }
+.srch    { border: 1.5px solid #111; background: #fafafa; padding: 8px 10px; color: #555; font-style: italic; }
+.sel     { border: 1.5px solid #111; background: #fff; padding: 7px 10px; font-weight: 700; font-size: 11.5px;
+           display: flex; justify-content: space-between; gap: 14px; }
+.opt     { border: 1.5px solid #111; border-top: none; background: #fff; font-size: 11.5px; }
+.opt div { padding: 5px 10px; border-bottom: 1px solid #ccc; }
+.opt div:last-child { border-bottom: none; }
+.opt .on { background: #111; color: #fff; font-weight: 700; }
+.chips   { display: flex; gap: 7px; flex-wrap: wrap; align-items: center; }
+.dossier { border: 1.5px solid #111; border-left: 5px solid #bbb; padding: 9px 11px; margin-top: 9px; background: #fff; }
+.dossier.acc  { border-left: 5px solid #111; }
+.dossier.flag { border-left: 5px double #111; }
+.badge   { border: 1px solid #111; background: #ececec; padding: 1px 6px; font-size: 10px;
+           font-weight: 700; display: inline-block; }
+.badge.q { background: #111; color: #fff; }
+.badge.w { background: #fff; font-weight: 400; font-style: italic; color: #555; }
+.clock   { border: 1px solid #111; background: #fff; padding: 1px 7px; font-size: 10.5px; font-weight: 700; white-space: nowrap; }
+.clock.u { background: #d9d9d9; }
+.clock.x { border-style: dashed; font-style: italic; font-weight: 400; }
+.claim   { font-size: 12.5px; font-weight: 600; margin: 7px 0; line-height: 1.35; }
+.thumb   { display: flex; align-items: center; gap: 8px; border: 1px solid #999; background: #f7f7f7;
+           padding: 5px 8px; margin-bottom: 7px; width: fit-content; }
+.thumb .sq { width: 30px; height: 30px; border: 1px dashed #777; background: #ececec; }
+.foot    { display: flex; align-items: center; justify-content: space-between; gap: 10px;
+           border-top: 1px solid #ccc; padding-top: 7px; }
+.foot .btn { margin-top: 0; padding: 6px 11px; font-size: 11.5px; border-width: 1.5px; flex-shrink: 0; }
+.meta    { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; font-size: 10.5px; color: #666; }
+.meta b  { font-size: 11px; color: #111; }
+.empty   { border: 1.5px dashed #777; background: #f7f7f7; text-align: center; padding: 16px; }
+</style>
+
+<div class="title">FactStamp — Verification Queue (/verify, protected)</div>
+<div class="frame">
+
+  <div class="nav">
+    <span class="brand">⛨ FactStamp</span><span>Home</span><span style="text-decoration:underline">Verify Claims</span>
+    <span>Dashboard</span><span>My Profile</span>
+    <span class="sp"></span>
+    <span class="pill">☾</span><span class="pill">◉ 3</span><span class="pill on">Submit claim</span>
+    <span class="pill">Ⓐ Aadish ★ 72%</span><span class="pill">⇥</span>
+  </div>
+  <div class="crumb">⌂ &nbsp;›&nbsp; <b>Verify Queue</b> &nbsp;&nbsp;<i>· ☾ theme toggle · ◉ notification bell · ⇥ logout</i></div>
+
+  <!-- HEADER BANNER ------------------------------------------------------- -->
+  <div class="sec">
+    <div class="lbl">Page header — reputation incentive banner</div>
+    <div class="banner">
+      <div>
+        <span class="pill">✦ Earn +2 Reputation Per Verified Claim</span>
+        <div class="h1">Verification Queue</div>
+        <div class="sub">Review viral WhatsApp claims, inspect sources, and cast your verdict to
+          protect the community.</div>
+      </div>
+      <div class="count"><b>6</b>
+        <div><span style="font-size:10px;font-weight:700;letter-spacing:.7px">PENDING CLAIMS</span>
+          <div class="sub">Awaiting consensus verification</div></div>
+      </div>
+    </div>
+    <div class="note">Route is guarded — an unauthenticated visitor is redirected to /signin and the
+      “Verify Claims” link is not even rendered in the navbar.</div>
+  </div>
+
+  <!-- CONTROLS ------------------------------------------------------------ -->
+  <div class="sec">
+    <div class="lbl">Controls — search, sort and category filter</div>
+    <div class="row" style="margin-top:0;align-items:flex-start">
+      <div class="col" style="flex:6">
+        <div class="srch">⊙ &nbsp;Search pending claims text or keyword…</div>
+        <div class="note">Client-side match against claim text, category and claim id.</div>
+        <div class="chips" style="margin-top:11px">
+          <span class="pill on">All</span><span class="pill">Health</span><span class="pill">Political</span>
+          <span class="pill">Religious</span><span class="pill">Financial</span><span class="pill">Other</span>
+        </div>
+        <div class="note">No status filter — the queue is pending-only by definition.</div>
+      </div>
+      <div style="flex:4">
+        <div class="kv" style="justify-content:flex-start;gap:8px;align-items:flex-start">
+          <span style="font-size:10px;font-weight:700;letter-spacing:.7px;padding-top:8px">SORT:</span>
+          <div style="flex:1">
+            <div class="sel">Newest Submissions <span>▾</span></div>
+            <div class="opt">
+              <div class="on">Newest Submissions</div>
+              <div>Closest to Resolving</div>
+              <div>Best Rep Match</div>
+            </div>
+            <div class="note">Native &lt;select&gt;, drawn open. Expedited claims are re-sorted above
+              whichever mode is chosen.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- QUEUE --------------------------------------------------------------- -->
+  <div class="sec">
+    <div class="lbl">Result list — dossier cards</div>
+    <div class="sub" style="font-family:monospace">Showing 6 claims awaiting community verification</div>
+
+    <!-- flagged, sorts to the top -->
+    <div class="dossier flag">
+      <div class="kv">
+        <div><span class="badge">⌂ Political</span> <span class="badge">⚑ Expedited Review</span></div>
+        <span class="clock">◷ 2d 4h left</span>
+      </div>
+      <div class="claim">“Voter IDs not linked to Aadhaar by 31 March will be cancelled — verify on the
+        link before your name is deleted from the rolls.”</div>
+      <div class="foot">
+        <div class="meta">
+          <span class="step"><i class="done"></i><i></i><i></i></span> <b>1/3</b>
+          <span>1 verifier verified • 2 more needed</span><span>•</span><span>Reported 3 h ago</span>
+        </div>
+        <span class="btn">Inspect &amp; Verify →</span>
+      </div>
+    </div>
+
+    <!-- verificationCount === 2 -->
+    <div class="dossier acc">
+      <div class="kv">
+        <div><span class="badge">♥ Health</span> <span class="badge q">▲ 1 Verdict to Resolve</span>
+          <span class="badge w">▣ Screenshot Attached</span></div>
+        <span class="clock u">◷ 6h left</span>
+      </div>
+      <div class="claim">“Drinking hot water with lemon cures dengue fever completely in 24 hours,
+        confirmed by AIIMS doctors.”</div>
+      <div class="thumb"><span class="sq"></span>
+        <div><b style="font-size:11px">▣ Attached WhatsApp Forward</b>
+          <div class="sub">Image evidence attached for cross-examination</div></div>
+      </div>
+      <div class="foot">
+        <div class="meta">
+          <span class="step"><i class="done"></i><i class="done"></i><i></i></span> <b>2/3</b>
+          <span>2 verifiers verified • Final verdict pending</span><span>•</span><span>Reported 1 d ago</span>
+        </div>
+        <span class="btn">Submit Resolving Verdict →</span>
+      </div>
+    </div>
+
+    <!-- deadline elapsed, no verdicts yet -->
+    <div class="dossier">
+      <div class="kv">
+        <div><span class="badge">$ Financial</span></div>
+        <span class="clock x">↺ Consensus closed</span>
+      </div>
+      <div class="claim">“The government is crediting ₹5,000 to every UPI account this week — claim
+        yours through the attached form.”</div>
+      <div class="foot">
+        <div class="meta">
+          <span class="step"><i></i><i></i><i></i></span> <b>0/3</b>
+          <span>Awaiting first independent verifier</span><span>•</span><span>Reported 6 d ago</span>
+        </div>
+        <span class="btn">Inspect &amp; Verify →</span>
+      </div>
+    </div>
+
+    <div class="note">The left rule marks admin-flagged (double) and near-consensus (solid) claims;
+      an ordinary pending claim carries a plain grey rule.</div>
+  </div>
+
+  <!-- EMPTY STATE --------------------------------------------------------- -->
+  <div class="sec">
+    <div class="lbl">Alternate state — filters match nothing</div>
+    <div class="empty">
+      <div style="font-size:19px">⛨</div>
+      <div style="font-size:14px;font-weight:700;font-style:normal;color:#111">No claims match your filters</div>
+      <div class="sub" style="margin-top:3px">Try clearing your search query or selecting a different category tab.</div>
+      <div class="btn" style="margin-top:9px;padding:7px 13px;font-size:11.5px">Reset All Filters</div>
+    </div>
+  </div>
+
+</div>

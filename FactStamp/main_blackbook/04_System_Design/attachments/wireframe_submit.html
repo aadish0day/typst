@@ -1,0 +1,82 @@
+<!doctype html><meta charset="utf-8">
+<link rel="stylesheet" href="wireframe.css">
+<style>
+  /* scoped: two-column split so the screen fills the embed box (~0.755) rather
+     than running tall-and-narrow, which would shrink the rendered text */
+  .split { display: flex; gap: 14px; }
+  .split > .col { flex: 1; min-width: 0; }
+  .modehead { font-size: 11px; font-weight: 700; letter-spacing: .6px; text-transform: uppercase;
+              border-bottom: 1.5px solid #111; padding-bottom: 5px; margin-bottom: 9px; }
+  .drop { border: 1.5px dashed #777; background: #f7f7f7; text-align: center; padding: 20px 12px; color: #666; }
+  .bar { border: 1.5px solid #111; height: 13px; background: #fff; margin: 7px 0 3px; }
+  .bar > i { display: block; height: 100%; background: #111; width: 62%; }
+</style>
+
+<div class="title">FactStamp — Submit Claim (/submit)</div>
+<div class="subtitle">Protected route · both input modes shown side by side; the live UI shows one at a time</div>
+
+<div class="frame">
+  <div class="nav">
+    <span class="brand">FactStamp</span><span>Home</span><span>Verify Claims</span>
+    <span>Dashboard</span><span>My Profile</span><span class="sp"></span>
+    <span class="muted">theme</span><span class="muted">alerts (3)</span>
+    <span class="pill">Submit claim</span><span class="pill">AD · 72%</span><span class="muted">sign out</span>
+  </div>
+
+  <div class="sec">
+    <div class="lbl">Input mode</div>
+    <div class="tabs"><div class="tab on">Text Forward</div><div class="tab">Screenshot (OCR)</div></div>
+
+    <div class="split">
+      <!-- ------------------------------------------------ MODE A: text -->
+      <div class="col">
+        <div class="modehead">Mode A — Text Forward (active)</div>
+        <div class="field">Paste the forwarded WhatsApp message here…</div>
+        <div class="note">Duplicate check fires on blur · 0 / 500 characters (min 20)</div>
+        <div class="row" style="margin-top:8px">
+          <span class="pill">Sample 1</span><span class="pill">Sample 2</span><span class="pill">Sample 3</span>
+        </div>
+        <div class="callout">
+          <b>⚠ Similar claim already in system — 82% match</b>
+          This claim has already been submitted and fact-checked.
+          <div style="margin-top:7px"><span class="pill">View Existing Verdict Card →</span></div>
+        </div>
+        <div class="note">Jaccard similarity ≥ 0.75 blocks submission — it does not auto-redirect.</div>
+      </div>
+
+      <!-- ------------------------------------------- MODE B: screenshot -->
+      <div class="col">
+        <div class="modehead">Mode B — Screenshot (OCR)</div>
+        <div class="drop">
+          Drag &amp; drop a WhatsApp screenshot<br>
+          <span style="font-size:11px">or Browse Files · paste with Ctrl+V</span>
+        </div>
+        <div class="note">Tesseract.js runs in-browser — the image never leaves the client.</div>
+        <div class="card" style="margin-top:9px">
+          <div class="lbl" style="margin-bottom:5px">Extracting…</div>
+          <div class="bar"><i></i></div>
+          <div class="note" style="margin-top:2px">62% · recognising text</div>
+        </div>
+        <div class="card" style="margin-top:9px">
+          <div class="lbl" style="margin-bottom:5px">OCR result — editable</div>
+          <div class="field" style="min-height:34px">Extracted text, WhatsApp chrome stripped — user corrects here</div>
+          <div class="note">48 words · 91% confidence · category auto-selected</div>
+        </div>
+        <div class="note">“Continue to Submit Claim” returns to Mode A with the text and duplicate check applied.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="lbl">Select claim category</div>
+    <div class="row">
+      <div class="card on center">Health &amp; Medical<small>cures, remedies</small></div>
+      <div class="card center">Political &amp; Govt<small>elections, policy</small></div>
+      <div class="card center">Financial &amp; Loans<small>UPI, schemes</small></div>
+      <div class="card center">Religious &amp; Culture<small>festivals</small></div>
+      <div class="card center">Other Topics<small>scams, tech</small></div>
+    </div>
+    <div class="btn off">Submit Claim for Community Verification</div>
+    <div class="note">Disabled while a duplicate warning is shown, or if length is outside 20–500 characters.</div>
+  </div>
+</div>
