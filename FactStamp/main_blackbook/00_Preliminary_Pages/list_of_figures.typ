@@ -9,27 +9,26 @@
 #align(center)[
   #text(size: 14pt, weight: "bold")[LIST OF FIGURES]
 ]
-#v(10pt)
+#v(6pt)
 
-// Helper: generates a single clickable entry row with dotted leader and page number
+// Helper: one clickable entry row styled to match the Table of Contents
+// (11pt text, baseline-aligned dotted leader, right-aligned page number).
 #let fig-entry(number, title, lbl) = {
-  link(lbl, grid(
+  block(below: 0.9em, text(size: 11pt, link(lbl, grid(
     columns: (auto, 1fr, auto),
     column-gutter: 4pt,
-    align: (left, left, right),
-    text(size: 10.5pt)[#number.#h(6pt)#title],
-    repeat[.],
+    align: (bottom, bottom, bottom),
+    [#number.#h(0.6em)#title],
+    box(width: 1fr, inset: (x: 3pt), repeat[.]),
     context {
       let target = query(lbl)
       if target.len() > 0 {
-        let page-num = counter(page).at(target.first().location()).first()
-        text(size: 10.5pt, str(page-num))
+        str(counter(page).at(target.first().location()).first())
       } else {
-        text(size: 10.5pt, "??")
+        "??"
       }
     },
-  ))
-  v(3pt)
+  ))))
 }
 
 #fig-entry(1, "PERT Chart", <fig-pert>)

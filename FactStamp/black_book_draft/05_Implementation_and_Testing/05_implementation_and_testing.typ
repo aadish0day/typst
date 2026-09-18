@@ -6,12 +6,12 @@
 
 === Project summary
 
-FactStamp is a community fact-checking web application for WhatsApp forwards. Users submit claims as text or screenshots, duplicates are detected automatically, community verifiers review each claim, and a weighted consensus produces a verdict that can be shared as a PNG card. The system is built as a single-page application with React, TypeScript, and Tailwind CSS, and uses Firebase for sign-in, the database, and one Cloud Function. It was developed module by module, and each module was tested against the Firebase Local Emulator Suite before the next one was added.
+FactStamp is a community fact-checking web application for WhatsApp forwards. Users submit claims as text or screenshots, duplicates are detected automatically, community verifiers review each claim, and a weighted consensus produces a verdict that can be shared as a PNG card. The system is built as a single-page application with React, TypeScript, and Tailwind CSS, and uses Firebase for sign-in, the database, and one Cloud Function. It grew one module at a time: each was wired up and checked against the Firebase Local Emulator Suite before the next was started, so a problem in the duplicate check or the consensus engine surfaced before anything downstream depended on it.
 
 #pagebreak()
 == Coding details and code efficiency
 
-The code is divided into modules for authentication, claim submission, duplicate detection, the verification queue, consensus, card export, analytics, and security. Shared logic is kept in reusable functions, input is validated before it is saved, and errors are shown to the user instead of being ignored.
+Each of the eight modules from Chapter 4 keeps to its own part of the codebase, from authentication through to the security layer. Where two of them need the same logic, such as scoring a cited source or checking an explanation, that logic sits in one shared function instead of being copied, and a write the database refuses surfaces as an error to the user rather than being swallowed.
 
 === Coding details
 
@@ -23,7 +23,7 @@ The three modules below contain the core logic that makes FactStamp different fr
 
 The engine normalizes the claim text, splits it into words longer than three characters, and calculates Jaccard similarity (shared words divided by all distinct words) against existing claims. If the best match is 0.75 or higher, the Submit page shows the existing claim and blocks the new submission, so the same claim is not queued twice.
 
-*`src/lib/duplicateDetection.ts` (full file)*
+#block(sticky: true)[*`src/lib/duplicateDetection.ts` (full file)*]
 
 ```typescript
 function normalize(text: string): string {
@@ -78,7 +78,7 @@ export function findDuplicate(
 }
 ```
 
-*`src/pages/Submit.tsx` (where the engine is used)*
+#block(sticky: true)[*`src/pages/Submit.tsx` (where the engine is used)*]
 
 ```tsx
   const checkDuplicate = useCallback(() => {
@@ -106,7 +106,7 @@ export function findDuplicate(
 
 A claim can be verified only by a signed-in user who did not submit it and has not already verified it, and only until three verifications are reached. The verifier gives a verdict, a source URL, and an explanation; the explanation is checked for length and spam, and the verification is then added to the claim and saved to Firestore.
 
-*`src/lib/types.ts` (who may verify a claim)*
+#block(sticky: true)[*`src/lib/types.ts` (who may verify a claim)*]
 
 ```typescript
 export function canVerify(claim: Claim, uid: string | undefined): boolean {
@@ -118,7 +118,7 @@ export function canVerify(claim: Claim, uid: string | undefined): boolean {
 }
 ```
 
-*`src/lib/security.ts` (explanation validation)*
+#block(sticky: true)[*`src/lib/security.ts` (explanation validation)*]
 
 ```typescript
 export interface ExplanationValidationResult {
@@ -276,7 +276,7 @@ export function validateVerdictExplanation(
 }
 ```
 
-*`src/pages/VerifyDetail.tsx` (submitting a verdict)*
+#block(sticky: true)[*`src/pages/VerifyDetail.tsx` (submitting a verdict)*]
 
 ```tsx
   const handleSubmit = async (e: React.FormEvent) => {
@@ -335,7 +335,7 @@ export function validateVerdictExplanation(
   }
 ```
 
-*`src/contexts/ClaimsContext.tsx` (saving the verification)*
+#block(sticky: true)[*`src/contexts/ClaimsContext.tsx` (saving the verification)*]
 
 ```tsx
   const addVerification = useCallback(
@@ -379,7 +379,7 @@ export function validateVerdictExplanation(
 
 The confidence score combines the agreement ratio (40%), the average reputation of the verifiers (30%), and the average source quality (30%). Source quality is 100 for trusted official domains, 70 for established news sites, and 30 for any other link. Each new verification recalculates the majority verdict and score, and the claim is marked verified once it has three verifications. After a verification is saved, a Cloud Function updates each verifier's reputation: +2 if their verdict matched the final verdict and -1 if it did not.
 
-*`src/lib/confidenceScore.ts` (full file)*
+#block(sticky: true)[*`src/lib/confidenceScore.ts` (full file)*]
 
 ```typescript
 export function calculateConfidenceScore(
@@ -495,7 +495,7 @@ export function sourceQualityToScore(
 }
 ```
 
-*`src/contexts/ClaimsContext.tsx` (consensus after each verification)*
+#block(sticky: true)[*`src/contexts/ClaimsContext.tsx` (consensus after each verification)*]
 
 ```typescript
 function computeUpdatedClaim(claim: Claim, data: AddVerificationInput): Claim {
@@ -554,7 +554,7 @@ function computeUpdatedClaim(claim: Claim, data: AddVerificationInput): Claim {
 }
 ```
 
-*`functions/index.js` (reputation update, full file)*
+#block(sticky: true)[*`functions/index.js` (reputation update, full file)*]
 
 ```javascript
 import { onDocumentUpdated } from 'firebase-functions/v2/firestore'
@@ -733,37 +733,19 @@ Testing was done at three levels: unit testing, integration testing, and system 
 
 Unit testing checks each function on its own.
 
-*Examples:*
-- Two identical claims give a similarity of 1.00 and are marked as duplicates.
-- Two claims on the same topic but with different wording score below 0.75 and are not marked as duplicates.
-- Three FALSE verdicts with reputations 80, 60, 70 and source scores 100, 100, 70 give a confidence score of 88.
-- An empty list of verifications gives a confidence score of 0 instead of an error.
-- An explanation shorter than 50 characters is rejected.
+Two identical claims produced a similarity of 1.00 and were marked as duplicates, whereas two claims on the same topic worded differently scored below 0.75 and stayed separate. For the confidence formula, three FALSE verdicts with reputations of 80, 60, and 70 and source scores of 100, 100, and 70 came out at 88, matching the value worked out by hand. An empty list of verifications returned 0 rather than raising an error, and an explanation shorter than 50 characters was rejected.
 
 === Integration testing
 
 Integration testing checks that the modules work correctly with Firebase, using the local emulator.
 
-*Examples:*
-- Three different users verify the same claim, and the claim becomes verified with the correct score.
-- A write with a fake reputation value is rejected by the Security Rules.
-- A signed-out user cannot submit a claim.
-- A user cannot verify their own claim.
-- A non-admin user who fakes the admin session flag is still sent back to the login screen.
-- The `test:rules` script runs 28 checks, including forged verdicts, double voting, and editing reputation, and all blocked actions are denied.
+When three different users each verified the same claim, it became verified with the expected score. A write carrying a fake reputation value was refused by the Security Rules, a signed-out user could not submit a claim, and no user could verify their own claim. Faking the admin session flag as a non-admin got nowhere: the next render returned the user to the login screen. The `test:rules` script rounded this out with 28 checks, among them forged verdicts, double voting, and direct edits to reputation, and every write it was meant to block was denied.
 
 === System testing
 
 System testing checks complete user journeys on the running application.
 
-*Examples:*
-- Signing up, checking that the profile starts with reputation 50, and signing in.
-- Submitting a screenshot and checking that OCR fills in the text.
-- Submitting a near-duplicate claim and checking that it is blocked.
-- Verifying a claim with a short explanation and checking the error message.
-- Completing three verifications and downloading the PNG card.
-- Opening the admin console, overriding a verdict, and checking the audit log.
-- Switching between light and dark themes.
+A new account was created and its profile opened at a reputation of 50, then signed in cleanly. A screenshot was submitted and OCR filled in the claim text; a near-duplicate claim was submitted and the system blocked it; and a verdict with a short explanation drew the expected error. One claim was carried through its third verification and the resulting PNG card downloaded, an administrator overrode a verdict and the change showed up in the audit log, and the interface was switched between light and dark themes.
 
 #pagebreak()
 == Modifications and improvements

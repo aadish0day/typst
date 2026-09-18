@@ -17,14 +17,14 @@
   margin: (left: 1in, right: 1in, top: 1in, bottom: 1in), // Symmetric margins (centered within border)
   number-align: center,
   // Mandatory Black Page Border for Black Books and Dissertations
-  background: place(
-    center + horizon,
-    rect(
-      width: 100% - 1.5cm,
-      height: 100% - 1.5cm,
-      stroke: 1pt + black,
-    )
-  )
+  // background: place(
+  //   center + horizon,
+  //   rect(
+  //     width: 100% - 1.5cm,
+  //     height: 100% - 1.5cm,
+  //     stroke: 1pt + black,
+  //   )
+  // )
 )
 
 // Typography Rules: Times New Roman, 12pt justified body

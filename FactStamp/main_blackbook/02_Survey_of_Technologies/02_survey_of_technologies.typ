@@ -4,14 +4,14 @@
 
 == Introduction
 
-Building a modern web application requires technologies that are secure, fast, and easy to maintain. FactStamp is a single-page web application built with React and backed by Firebase, so it needs no custom application server. The selected technologies provide a responsive user interface, secure sign-in, a real-time database, and in-browser processing for OCR and image export.
+FactStamp runs as a single-page application in the browser and leans on Firebase's managed services, so there is no server of its own to run or maintain. The technologies below were chosen to fit that model: a fast React interface, sign-in and a real-time database from Firebase, and OCR and image export that happen on the user's own device.
 
 #pagebreak()
 == Front-End Technologies
 
 === React 18
 
-React is an open-source JavaScript library for building component-based user interfaces. FactStamp uses React 18.3.1 for every page, with application state shared through React Context.
+Every screen in FactStamp is built from React components, and version 18.3.1 is used throughout. Rather than pull in a separate state library, the app shares its state, the signed-in user, the claims, and notifications, through React Context.
 
 *Advantages:*
 - Reusable components
@@ -21,7 +21,7 @@ React is an open-source JavaScript library for building component-based user int
 
 === TypeScript 5.5
 
-TypeScript adds static types to JavaScript. FactStamp is written in strict TypeScript, so data read from Firestore is checked against defined types before it is used.
+The whole codebase is written in strict TypeScript 5.5. This matters because Firestore does not enforce a schema, so the types declared in the code are what guarantee that a claim or verification read back from the database carries the fields the app expects.
 
 *Advantages:*
 - Catches errors at compile time
@@ -31,7 +31,7 @@ TypeScript adds static types to JavaScript. FactStamp is written in strict TypeS
 
 === Vite 5
 
-Vite is the build tool and development server. It serves the project instantly during development and produces an optimized production bundle split into cached vendor chunks.
+Vite 5 serves the app during development and bundles it for release. Large dependencies such as Firebase and Tesseract.js are split into their own chunks, which lets the browser cache them between visits instead of downloading them again.
 
 *Advantages:*
 - Very fast development server
@@ -41,7 +41,7 @@ Vite is the build tool and development server. It serves the project instantly d
 
 === Tailwind CSS 4
 
-Tailwind CSS is a utility-first CSS framework. FactStamp uses Tailwind CSS v4 with OKLCH colour tokens for the verdict colours and the light and dark themes.
+Styling is written with Tailwind CSS v4 utility classes. The verdict colours and the light and dark themes are defined once as OKLCH colour tokens, which keeps them consistent everywhere they appear.
 
 *Advantages:*
 - Faster UI development
@@ -51,7 +51,7 @@ Tailwind CSS is a utility-first CSS framework. FactStamp uses Tailwind CSS v4 wi
 
 === Framer Motion 12
 
-Framer Motion is a React animation library. It is used for page transitions, card reveals, and animated counters.
+The motion in the interface, page transitions, the reveal of claim cards, and the animated statistics counters, is handled by Framer Motion 12.
 
 *Advantages:*
 - Smooth, physics-based animations
@@ -60,7 +60,7 @@ Framer Motion is a React animation library. It is used for page transitions, car
 
 === Recharts
 
-Recharts is a React charting library. It draws the category and verdict charts on the analytics dashboard and in the admin console.
+The charts that break down claims by category and verdict, both on the public dashboard and in the admin console, are drawn with Recharts.
 
 *Advantages:*
 - Charts written as React components
@@ -72,7 +72,7 @@ Recharts is a React charting library. It draws the category and verdict charts o
 
 === Firebase Authentication
 
-Firebase Authentication manages user accounts. FactStamp supports sign-in with email and password or with a Google account, so no custom password handling is needed.
+Accounts and sign-in are handled by Firebase Authentication, using either an email and password or a Google account. FactStamp therefore never stores or checks a password itself.
 
 *Advantages:*
 - Secure, managed sign-in
@@ -82,7 +82,7 @@ Firebase Authentication manages user accounts. FactStamp supports sign-in with e
 
 === Cloud Firestore
 
-Cloud Firestore is Google's NoSQL document database. It stores users, claims, claim screenshots, notifications, reports, and audit logs, and pushes changes to the browser in real time.
+FactStamp keeps its data in Cloud Firestore, Google's NoSQL document database, across the users, claims, claim screenshots, notifications, reports, and audit-log collections. Firestore streams changes straight to the browser, which is what keeps the verification queue and the dashboard current without a refresh.
 
 *Advantages:*
 - Real-time updates without a custom server
@@ -92,7 +92,7 @@ Cloud Firestore is Google's NoSQL document database. It stores users, claims, cl
 
 === Firestore Security Rules
 
-Security Rules run on Google's servers and check every read and write to the database. They enforce who may change what, such as one verdict per verifier and admin-only actions.
+Before any read or write reaches the database, Google's servers check it against the Firestore Security Rules. These rules carry the platform's core constraints, one verdict per verifier, no self-verification, and admin-only actions, so the constraints hold even when a request skips the app entirely.
 
 *Advantages:*
 - Server-side protection of all data
@@ -101,7 +101,7 @@ Security Rules run on Google's servers and check every read and write to the dat
 
 === Cloud Functions
 
-Cloud Functions run server-side code when an event happens. FactStamp uses one function to update verifier reputation whenever a verification is saved.
+Reputation is the one value the browser is not trusted to change. A single Cloud Function, triggered whenever a verification is saved, recalculates each verifier's reputation on the server.
 
 *Advantages:*
 - Trusted code that users cannot modify
@@ -113,7 +113,7 @@ Cloud Functions run server-side code when an event happens. FactStamp uses one f
 
 === Tesseract.js 7
 
-Tesseract.js is an OCR engine compiled to WebAssembly. It reads the text from WhatsApp screenshots directly in the browser, so images are never sent to an external service.
+Because WhatsApp forwards often arrive as screenshots, FactStamp reads their text with Tesseract.js 7, an OCR engine compiled to WebAssembly. It runs inside the browser, so a screenshot never leaves the user's device.
 
 *Advantages:*
 - Free, with no API cost
@@ -122,7 +122,7 @@ Tesseract.js is an OCR engine compiled to WebAssembly. It reads the text from Wh
 
 === html-to-image
 
-html-to-image converts a part of the web page into a PNG image. FactStamp uses it to export the 1080 px wide fact-check card, with the browser rendering the card's OKLCH colours correctly.
+The fact-check card is exported with html-to-image, which turns the on-screen card into a 1080 px wide PNG. Since the browser itself does the rendering, the card's OKLCH colours come out exactly as they appear on screen.
 
 *Advantages:*
 - Exports exactly what the page shows

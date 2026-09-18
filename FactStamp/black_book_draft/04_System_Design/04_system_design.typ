@@ -26,19 +26,19 @@ When a claim has three verifications, the majority verdict is settled and the co
 
 *6. Fact-Check Card Module*
 
-The claim page shows the verdict, confidence score, and sources, and exports them as a 1080 px wide PNG card using html-to-image.
+Once a claim is settled, its page brings together the verdict, the confidence score, and the cited sources. From there the reader can export the whole thing as a 1080 px wide PNG card, generated with html-to-image, and forward it back into WhatsApp.
 
 *7. Analytics Dashboard Module*
 
-The public dashboard shows weekly claim trends by category, the most debunked claims, the most active verifiers, and the number of claims closed without quorum.
+The dashboard is open to anyone, with no sign-in. It follows how many claims arrive each week in each category, which claims have been debunked most, who the most active verifiers are, and how many claims closed without ever reaching a quorum.
 
 *8. Security and Notifications Module*
 
-This module sanitizes input, validates uploaded images, times out idle sessions, and sends in-app notifications when a claim is settled. Firestore Security Rules check every database write on the server.
+Cutting across the others is a layer that cleans user input, checks uploaded images, and ends idle sessions, while the Firestore Security Rules enforce the same limits on the server. This layer also raises the notification a user sees when their claim is settled.
 
 *9. Admin Module*
 
-The unlisted `/admin` console lets administrators manage users, moderate claims, handle incident reports, run consensus expiry, and view the audit log.
+Administrators work from an unlisted `/admin` console. There they manage accounts, moderate or override claims, work through incident reports, trigger consensus expiry on overdue claims, and read the audit log of what other administrators have done.
 
 #pagebreak()
 == Data design
@@ -162,6 +162,7 @@ Firestore Security Rules check every write on the server, so invalid data is rej
 #pagebreak()
 == User interface design
 
+#block(breakable: false)[
 *1. Home:* Introduction · Submit a claim · Browse the queue
 
 #v(1em)
@@ -171,7 +172,9 @@ Firestore Security Rules check every write on the server, so invalid data is rej
   kind: "diagram",
   supplement: "Diagram",
 ) <fig-wireframe-home>
+]
 
+#block(breakable: false)[
 *2. Submit:* Text or screenshot · OCR · Category · Duplicate warning
 
 #v(1em)
@@ -181,7 +184,9 @@ Firestore Security Rules check every write on the server, so invalid data is rej
   kind: "diagram",
   supplement: "Diagram",
 ) <fig-wireframe-submit>
+]
 
+#block(breakable: false)[
 *3. Verify Queue:* Claim cards · Progress · Deadline · Filters
 
 #v(1em)
@@ -191,7 +196,9 @@ Firestore Security Rules check every write on the server, so invalid data is rej
   kind: "diagram",
   supplement: "Diagram",
 ) <fig-wireframe-verify-queue>
+]
 
+#block(breakable: false)[
 *4. Verify Detail:* Claim · Verdict · Source URL · Explanation
 
 #v(1em)
@@ -201,7 +208,9 @@ Firestore Security Rules check every write on the server, so invalid data is rej
   kind: "diagram",
   supplement: "Diagram",
 ) <fig-wireframe-verify-detail>
+]
 
+#block(breakable: false)[
 *5. Claim Detail:* Verdict · Confidence score · Sources · Download card
 
 #v(1em)
@@ -211,7 +220,9 @@ Firestore Security Rules check every write on the server, so invalid data is rej
   kind: "diagram",
   supplement: "Diagram",
 ) <fig-wireframe-claim-detail>
+]
 
+#block(breakable: false)[
 *6. Dashboard:* Statistics · Category chart · Weekly trends · Top verifiers
 
 #v(1em)
@@ -221,7 +232,9 @@ Firestore Security Rules check every write on the server, so invalid data is rej
   kind: "diagram",
   supplement: "Diagram",
 ) <fig-wireframe-dashboard>
+]
 
+#block(breakable: false)[
 *7. Profile:* Reputation · Tier · History
 
 #v(1em)
@@ -231,7 +244,9 @@ Firestore Security Rules check every write on the server, so invalid data is rej
   kind: "diagram",
   supplement: "Diagram",
 ) <fig-wireframe-profile>
+]
 
+#block(breakable: false)[
 *8. Admin Console:* Overview · Verifiers · Claims · Incidents · Audit and Tools
 
 #v(1em)
@@ -241,6 +256,7 @@ Firestore Security Rules check every write on the server, so invalid data is rej
   kind: "diagram",
   supplement: "Diagram",
 ) <fig-wireframe-admin>
+]
 
 #pagebreak()
 == Security issues
@@ -264,22 +280,23 @@ Because FactStamp lets the public submit and judge claims, security is enforced 
 == Test cases design
 
 #styled-table(
-  columns: (1.2fr, 1.4fr, 1.9fr),
-  headers: ("Test Condition", "Input", "Expected Result"),
-  "User registration", "Valid name, email, and password", "Account created with reputation 50",
-  "User login", "Correct email and password", "Signed in successfully",
-  "User login", "Wrong password", "Error message shown",
-  "Repeated failed login", "5 wrong passwords", "Sign-in locked for 15 minutes",
-  "Submit text claim", "Valid claim text and category", "Claim created as pending",
-  "Submit screenshot", "JPEG/PNG under 5 MB", "Text extracted and shown for review",
-  "Upload invalid file", "Renamed non-image file", "Upload rejected",
-  "Duplicate claim", "Text similar to an existing claim", "Submission blocked with link to existing claim",
-  "Submit verdict", "Verdict, source URL, and explanation", "Verification saved",
-  "Short explanation", "Explanation under 50 characters", "Validation message shown",
-  "Verify own claim", "Submitter opens their own claim", "Verification not allowed",
-  "Third verification", "Third valid verdict", "Claim verified with verdict and score",
-  "Overdue claim", "Admin runs expiry after 7 days", "Claim settled as CONTESTED",
-  "Download card", "Click Download on a verified claim", "PNG card downloaded",
-  "Admin access", "Non-admin opens /admin", "Access denied",
-  "Admin override", "Admin changes a verdict", "Claim updated and action logged",
+  columns: (1.15fr, 1.5fr, 1.75fr, 1.4fr),
+  headers: ("Test Condition", "Input Selected", "Expected Result", "Actual Result"),
+  "User Registration", "Valid name, email and password", "User should be registered with a starting reputation of 50", "User registered successfully",
+  "User Login", "Valid email and password", "User should be signed in and shown the dashboard", "User logged in successfully",
+  "Invalid Login", "Correct email, wrong password", "An error message should be shown", "Error message displayed",
+  "Repeated Failed Login", "5 wrong password attempts", "Sign-in should be locked for 15 minutes", "Sign-in locked successfully",
+  "Submit Text Claim", "Valid claim text and category", "A pending claim should be created", "Claim created successfully",
+  "Submit Screenshot", "JPEG/PNG image under 5 MB", "Text should be extracted and shown for review", "Text extracted successfully",
+  "Invalid File Upload", "Renamed non-image file", "The upload should be rejected", "Upload rejected successfully",
+  "Duplicate Detection", "Text similar to an existing claim", "Submission should be blocked with a link to the existing claim", "Duplicate blocked successfully",
+  "Submit Verdict", "Verdict, source URL and explanation", "The verification should be saved to the claim", "Verification saved successfully",
+  "Short Explanation", "Explanation under 50 characters", "A validation message should be shown", "Validation message displayed",
+  "Self-Verification", "Submitter opens their own claim", "Verification should not be allowed", "Verification blocked successfully",
+  "Reach Consensus", "Third valid verification", "The claim should be verified with a verdict and score", "Claim verified successfully",
+  "Consensus Expiry", "Admin runs expiry after 7 days", "The claim should be settled as CONTESTED", "Claim settled successfully",
+  "Download Card", "Click Download on a verified claim", "A PNG fact-check card should be downloaded", "Card downloaded successfully",
+  "Admin Access", "Non-admin opens the /admin page", "Access should be denied", "Access denied successfully",
+  "Admin Override", "Admin changes a claim's verdict", "The claim should be updated and the action logged", "Verdict updated and logged successfully",
+  "User Logout", "Click Logout", "User should be logged out and returned to the login page", "User logged out successfully",
 )
