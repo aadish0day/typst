@@ -47,7 +47,7 @@
 </style>
 
 <div class="title">FactStamp — Verifier Profile (/profile)</div>
-<div class="subtitle">Protected route — an unauthenticated visitor is shown a “Sign in to view your profile” panel instead.</div>
+<div class="subtitle">Protected route — ProtectedRoute redirects an unauthenticated visitor to /signin before this page renders.</div>
 
 <div class="frame">
   <div class="nav"><span class="brand">FactStamp</span><span>Home</span><span>Verify Claims</span><span>Dashboard</span><span>My Profile</span><span class="sp"></span><span class="muted">theme</span><span class="muted">alerts (3)</span><span class="muted">sign out</span><span class="pill">Submit claim</span><span class="pill">AD · 72%</span></div>
@@ -100,7 +100,8 @@
           <div class="track thin"><i style="width:86%"></i></div>
           <div class="tiny mono" style="display:flex;justify-content:space-between;font-size:9.5px;margin-top:3px"><span>Matched 12 quorums</span><span>14 total</span></div>
           <div class="stat"><span>Verdicts Cast</span><b>14</b></div>
-          <div class="stat"><span>Leaderboard Rank</span><span><b>#3 of 12</b> <span class="pill">Verified</span></span></div>
+          <div class="stat"><span>Leaderboard Rank</span><span><b>—</b> <span class="pill">Verified</span></span></div>
+          <div class="note" style="margin-top:2px">Rank always shows “—”: computing it meant reading every user profile.</div>
         </div>
 
         <div class="row" style="gap:8px">

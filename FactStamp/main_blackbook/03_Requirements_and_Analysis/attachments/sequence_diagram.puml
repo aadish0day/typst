@@ -55,7 +55,7 @@ participant "security\n.ts" as SEC
 participant "Claims\nContext" as CTX
 participant "confidence\nScore.ts" as CONF
 database "Firestore" as FS
-participant "Notifications\nContext" as NOTIF
+participant "Cloud Function\nawardVerification\nReputation" as CF
 
 V -> UI : open /verify/:claimId
 activate UI
@@ -63,6 +63,7 @@ UI -> CTX : getClaimById()
 activate CTX
 CTX --> UI : pending claim (2 of 3 verdicts)
 deactivate CTX
+UI -> UI : canVerify()\n[pending,\nnot own claim,\nnot yet voted]
 
 V -> UI : verdict, source URL, explanation
 UI -> SEC : validateVerdictExplanation()
@@ -84,16 +85,16 @@ end
 
 CTX -> FS : updateClaimInFirestore()
 activate FS
-FS -> FS : Cloud Function\nupdates reputation
-FS --> CTX : updated profile
+FS -> FS : rules Case C\n(not author,\none verdict each)
+FS --> CTX : write accepted
 deactivate CTX
-
-FS -> NOTIF : claim_verified
-activate NOTIF
-NOTIF --> V : "Consensus Reached"
-deactivate NOTIF
-deactivate FS
-
-UI --> V : verdict stamp + score
+CTX --> UI : resolved
+UI --> V : "Consensus reached!"\n+ verdict stamp
 deactivate UI
+
+FS -> CF : onDocumentUpdated\nclaims/{claimId}
+deactivate FS
+activate CF
+CF -> FS : transaction:\nscore all 3 verifiers\n(+2 agree,\n-1 disagree);\nnew verifier's\ntotalVerifications +1
+deactivate CF
 @enduml

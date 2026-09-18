@@ -41,7 +41,7 @@ node "Client Device\n<<desktop / mobile>>" as CLIENT {
     artifact "FactStamp SPA bundle\nindex.html + hashed /assets/*.js\n(vendor-react, vendor-firebase,\nvendor-ocr, vendor-charts chunks)" as A_SPA
     artifact "tesseract.js\nWebAssembly OCR worker" as A_OCR
     artifact "html-to-image\nPNG card rasteriser" as A_CARD
-    artifact "localStorage\ntheme, session activity,\nlogin rate-limit counters" as A_LS
+    artifact "localStorage + sessionStorage\ntheme, session activity,\nlogin rate-limit counters" as A_LS
 
     A_SPA -[hidden]right- A_OCR
     A_CARD -[hidden]right- A_LS
@@ -73,12 +73,12 @@ node "Static Hosting Tier\n<<one of three interchangeable targets>>" as HOST {
   H_VC -[hidden]right- H_DK
 }
 
-node "Google Cloud Platform\n<<Backend as a Service - no custom server>>" as GCP {
+node "Google Cloud Platform\n<<Firebase managed services + one Cloud Function>>" as GCP {
   node "Firebase Authentication\nidentitytoolkit.googleapis.com\nemail/password + Google OAuth" as GAUTH
   database "Cloud Firestore\nusers, claims, claim_media,\nnotifications, reports, audit_logs" as GDB
   artifact "firestore.rules\n<<server-side enforcement>>\nrole, ownership and\nfield-immutability checks" as A_RULES
   artifact "firestore.indexes.json\ncomposite indexes" as A_IDX
-  node "Cloud Functions (v2)\nawardVerificationReputation\n<<sole writer of reputation>>" as GFN
+  node "Cloud Functions (v2, Node 20)\nawardVerificationReputation\n<<Admin SDK - bypasses rules>>" as GFN
 
   GAUTH -[hidden]right- GDB
   A_RULES -[hidden]right- A_IDX
@@ -86,18 +86,19 @@ node "Google Cloud Platform\n<<Backend as a Service - no custom server>>" as GCP
 }
 
 node "Developer Workstation\n<<local development only>>" as DEV {
-  artifact "Firebase Emulator Suite\nAuth 9099 - Firestore 8080\nStorage 9199 - UI 4000" as A_EMU
+  artifact "Firebase Emulator Suite\nAuth 9099 - Firestore 8080\nStorage 9199 - Functions 5001\nUI 4000" as A_EMU
   artifact "Vite dev server :5173\nHMR client port 5174" as A_VITE
 
   A_EMU -[hidden]right- A_VITE
 }
 
-CI --> HOST : deploys dist/
+CI ..> HOST : builds the same dist/\n(check only, no deploy step)
 HOST --> BROWSER : <<HTTPS>>\nSPA shell
 BROWSER --> GAUTH : <<HTTPS>>\nID token
 BROWSER --> GDB : <<HTTPS/WSS>>\nonSnapshot
 GDB ..> A_RULES : checked by
 GDB ..> GFN : claims/{claimId}\nupdate trigger
+GDB <-- GFN : writes users\nreputation
 GCP ..> DEV : substituted\nlocally by
 
 ' ---- hidden spine: keeps the four tiers vertically aligned ----

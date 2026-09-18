@@ -97,26 +97,28 @@ partition "Peer Verification (Module 4)" {
     :Add source URL and explanation;
     :Validate explanation and rate source quality;
     :Save the verification;
-  repeat while (Fewer than 3 verifications\nand not expired?) is (yes) not (no)
+  repeat while (Fewer than 3 verifications\nand not yet expired by an admin?) is (yes) not (no)
 }
 
 partition "Consensus (Module 5)" {
   if (3 verifications?) then (yes)
     :Majority verdict and confidence score (40%\nagreement, 30% reputation, 30% source);
-  else (no - deadline passed)
-    :Admin runs consensus expiry: verdict\nCONTESTED;
+  else (no - past the 7-day deadline)
+    :Admin runs Force Consensus Expiry:\nverdict CONTESTED;
   endif
   :Mark claim verified;
 }
 
-partition "Publication (Modules 6 and 8)" {
-  fork
-    :Update reputation (+2 agree, -1 disagree);
-  fork again
-    :Notify the submitter;
-  fork again
-    :Enable fact-check card download;
-  end fork
+partition "Publication (Modules 1 and 6)" {
+  if (Verdict CONTESTED?) then (no)
+    fork
+      :Cloud Function scores\nall 3 verifiers\n(+2 agree, -1 disagree);
+    fork again
+      :Enable fact-check\ncard download;
+    end fork
+  else (yes)
+    :Show "No Consensus\nReached" (no card, no\nreputation award);
+  endif
 }
 
 stop

@@ -56,7 +56,7 @@
       <div class="card center">△<br>MISLEADING</div>
       <div class="card center">?<br>UNVERIFIABLE</div>
     </div>
-    <div class="note"><b>CONTESTED is never offered here.</b> It is assigned by the system when the 7-day consensus window expires with fewer than 3 verifications.</div>
+    <div class="note"><b>CONTESTED is never offered here.</b> It is set only when an administrator runs the consensus-expiry sweep on a claim still short of 3 verifications after its 7-day deadline; until then an overdue claim stays open to verifiers.</div>
   </div>
 
   <div class="sec">
@@ -89,21 +89,30 @@
   </div>
 
   <div class="sec">
-    <div class="lbl">Same route, two full-page interstitial states — these replace the entire form above</div>
+    <div class="lbl">Same route, three full-page states — each replaces the case dossier and the entire form above</div>
     <div class="eq">
       <div class="mini">
         <div class="seal">↻</div>
         <h4>Consensus Window Closed</h4>
-        <p>Rendered instead of the form when the 7-day deadline has passed. &ldquo;This claim did not receive the required 3 independent peer verifications within the 7-day period. It has been marked as <b>CONTESTED</b>.&rdquo;</p>
+        <p>Checked first: the 7-day deadline has passed. &ldquo;This claim did not receive the required 3 independent peer verifications within the 7-day period. It has been marked as <b>CONTESTED</b>.&rdquo;</p>
         <span class="pill">Return to Queue</span> <span class="pill">View Claim Details</span>
       </div>
       <div class="mini">
         <div class="seal">✓</div>
         <h4>Verdict Recorded</h4>
-        <p>Rendered after a successful submit. Shows the verdict stamp with the label &ldquo;Pending consensus&rdquo; and the count of further verdicts still needed.</p>
+        <p>After a successful submit: &ldquo;Thank you for reviewing this claim. 1 more independent verdict needed to achieve community consensus.&rdquo; Verdict stamp labelled &ldquo;Pending consensus&rdquo;.</p>
         <span class="pill">Verify Another Claim</span> <span class="pill">View Live Claim Page</span>
       </div>
+      <div class="mini">
+        <div class="seal">⛨</div>
+        <h4>Not open to you</h4>
+        <p><code>canVerify()</code> is false; one reason shows:<br>
+          &ldquo;This claim has already reached consensus.&rdquo;<br>
+          &ldquo;You submitted this claim, so you cannot also verify it.&rdquo;<br>
+          &ldquo;You have already submitted a verdict on this claim.&rdquo;</p>
+        <span class="pill">Back to the queue</span> <span class="pill">View the claim</span>
+      </div>
     </div>
-    <div class="note">A third variant exists for signed-out visitors: the form is replaced by a &ldquo;Sign In to Verify&rdquo; gate, since /verify/:claimId is a protected route.</div>
+    <div class="note">There is no signed-out state: /verify/:claimId sits behind <code>ProtectedRoute</code>, so a visitor without a session is redirected to sign in before this page renders. The third card mirrors the rules in firestore.rules, which would reject the write anyway.</div>
   </div>
 </div>

@@ -64,6 +64,7 @@ rectangle "FactStamp System Boundary" {
     usecase "Run Duplicate Check\n(match blocks)" as UC9
     usecase "Browse Verification\nQueue" as UC10
     usecase "Cast Verdict on Claim" as UC11
+    usecase "Check Eligibility\n(not own claim,\none verdict each)" as UC11E
     usecase "Validate Verdict\nExplanation" as UC12
     usecase "Auto-Derive Source\nQuality from URL" as UC13
     usecase "Compute Consensus\nand Confidence Score" as UC14
@@ -89,7 +90,8 @@ UC7 -[hidden]down- UC8
 UC8 -[hidden]down- UC9
 UC9 -[hidden]down- UC10
 UC10 -[hidden]down- UC11
-UC11 -[hidden]down- UC12
+UC11 -[hidden]down- UC11E
+UC11E -[hidden]down- UC12
 UC12 -[hidden]down- UC13
 UC13 -[hidden]down- UC14
 UC14 -[hidden]down- UC15
@@ -117,6 +119,7 @@ Verifier --> UC11
 UC6 ..> UC7 : <<include>>
 UC6 ..> UC9 : <<include>>
 UC8 ..> UC6 : <<extend>>
+UC11 ..> UC11E : <<include>>
 UC11 ..> UC12 : <<include>>
 UC11 ..> UC13 : <<include>>
 UC14 ..> UC11 : <<extend>>

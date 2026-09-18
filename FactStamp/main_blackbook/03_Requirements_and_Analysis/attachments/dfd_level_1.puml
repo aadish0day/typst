@@ -1,9 +1,14 @@
 ' FactStamp — Data Flow Diagram, Level 1
 ' Tool: PlantUML   Build: plantuml -tsvg dfd_level_1.puml
 ' Decomposes process "0 FactStamp System" from the Level 0 context diagram
-' into processes 1.0 - 7.0 and the six Firestore collections D1 - D6.
+' into processes 1.0 - 8.0 and the six Firestore collections D1 - D6.
 ' NOTE: there is deliberately NO "Verifications" data store — verifications are
 ' an embedded array field on each claim document in D1 Claims.
+' 8.0 Award Reputation is the awardVerificationReputation Cloud Function
+' (functions/index.js), the automatic, verification-driven writer of
+' users.reputation / totalVerifications. Ordinary clients cannot write those
+' fields (firestore.rules); an administrator can override them through 7.0.
+' 4.0 runs in the browser and only reads reputation; it never writes D2.
 '
 ' Rule 2 (Diagram-rules.md): PlantUML has no native DFD notation, so DFD shapes
 ' are mapped onto the nearest PlantUML constructs:
@@ -14,7 +19,7 @@
 '
 ' SIMPLIFIED: opposite flows between the same pair of nodes are drawn as one
 ' two-headed arrow (<-->), and minor read-backs are folded into them, which cuts
-' the diagram to 21 flows.
+' the diagram to 24 flows.
 '   -[hidden]->  = invisible spine edge (pins a node to the rank below its peer)
 '   -[norank]->  = a flow that must not stretch the vertical spine
 @startuml
@@ -64,6 +69,7 @@ database "Claim Media" as D6
 usecase "Manage\nVerification Queue" as P3
 usecase "Compute Weighted\nConsensus" as P4
 database "Users" as D2
+usecase "Award Reputation\n(Cloud Function)" as P8
 database "Notifications" as D3
 usecase "Produce Analytics" as P6
 usecase "Generate\nFact-Check Card" as P5
@@ -81,7 +87,7 @@ P4  -[hidden]down- P6
 VIS -[hidden]down- P7
 
 ' ---------- 1.0 and 2.0: submission ----------
-P1 <-right-> VER : "Claim /\nReceipt"
+P1 <-right-> VER : "Claim /\nReceipt or\nDuplicate Warning"
 P1  <--> P2 : "Normalised Text /\nDuplicate Match"
 P1  --> D1 : "New Claim"
 P1  --> D6 : "Full Screenshot"
@@ -91,11 +97,15 @@ D1  -left-> P2 : "Claim\nCorpus"
 VER --> P3 : "Verdict +\nSource URL"
 D1  <--> P3 : "Pending Queue /\nNew Verification"
 D6  --> P3 : "Screenshot"
-P3  --> P4 : "Quorum Reached /\nDeadline Expired"
-D2  <-[norank]-> P4 : "Reputation\n(Cloud Function)"
+P3  --> P4 : "Quorum Reached\n(3 Verifications)"
+D2  -[norank]-> P4 : "Verifier\nReputation"
 D1 <-- P4 : "Verdict +\nConfidence"
 P4  -right-> D3 : "Consensus\nAlert"
 VER <-- D3 : "Verdict\nNotification"
+
+' ---------- 8.0: server-side reputation (Admin SDK trigger on claims/{claimId}) ----------
+D1  --> P8 : "Appended Verification /\nSettled Verdict"
+P8  --> D2 : "Reputation +\nVerification Count"
 
 ' ---------- 5.0 and 6.0: public outputs ----------
 D1  --> P5 : "Settled Claim"
@@ -108,4 +118,5 @@ ADM <-up-> P7 : "Moderation Action /\nAudit Trail"
 P7  <--> D4 : "Incident\nReports"
 P7  --> D5 : "Audit Entry"
 D1 <-- P7 : "Override /\nFlag / Expiry"
+D2 <-[norank]- P7 : "Reputation /\nRole Override"
 @enduml

@@ -64,7 +64,7 @@ package "src" as SRC {
       NotificationBell
     }
     package "components.ui" as UI {
-      class "18 custom primitives\n(no third-party UI kit)" as UIC {
+      class "19 custom primitives\n(no third-party UI kit)" as UIC {
         Button / LoadingButton
         Input / Modal
         Badge / Avatar
@@ -105,11 +105,25 @@ package "src" as SRC {
   }
 }
 
+package "functions  <<server-side, deployed separately>>" as FN {
+  class "Cloud Function (Node 20)" as FNC {
+    index.js
+    awardVerificationReputation
+    trigger: claims/{claimId} updated
+    writes users reputation
+    Admin SDK - bypasses rules
+  }
+}
+
 package "External npm packages" as EXT {
   class "browser-side dependencies" as EXTC {
     firebase v12 (app / auth / firestore)
     tesseract.js (WASM OCR)
     html-to-image (PNG export)
+  }
+  class "server-side dependencies" as EXTS {
+    firebase-admin v12 (Admin SDK)
+    firebase-functions v6 (v2 triggers)
   }
 }
 
@@ -122,5 +136,7 @@ CTX ..> LIB : scores / validates
 PAGES ..> LIB : detects duplicates
 LIB ..> EXT : initialises SDK
 SVC ..> EXT : runs OCR worker
+PAGES ..> SVC : claim_media,\nOCR, admin ops
+EXTS <.. FNC : imports
 
 @enduml

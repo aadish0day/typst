@@ -45,6 +45,9 @@ entity "CATEGORY_METRIC" as CategoryMetric {
   ..
   { health, political, religious,
   financial, other }
+  ..
+  derived at runtime from
+  CLAIM (not a stored collection)
   --
   * totalClaims : integer
   * verifiedCount : integer
@@ -61,6 +64,7 @@ entity "CLAIM" as Claim {
   --
   * text : string (10..2000 chars)
   thumbnailUrl : string (<= 60 KB)
+  imageUrl : string (legacy claims only)
   hasScreenshot : boolean
   * status : enum { pending, verified }
   verdict : enum { TRUE, FALSE, MISLEADING,
@@ -73,6 +77,7 @@ entity "CLAIM" as Claim {
   --
   * createdAt : timestamp
   * consensusDeadline : timestamp (+7 days)
+  * consensusDeadlineMs : integer (epoch ms)
   verifiedAt : timestamp
   adminFlagged : boolean = false
   adminFlaggedAt : timestamp
@@ -91,7 +96,7 @@ entity "VERIFICATION" as Verification {
   --
   * verdict : enum { TRUE, FALSE,
   MISLEADING, UNVERIFIABLE }
-  * sourceUrl : string (https, <= 500)
+  * sourceUrl : string (http/https, <= 500)
   * sourceQuality : enum { high, medium, low }
   * explanation : string (50..3000 chars)
   * createdAt : timestamp
@@ -118,7 +123,7 @@ entity "DUPLICATE_CLUSTER" as DuplicateCluster {
 
 CategoryMetric ||--o{ Claim : "aggregates (1..N)"
 User ||--o{ Claim : "submits (0..N)"
-Claim ||--o{ Verification : "receives (0..N, quorum >= 3)"
+Claim ||--o{ Verification : "receives (0..3, closes at 3)"
 User ||--o{ Verification : "casts (0..N)"
 Claim ||--o{ DuplicateCluster : "groups (0..N)"
 Claim ||--o| ClaimMedia : "stores screenshot (0..1)"

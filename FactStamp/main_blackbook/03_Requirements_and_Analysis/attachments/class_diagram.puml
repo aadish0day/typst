@@ -29,8 +29,8 @@ skinparam ClassAttributeFontSize 24
 title FactStamp - Class Diagram
 
 ' Members are taken from src/lib/types.ts, src/contexts/ClaimsContext.tsx,
-' src/lib/duplicateDetection.ts, src/lib/confidenceScore.ts and
-' src/services/firebaseService.ts. The TypeScript modules are plain function
+' src/lib/duplicateDetection.ts, src/lib/confidenceScore.ts,
+' src/services/firebaseService.ts and functions/index.js. The TypeScript modules are plain function
 ' files, drawn as classes with a <<module>> / <<service>> stereotype.
 
 class ClaimsContext <<context>> {
@@ -52,6 +52,14 @@ class firebaseService <<service>> {
   + updateClaimInFirestore(claim) : Promise<void>
   + saveClaimScreenshot(claimId, dataUrl) : Promise<void>
   + getClaimScreenshot(claimId) : Promise<string?>
+}
+
+class awardVerificationReputation <<cloud function>> {
+  - AGREE_REWARD : number = +2
+  - DISAGREE_PENALTY : number = -1
+  --
+  + onDocumentUpdated(claims/{claimId}) : Promise<void>
+  - clamp(n) : number [0..100]
 }
 
 class duplicateDetection <<module>> {
@@ -154,10 +162,12 @@ enum NotificationType {
 }
 
 ' ---------- Relationships ----------
-ClaimsContext ..> duplicateDetection : uses
 ClaimsContext ..> confidenceScore : uses
 ClaimsContext ..> firebaseService : persists via
 ClaimsContext o-- "0..*" Claim : manages
+duplicateDetection ..> Claim : compares text
+awardVerificationReputation ..> Claim : triggered on update
+awardVerificationReputation ..> User : writes reputation,\ntotalVerifications
 
 User "1" -- "0..*" Claim : submits
 User "1" -- "0..*" Verification : casts
@@ -176,7 +186,8 @@ ClaimsContext -[hidden]down- duplicateDetection
 firebaseService -[hidden]down- confidenceScore
 duplicateDetection -[hidden]right- confidenceScore
 duplicateDetection -[hidden]down- User
-confidenceScore -[hidden]down- Claim
+confidenceScore -[hidden]down- awardVerificationReputation
+awardVerificationReputation -[hidden]down- Claim
 User -[hidden]down- AppNotification
 Claim -[hidden]down- Verification
 AppNotification -[hidden]down- Verdict

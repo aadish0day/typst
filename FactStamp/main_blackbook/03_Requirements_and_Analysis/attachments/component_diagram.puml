@@ -39,7 +39,7 @@ package "Client Tier :: Web Browser (single-page application)" as CLIENT {
   component "App Shell and Router\n<<React 18 + react-router-dom v6>>\nlazy-loaded routes, ErrorBoundary" as SHELL
 
   component "Page Views\n<<11 routed views>>\nSubmit, VerifyQueue, VerifyDetail,\nClaimDetail, Dashboard, Admin" as VIEWS
-  component "UI Primitive Library\n<<18 custom components>>\nButton, Modal, VerdictPill,\nCategoryBadge, Skeletons" as UIKIT
+  component "UI Primitive Library\n<<19 custom components>>\nButton, Modal, VerdictPill,\nCategoryBadge, Skeletons" as UIKIT
 
   interface "IAppState" as I_STATE
   component "Context Provider Layer\n<<React Context>>\nAuth, Claims, Users,\nNotifications, Theme" as CTX
@@ -64,6 +64,7 @@ package "Server Tier :: Google Cloud (Backend as a Service)" as CLOUD {
   component "Firebase Authentication\nemail/password + Google OAuth,\nID token issuing" as FBAUTH
   component "Cloud Firestore\nusers, claims, claim_media,\nnotifications, reports, audit_logs" as FSTORE
   component "Firestore Security Rules\n<<server-side enforcement>>\nrole, ownership and\nfield-immutability checks" as RULES
+  component "awardVerificationReputation\n<<Cloud Function v2, Node 20>>\nAdmin SDK - bypasses rules" as FN
 }
 
 cloud "tessdata CDN\n(traineddata language files)" as CDN
@@ -79,7 +80,7 @@ CTX ..> DOMAIN : scores / validates
 VIEWS ..> DOMAIN : sanitises input
 I_OCR -- OCR : provides
 I_REPO -- FSVC : provides
-OCR ..> CDN : downloads model
+OCR ..> CDN : fallback if local\n/tesseract assets fail
 FSVC --> SDK : uses
 SDK ..> I_AUTH : requires
 SDK ..> I_DB : requires
@@ -87,6 +88,9 @@ I_AUTH -- FBAUTH : provides
 I_DB -- FSTORE : provides
 FSTORE ..> RULES : every read/write\nevaluated against
 FBAUTH --> RULES : supplies request.auth
+VIEWS ..> I_REPO : claim_media\nscreenshots
+FSTORE ..> FN : claims/{claimId}\nupdate trigger
+FN --> FSTORE : writes users\nreputation
 
 DOMAIN -[hidden]down- SDK
 OCR -[hidden]down- SDK
