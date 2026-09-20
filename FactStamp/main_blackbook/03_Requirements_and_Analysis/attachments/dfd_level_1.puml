@@ -9,6 +9,9 @@
 ' users.reputation / totalVerifications. Ordinary clients cannot write those
 ' fields (firestore.rules); an administrator can override them through 7.0.
 ' 4.0 runs in the browser and only reads reputation; it never writes D2.
+' D3 Notifications is server-written: 8.0 emits claim_verified,
+' verdict_submitted and reputation_update notifications for the verifiers and
+' claim author, while 7.0 broadcasts weekly-report / system messages.
 '
 ' Rule 2 (Diagram-rules.md): PlantUML has no native DFD notation, so DFD shapes
 ' are mapped onto the nearest PlantUML constructs:
@@ -100,12 +103,12 @@ D6  --> P3 : "Screenshot"
 P3  --> P4 : "Quorum Reached\n(3 Verifications)"
 D2  -[norank]-> P4 : "Verifier\nReputation"
 D1 <-- P4 : "Verdict +\nConfidence"
-P4  -right-> D3 : "Consensus\nAlert"
 VER <-- D3 : "Verdict\nNotification"
 
 ' ---------- 8.0: server-side reputation (Admin SDK trigger on claims/{claimId}) ----------
 D1  --> P8 : "Appended Verification /\nSettled Verdict"
 P8  --> D2 : "Reputation +\nVerification Count"
+P8  --> D3 : "Consensus / Verdict /\nReputation Notifications"
 
 ' ---------- 5.0 and 6.0: public outputs ----------
 D1  --> P5 : "Settled Claim"
@@ -117,6 +120,7 @@ P6  --> VIS : "Analytics\nDashboard"
 ADM <-up-> P7 : "Moderation Action /\nAudit Trail"
 P7  <--> D4 : "Incident\nReports"
 P7  --> D5 : "Audit Entry"
+P7  --> D3 : "Weekly Report /\nSystem Broadcast"
 D1 <-- P7 : "Override /\nFlag / Expiry"
 D2 <-[norank]- P7 : "Reputation /\nRole Override"
 @enduml

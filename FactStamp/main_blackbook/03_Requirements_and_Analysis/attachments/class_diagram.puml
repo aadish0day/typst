@@ -40,18 +40,31 @@ class ClaimsContext <<context>> {
   --
   + addClaim(input) : Promise<Claim>
   + addVerification(claimId, data) : Promise<void>
+  + getClaimById(id) : Claim?
+  + getPendingClaims() : Claim[]
+  + getVerifiedClaims() : Claim[]
   + expireOverdueClaims() : Promise<void>
   + flagClaim(claimId, flagged) : Promise<void>
+  + deleteClaim(claimId) : Promise<void>
   + adminUpdateClaim(claimId, updates) : Promise<void>
   + deleteVerification(claimId, verificationId) : Promise<void>
 }
 
 class firebaseService <<service>> {
   + subscribeClaimsRealtime(callback, onError) : Unsubscribe
+  + subscribeUsersRealtime(callback, onError) : Unsubscribe
+  + subscribeNotificationsRealtime(userId, callback, onError) : Unsubscribe
   + addClaimToFirestore(claim) : Promise<string>
   + updateClaimInFirestore(claim) : Promise<void>
   + saveClaimScreenshot(claimId, dataUrl) : Promise<void>
   + getClaimScreenshot(claimId) : Promise<string?>
+  + markNotificationRead(id) : Promise<void>
+  + markAllNotificationsRead(userId) : Promise<void>
+  + broadcastNotification(title, message, type) : Promise<void>
+  + adminOverrideClaim(claimId, updates) : Promise<void>
+  + subscribeReportsRealtime(callback, onError) : Unsubscribe
+  + subscribeAuditLogsRealtime(callback, onError) : Unsubscribe
+  + authenticateAdmin(usernameOrEmail, pass) : Promise<User>
 }
 
 class awardVerificationReputation <<cloud function>> {
@@ -79,6 +92,7 @@ class User {
   + uid : string
   + displayName : string
   + email : string
+  + avatarUrl : string?
   + reputation : number = 50
   + totalVerifications : number
   + isAdmin : boolean?
@@ -92,14 +106,20 @@ class Claim {
   + status : ClaimStatus
   + verdict : Verdict?
   + confidenceScore : number?
+  + agreementRatio : number?
+  + avgVerifierReputation : number?
+  + sourceQualityScore : number?
   + verifications : Verification[]
   + verificationCount : number
   + submittedBy : string
+  + submittedByName : string
   + consensusDeadline : string
   + consensusDeadlineMs : number?
+  + imageUrl : string? (legacy)
   + thumbnailUrl : string?
   + hasScreenshot : boolean?
   + adminFlagged : boolean?
+  + adminFlaggedAt : string?
   + createdAt : string
   + verifiedAt : string?
 }
@@ -112,6 +132,7 @@ class Verification {
   + sourceQuality : SourceQuality
   + explanation : string
   + verifierId : string
+  + verifierName : string
   + verifierReputation : number
   + createdAt : string
 }
@@ -125,6 +146,37 @@ class AppNotification {
   + claimId : string?
   + isRead : boolean
   + createdAt : string
+}
+
+class ModerationReport {
+  + id : string
+  + targetType : {claim, user, verification}
+  + targetId : string
+  + targetTitle : string
+  + reason : {misinformation_spam, harassment,
+    low_quality_source, fake_account,
+    manipulation, hate_speech, other}
+  + details : string?
+  + reportedBy : string
+  + reportedByName : string
+  + reportedAt : string
+  + status : {pending, investigating,
+    resolved, dismissed}
+  + severity : {low, medium, high}
+  + actionTaken : string?
+  + resolvedAt : string?
+  + resolvedBy : string?
+}
+
+class AdminAuditLog {
+  + id : string
+  + timestamp : string
+  + adminId : string
+  + adminName : string
+  + action : string
+  + targetType : {claim, user, report, system}
+  + targetId : string
+  + details : string
 }
 
 enum Verdict {
@@ -168,10 +220,13 @@ ClaimsContext o-- "0..*" Claim : manages
 duplicateDetection ..> Claim : compares text
 awardVerificationReputation ..> Claim : triggered on update
 awardVerificationReputation ..> User : writes reputation,\ntotalVerifications
+awardVerificationReputation ..> AppNotification : notifies users\n(claim_verified,\nverdict_submitted,\nreputation_update)
 
 User "1" -- "0..*" Claim : submits
 User "1" -- "0..*" Verification : casts
 User "1" -- "0..*" AppNotification : receives
+User "1" -- "0..*" ModerationReport : files
+User "1" -- "0..*" AdminAuditLog : triggers\n(admin writes)
 Claim "1" *-- "0..3" Verification : embedded
 
 Claim ..> ClaimStatus
@@ -195,4 +250,7 @@ AppNotification -[hidden]down- NotificationType
 Verification -[hidden]down- SourceQuality
 Verification -[hidden]down- ClaimStatus
 Verification -[hidden]down- ClaimCategory
+AppNotification -[hidden]right- ModerationReport
+ModerationReport -[hidden]down- AdminAuditLog
+AdminAuditLog -[hidden]down- Verdict
 @enduml

@@ -76,7 +76,7 @@
   width: 100%,
   text(
     font: ("DejaVu Sans Mono", "Liberation Mono", "Courier New"),
-    size: 9.5pt,
+    size: 7pt,
     it
   )
 )

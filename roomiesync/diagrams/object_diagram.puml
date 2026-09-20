@@ -1,0 +1,137 @@
+@startuml
+skinparam style strictuml
+skinparam monochrome true
+skinparam defaultFontName "Liberation Sans"
+skinparam defaultFontSize 20
+skinparam defaultFontStyle bold
+skinparam titleFontSize 28
+skinparam titleFontStyle bold
+
+skinparam ranksep 50
+skinparam nodesep 30
+
+skinparam backgroundColor white
+skinparam ArrowColor black
+skinparam ArrowThickness 2.5
+skinparam ArrowFontSize 17
+skinparam ArrowFontStyle bold
+
+skinparam ObjectBorderColor black
+skinparam ObjectBorderThickness 2.5
+skinparam ObjectBackgroundColor #F8F9FA
+skinparam ObjectFontSize 22
+skinparam ObjectFontStyle bold
+skinparam ClassAttributeFontSize 17
+
+title RoomieSync - Runtime Object Diagram (State Instance Snapshot)
+
+object "aarav : User" as u1 {
+  id = "usr_1"
+  name = "Aarav Sharma"
+  email = "aarav@example.com"
+  role = "user"
+  isVerified = true
+}
+
+object "aaravProfile : Profile" as p1 {
+  userId = "usr_1"
+  occupation = "Software Engineer"
+  budget = [12000, 22000]
+  cleanliness = 5
+  foodPref = "Veg"
+  sleepSchedule = "Early Bird"
+}
+
+object "ananya : User" as u2 {
+  id = "usr_2"
+  name = "Ananya Verma"
+  email = "ananya@example.com"
+  role = "user"
+  isVerified = true
+}
+
+object "ananyaProfile : Profile" as p2 {
+  userId = "usr_2"
+  occupation = "Product Designer"
+  budget = [15000, 25000]
+  cleanliness = 4
+  foodPref = "Veg"
+  sleepSchedule = "Flexible"
+}
+
+object "matchScore : matchingEngine" as score {
+  compatibilityScore = 92%
+  budgetMatch = 100% (wt 25%)
+  foodMatch = 100% (wt 20%)
+  sleepMatch = 85% (wt 20%)
+}
+
+object "matchReq : FriendRequest" as req1 {
+  id = "req_101"
+  senderId = "usr_2"
+  recipientId = "usr_1"
+  status = "pending"
+  type = "roommate"
+}
+
+object "flat302 : Property" as prop1 {
+  id = "prop_1"
+  title = "Luxury 3BHK Shared Flat"
+  location = "Koramangala 4th Block"
+  price = 18000
+  status = "verified"
+}
+
+object "leaseAgr : Agreement" as agr1 {
+  id = "agr_1"
+  roommate1Name = "Aarav Sharma"
+  roommate2Name = "Ananya Verma"
+  totalRent = 36000
+  roommate1Share = 50%
+  roommate2Share = 50%
+  securityDeposit = 100000
+  status = "Approved & Signed"
+}
+
+object "wifiExp : Expense" as exp1 {
+  id = "exp_2"
+  title = "WiFi Fiber Broadband"
+  amount = 1499
+  paidBy = "Ananya Verma"
+  splitBetween = ["Aarav", "Ananya"]
+  shareOwed = 749.50
+  status = "Pending"
+}
+
+' ---------- Links ----------
+u1 -- p1 : has
+u2 -- p2 : has
+
+p1 ..> score : profile A
+p2 ..> score : profile B
+score ..> req1 : computes 92%
+u2 --> req1 : sends
+req1 --> u1 : received by
+
+u1 --> prop1 : shortlists
+u2 --> prop1 : shortlists
+prop1 --> agr1 : leased under
+u1 --> agr1 : signs (50%)
+u2 --> agr1 : signs (50%)
+u2 --> exp1 : paid by
+exp1 ..> u1 : share owed (₹749.50)
+
+' ---------- Strict Vertical Layout Spine ----------
+u1 -[hidden]right- p1
+u1 -[hidden]down- u2
+p1 -[hidden]down- p2
+u2 -[hidden]right- p2
+u2 -[hidden]down- score
+p2 -[hidden]down- req1
+score -[hidden]right- req1
+score -[hidden]down- prop1
+req1 -[hidden]down- prop1
+prop1 -[hidden]down- agr1
+agr1 -[hidden]down- exp1
+
+@enduml

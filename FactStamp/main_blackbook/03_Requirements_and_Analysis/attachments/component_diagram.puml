@@ -60,7 +60,7 @@ package "Client Tier :: Web Browser (single-page application)" as CLIENT {
 interface "IAuthentication" as I_AUTH
 interface "IDocumentStore" as I_DB
 
-package "Server Tier :: Google Cloud (Backend as a Service)" as CLOUD {
+package "Server Tier" as CLOUD {
   component "Firebase Authentication\nemail/password + Google OAuth,\nID token issuing" as FBAUTH
   component "Cloud Firestore\nusers, claims, claim_media,\nnotifications, reports, audit_logs" as FSTORE
   component "Firestore Security Rules\n<<server-side enforcement>>\nrole, ownership and\nfield-immutability checks" as RULES

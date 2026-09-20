@@ -29,6 +29,7 @@
 '   -[norank]->  = constraint=false (a flow that must not stretch the spine)
 @startuml
 skinparam style strictuml
+skinparam linetype ortho
 skinparam monochrome true
 skinparam defaultFontName "Liberation Sans"
 skinparam defaultFontSize 20

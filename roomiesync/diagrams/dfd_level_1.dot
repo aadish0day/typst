@@ -1,0 +1,97 @@
+digraph DFD_Level_1 {
+  rankdir=TB;
+  bgcolor="#FFFFFF";
+  fontname="Liberation Sans";
+  fontsize=14;
+  label="RoomieSync - Data Flow Diagram (Level 1: System Functional Decomposition)";
+  labelloc="t";
+  nodesep=0.4;
+  ranksep=0.6;
+  splines=true;
+
+  node [fontname="Liberation Sans", fontsize=10];
+  edge [fontname="Liberation Sans", fontsize=8, color="#212121", penwidth=1.0, arrowsize=0.7];
+
+  // External Entities (Top/Bottom Ranks)
+  subgraph cluster_entities {
+    rank=same;
+    style=invis;
+    USER [label="Roommate / User", shape=box, style="filled", fillcolor="#F8F9FA", color="#212121", width=1.6, penwidth=1.3];
+    LANDLORD [label="Property Landlord", shape=box, style="filled", fillcolor="#F8F9FA", color="#212121", width=1.6, penwidth=1.3];
+    MESS [label="Mess Provider", shape=box, style="filled", fillcolor="#F8F9FA", color="#212121", width=1.6, penwidth=1.3];
+    ADMIN [label="Administrator", shape=box, style="filled", fillcolor="#F8F9FA", color="#212121", width=1.6, penwidth=1.3];
+  }
+
+  // Processes (Circular / Rounded nodes)
+  node [shape=circle, style="filled", fillcolor="#FFFFFF", color="#212121", penwidth=1.2, width=1.4, fixedsize=true];
+  P1 [label="1.0\nAuth &\nProfiles"];
+  P2 [label="2.0\nMatching\nEngine"];
+  P3 [label="3.0\nProperties &\nBookings"];
+  P4 [label="4.0\nMeal\nPlans"];
+  P5 [label="5.0\nAgreements\n& Expenses"];
+  P6 [label="6.0\nSocial &\nChat"];
+  P7 [label="7.0\nPlatform\nAdmin"];
+
+  // Data Stores (Gane & Sarson standard open record)
+  node [shape=record, style="filled", fillcolor="#F1F3F5", color="#212121", penwidth=1.1, width=1.6, height=0.35, fixedsize=false];
+  D1 [label="{ D1 | users }"];
+  D2 [label="{ D2 | profiles }"];
+  D3 [label="{ D3 | properties & bookings }"];
+  D4 [label="{ D4 | mealplans & subs }"];
+  D5 [label="{ D5 | agreements }"];
+  D6 [label="{ D6 | expenses }"];
+  D7 [label="{ D7 | friendrequests }"];
+  D8 [label="{ D8 | conversations & msgs }"];
+  D9 [label="{ D9 | reports & reviews }"];
+
+  // Flows: User to Processes
+  USER -> P1 [label="Credentials,\nProfile info"];
+  P1 -> USER [label="Auth token,\nProfile state"];
+
+  USER -> P2 [label="Match criteria"];
+  P2 -> USER [label="Compatibility %"];
+
+  USER -> P3 [label="Search, Visit request"];
+  P3 -> USER [label="Property list,\nBooking status"];
+
+  USER -> P4 [label="Subscribe plan"];
+  P4 -> USER [label="Meal schedule"];
+
+  USER -> P5 [label="Agreement sign,\nExpense logs"];
+  P5 -> USER [label="PDF agreement,\nSplit shares"];
+
+  USER -> P6 [label="Friend req,\nChat msg"];
+  P6 -> USER [label="Real-time msgs,\nPresence alerts"];
+
+  USER -> P7 [label="Abuse reports,\nReviews"];
+
+  // Flows: Landlord, Mess, Admin
+  LANDLORD -> P3 [label="Listings, Availability"];
+  P3 -> LANDLORD [label="Visit notifications"];
+  LANDLORD -> P5 [label="Countersign agreement"];
+
+  MESS -> P4 [label="Menu updates"];
+  P4 -> MESS [label="Subscriber orders"];
+
+  ADMIN -> P7 [label="Triage / Verify / Ban"];
+  P7 -> ADMIN [label="Platform telemetry"];
+
+  // Processes to Data Stores (Reads and Writes)
+  P1 -> D1 [label="read/write"];
+  P1 -> D2 [label="read/write"];
+
+  P2 -> D2 [label="read profiles"];
+
+  P3 -> D3 [label="read/write"];
+  P4 -> D4 [label="read/write"];
+
+  P5 -> D5 [label="read/write"];
+  P5 -> D6 [label="read/write"];
+
+  P6 -> D7 [label="read/write"];
+  P6 -> D8 [label="read/write"];
+
+  P7 -> D1 [label="verify/ban"];
+  P7 -> D3 [label="verify prop"];
+  P7 -> D9 [label="read/write"];
+}

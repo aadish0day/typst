@@ -25,7 +25,7 @@ The system shall provide the following functions:
 - Lock sign-in for 15 minutes after 5 failed attempts
 
 *Claim Submission Module*
-- Submit a claim as text or as a screenshot (JPEG, PNG, WebP, or GIF, up to 5 MB)
+- Submit a claim as text or as a screenshot (JPEG, PNG, WebP, or GIF, up to 5 MB; compressed to about 900 KB for storage)
 - Extract text from the screenshot with in-browser OCR
 - Remove WhatsApp timestamps and status text from the extracted text
 - Compress the screenshot before saving it
@@ -103,8 +103,19 @@ The system should satisfy the following quality requirements:
 === PERT Chart
 
 #v(1em)
-#align(center)[#image("attachments/pert_chart.svg", width: 100%, height: 85%, fit: "contain")]
-<fig-pert>
+#figure(
+  image("attachments/pert_chart.svg", width: 100%, height: 85%, fit: "contain"),
+  caption: [PERT Chart],
+) <fig-pert>
+
+#pagebreak()
+=== Gantt Chart
+
+// Wide timeline: turned to landscape so it prints at a readable size.
+#figure(
+  rotate(-90deg, reflow: true)[#image("attachments/gantt_chart.svg", width: 8.6in)],
+  caption: [Gantt Chart],
+) <fig-gantt>
 
 #pagebreak()
 == Software and Hardware Requirements
@@ -184,100 +195,121 @@ Administrators use the `/admin` console to manage users, moderate claims, handle
 #pagebreak()
 == Conceptual Models
 
-=== Gantt Chart
-
-// Wide timeline: turned to landscape so it prints at a readable size.
-#align(center)[#rotate(-90deg, reflow: true)[#image("attachments/gantt_chart.svg", width: 8.6in)]]
-<fig-gantt>
-
-#pagebreak()
 === Event Table
 
 #v(1em)
-#align(center)[#image("attachments/event_table.svg", width: 100%)]
-<fig-event-table>
+#figure(
+  image("attachments/event_table.svg", width: 100%),
+  caption: [Event Table],
+) <fig-event-table>
 
 #pagebreak()
 === Entity-Relationship (E-R) Diagram
 
 #v(1em)
-#align(center)[#image("attachments/er_diagram.svg", width: 100%, height: 88%, fit: "contain")]
-<fig-er>
+#figure(
+  image("attachments/er_diagram.svg", width: 100%, height: 93%, fit: "contain"),
+  caption: [Entity-Relationship (E-R) Diagram],
+) <fig-er>
 
 #pagebreak()
 === Class Diagram
 
 #v(1em)
-#align(center)[#image("attachments/class_diagram.svg", width: 100%, height: 90%, fit: "contain")]
-<fig-class>
+#figure(
+  image("attachments/class_diagram.svg", width: 100%, height: 90%, fit: "contain"),
+  caption: [Class Diagram],
+) <fig-class>
 
 #pagebreak()
 === Object Diagram
 
 #v(1em)
-#align(center)[#image("attachments/object_diagram.svg", width: 88%)]
-<fig-object>
+#figure(
+  image("attachments/object_diagram.svg", width: 88%),
+  caption: [Object Diagram],
+) <fig-object>
 
 #pagebreak()
 === Use Case Diagram
 
 #v(1em)
-#align(center)[#image("attachments/use_case_diagram.svg", width: 100%, height: 88%, fit: "contain")]
-<fig-usecase>
+#figure(
+  image("attachments/use_case_diagram.svg", width: 100%, height: 88%, fit: "contain"),
+  caption: [Use Case Diagram],
+) <fig-usecase>
 
 #pagebreak()
 === Activity Diagram
 
 #v(1em)
-#align(center)[#image("attachments/activity_diagram.svg", width: 100%, height: 90%, fit: "contain")]
-<fig-activity>
+#figure(
+  image("attachments/activity_diagram.svg", width: 100%, height: 90%, fit: "contain"),
+  caption: [Activity Diagram],
+) <fig-activity>
 
 #pagebreak()
 === Sequence Diagram
 
 #v(1em)
-#align(center)[#image("attachments/sequence_diagram.svg", width: 100%)]
-<fig-sequence>
+#figure(
+  image("attachments/sequence_diagram.svg", width: 100%),
+  caption: [Sequence Diagram],
+) <fig-sequence>
 
 #pagebreak()
 === State Diagram
 
 #v(1em)
-#align(center)[#image("attachments/state_diagram.svg", width: 85%)]
-<fig-state>
+#figure(
+  image("attachments/state_diagram.svg", width: 85%),
+  caption: [State Diagram],
+) <fig-state>
 
 #pagebreak()
 === Package Diagram
 
 #v(1em)
-#align(center)[#image("attachments/package_diagram.svg", width: 88%)]
-<fig-package>
+#figure(
+  image("attachments/package_diagram.svg", width: 88%),
+  caption: [Package Diagram],
+) <fig-package>
 
 #pagebreak()
 === Component Diagram
 
 #v(1em)
-#align(center)[#image("attachments/component_diagram.svg", width: 100%, height: 88%, fit: "contain")]
-<fig-component>
+#figure(
+  image("attachments/component_diagram.svg", width: 100%, height: 88%, fit: "contain"),
+  caption: [Component Diagram],
+) <fig-component>
 
 #pagebreak()
 === Deployment Diagram
 
 #v(1em)
-#align(center)[#image("attachments/deployment_diagram.svg", width: 92%)]
-<fig-deployment>
+#figure(
+  image("attachments/deployment_diagram.svg", width: 92%),
+  caption: [Deployment Diagram],
+) <fig-deployment>
 
 #pagebreak()
 === Data Flow Diagrams
 
 #v(1em)
-#align(center)[#image("attachments/dfd_level_0.svg", width: 85%)]
-<fig-dfd0>
+#figure(
+  image("attachments/dfd_level_0.svg", width: 85%),
+  caption: [Data Flow Diagram — Level 0],
+) <fig-dfd0>
 
 #pagebreak()
-#align(center)[#image("attachments/dfd_level_1.svg", width: 100%, height: 92%, fit: "contain")]
-<fig-dfd1>
+#figure(
+  image("attachments/dfd_level_1.svg", width: 100%, height: 92%, fit: "contain"),
+  caption: [Data Flow Diagram — Level 1],
+) <fig-dfd1>
 
 #pagebreak()
-#align(center)[#image("attachments/dfd_level_2.svg", width: 100%, height: 92%, fit: "contain")]
-<fig-dfd2>
+#figure(
+  image("attachments/dfd_level_2.svg", width: 100%, height: 92%, fit: "contain"),
+  caption: [Data Flow Diagram — Level 2],
+) <fig-dfd2>

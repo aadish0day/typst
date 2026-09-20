@@ -1,0 +1,103 @@
+@startuml
+skinparam style strictuml
+skinparam monochrome true
+skinparam defaultFontName "Liberation Sans"
+skinparam defaultFontSize 20
+skinparam defaultFontStyle bold
+skinparam titleFontSize 26
+skinparam titleFontStyle bold
+
+skinparam ranksep 45
+skinparam nodesep 25
+
+skinparam backgroundColor white
+skinparam ArrowColor black
+skinparam ArrowThickness 2.5
+skinparam ArrowFontSize 17
+skinparam ArrowFontStyle bold
+
+skinparam UsecaseBorderColor black
+skinparam UsecaseBorderThickness 2.5
+skinparam UsecaseBackgroundColor #F8F9FA
+skinparam UsecaseFontSize 19
+skinparam UsecaseFontStyle bold
+
+skinparam RectangleBorderColor black
+skinparam RectangleBorderThickness 2.5
+skinparam RectangleBackgroundColor transparent
+skinparam RectangleFontSize 20
+skinparam RectangleFontStyle bold
+
+skinparam DatabaseBorderColor black
+skinparam DatabaseBorderThickness 2.5
+skinparam DatabaseBackgroundColor #F8F9FA
+skinparam DatabaseFontSize 19
+skinparam DatabaseFontStyle bold
+
+title RoomieSync - Data Flow Diagram (Level 1)
+
+' ---------- Entities (Top to Bottom) ----------
+rectangle "Roommate / User" as USER
+usecase "1.0 Manage Profile\n& Preferences" as P1
+usecase "2.0 Execute\nMatching Engine" as P2
+database "D1: Users & Profiles" as D1
+usecase "3.0 Property Search\n& Booking" as P3
+rectangle "Property Landlord" as LANDLORD
+database "D2: Properties & Visits" as D2
+usecase "4.0 Real-Time Chat\n& Messaging" as P4
+database "D3: Messages & Requests" as D3
+usecase "5.0 Execute Agreement\n& Digital Signing" as P5
+database "D4: Agreements & KYC" as D4
+usecase "6.0 Shared Expense\nTracker & Split" as P6
+database "D5: Shared Expenses" as D5
+usecase "7.0 Meal Plan\nSubscription" as P7
+database "D6: Meal Plans" as D6
+rectangle "Mess Provider" as MESS
+usecase "8.0 Moderation\n& Incident Triage" as P8
+rectangle "Administrator" as ADMIN
+
+' ---------- Vertical Spine ----------
+USER -[hidden]down- P1
+P1 -[hidden]down- P2
+P2 -[hidden]down- D1
+D1 -[hidden]down- P3
+P3 -[hidden]down- D2
+D2 -[hidden]down- P4
+P4 -[hidden]down- D3
+D3 -[hidden]down- P5
+P5 -[hidden]down- D4
+D4 -[hidden]down- P6
+P6 -[hidden]down- D5
+D5 -[hidden]down- P7
+P7 -[hidden]down- D6
+D6 -[hidden]down- P8
+P8 -[hidden]down- ADMIN
+
+' ---------- Data Flows ----------
+USER <--> P1 : "Profile data /\nProfile state"
+P1 --> D1 : "Save profile"
+D1 --> P2 : "Candidate profiles"
+USER <-- P2 : "Compatibility %"
+
+USER <--> P3 : "Search query /\nListing results"
+LANDLORD <--> P3 : "Post flat /\nVisit bookings"
+P3 <--> D2 : "Listing records"
+
+USER <--> P4 : "Send message /\nReceive chat"
+P4 <--> D3 : "Persist conversation"
+
+USER <--> P5 : "Sign agreement /\nLegal PDF"
+LANDLORD <--> P5 : "Countersign lease"
+P5 <--> D4 : "Store signed lease"
+
+USER <--> P6 : "Log expense /\nLedger balance"
+P6 <--> D5 : "Record shared split"
+
+USER <--> P7 : "Subscribe /\nWeekly order"
+MESS <--> P7 : "Menu update /\nSubscriber counts"
+P7 <--> D6 : "Meal plans"
+
+ADMIN <--> P8 : "Triage action /\nBan decision"
+P8 --> D1 : "Update account status"
+
+@enduml

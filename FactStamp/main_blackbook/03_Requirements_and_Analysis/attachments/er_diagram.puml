@@ -109,6 +109,70 @@ entity "CLAIM_MEDIA" as ClaimMedia {
   * createdAt : timestamp
 }
 
+entity "NOTIFICATION" as Notification {
+  * id : string <<PK>>
+  --
+  * userId : string <<FK USER.uid>>
+  * type : enum { claim_verified,
+  reputation_update, weekly_report,
+  verdict_submitted }
+  * title : string (<= 200)
+  * message : string (<= 2000)
+  claimId : string <<FK CLAIM.id>>
+  * isRead : boolean = false
+  * createdAt : timestamp
+}
+
+entity "VERDICT" as Verdict {
+  * id : string <<PK>>
+  ..
+  subcollection under the CLAIM
+  document (claims/{claimId}/verdicts);
+  sibling of the embedded
+  VERIFICATION array rows
+  --
+  * claimId : string <<FK CLAIM.id>>
+  * verifierId : string <<FK USER.uid>>
+  * explanation : string (<= 3000)
+  * createdAt : timestamp
+}
+
+entity "REPORT" as Report {
+  * id : string <<PK>>
+  --
+  * targetType : enum { claim, user,
+  verification }
+  * targetId : string
+  * targetTitle : string (<= 300)
+  * reason : enum { misinformation_spam,
+  harassment, low_quality_source,
+  fake_account, manipulation,
+  hate_speech, other }
+  * severity : enum { low, medium, high }
+  * status : enum { pending,
+  investigating, resolved, dismissed }
+  * reportedBy : string <<FK USER.uid>>
+  * reportedByName : string
+  * details : string (<= 3000)
+  actionTaken : string
+  resolvedAt : timestamp
+  resolvedBy : string
+  * reportedAt : timestamp
+}
+
+entity "AUDIT_LOG" as AuditLog {
+  * id : string <<PK>>
+  --
+  * timestamp : timestamp
+  * adminId : string <<FK USER.uid>>
+  * adminName : string
+  * action : string (<= 200)
+  * targetType : enum { claim, user,
+  report, system }
+  * targetId : string
+  * details : string (<= 2000)
+}
+
 entity "DUPLICATE_CLUSTER" as DuplicateCluster {
   * id : string <<PK>>
   ..
@@ -127,7 +191,14 @@ Claim ||--o{ Verification : "receives (0..3, closes at 3)"
 User ||--o{ Verification : "casts (0..N)"
 Claim ||--o{ DuplicateCluster : "groups (0..N)"
 Claim ||--o| ClaimMedia : "stores screenshot (0..1)"
+User ||--o{ Notification : "receives (0..N)"
+Claim ||--o{ Verdict : "holds (0..N)\nsubcollection"
+User ||--o{ Report : "files (0..N)"
+Claim ||--o{ Report : "is reported (0..N)"
+User ||--o{ AuditLog : "performs (0..N)\nadmin only"
 
 Verification -[hidden]down-> DuplicateCluster
+Notification -[hidden]down- Verdict
+Report -[hidden]down- AuditLog
 
 @enduml

@@ -1,0 +1,59 @@
+digraph DFD_Level_2 {
+  rankdir=LR;
+  bgcolor="#FFFFFF";
+  fontname="Liberation Sans";
+  fontsize=13;
+  label="RoomieSync - Subsystem Data Flow Diagram (Level 2: Social & Real-Time Chat)";
+  labelloc="t";
+  nodesep=0.5;
+  ranksep=0.8;
+  splines=true;
+
+  node [fontname="Liberation Sans", fontsize=10];
+  edge [fontname="Liberation Sans", fontsize=9, color="#212121", penwidth=1.1, arrowsize=0.8];
+
+  // External Entities
+  USER_A [label="User A\n(Sender)", shape=box, style="filled", fillcolor="#F8F9FA", color="#212121", penwidth=1.3, width=1.5];
+  USER_B [label="User B\n(Recipient)", shape=box, style="filled", fillcolor="#F8F9FA", color="#212121", width=1.5, penwidth=1.3];
+
+  // Sub-Processes
+  node [shape=circle, style="filled", fillcolor="#FFFFFF", color="#212121", penwidth=1.2, width=1.4, fixedsize=true];
+  P61 [label="6.1\nSubmit\nFriend Req"];
+  P62 [label="6.2\nRespond to\nFriend Req"];
+  P63 [label="6.3\nInitialize\nConversation"];
+  P64 [label="6.4\nTransmit\nMessage"];
+  P65 [label="6.5\nPresence &\nRead Receipts"];
+
+  // Data Stores
+  node [shape=record, style="filled", fillcolor="#F1F3F5", color="#212121", penwidth=1.1, width=1.6, height=0.35, fixedsize=false];
+  D_REQ [label="{ D7 | friendrequests }"];
+  D_CONV [label="{ D8a | conversations }"];
+  D_MSG [label="{ D8b | messages }"];
+
+  // Step 1: Send Friend Request
+  USER_A -> P61 [label="Friend request payload\n{recipientId, note}"];
+  P61 -> D_REQ [label="Create record\n(status: 'pending')"];
+  P61 -> USER_B [label="Socket push:\nfriend_request_received"];
+
+  // Step 2: Accept / Decline
+  USER_B -> P62 [label="Decision\n{accept | reject}"];
+  P62 -> D_REQ [label="Update record status"];
+  P62 -> P63 [label="Trigger conversation\non accept"];
+  P62 -> USER_A [label="Socket push:\nfriend_request_accepted"];
+
+  // Step 3: Initialize Conversation
+  P63 -> D_CONV [label="Create conversation\n[usrA, usrB]"];
+  P63 -> USER_A [label="Conversation ready"];
+  P63 -> USER_B [label="Conversation ready"];
+
+  // Step 4: Transmit Message
+  USER_A -> P64 [label="send_message {convId, text}"];
+  P64 -> D_MSG [label="Persist Message doc\n{isRead: false}"];
+  P64 -> D_CONV [label="Update lastMessageAt"];
+  P64 -> USER_B [label="Socket push:\nreceive_message"];
+
+  // Step 5: Read Receipts & Presence
+  USER_B -> P65 [label="message_read event\n{convId, msgId}"];
+  P65 -> D_MSG [label="Set isRead: true"];
+  P65 -> USER_A [label="Socket push:\nmessages_read"];
+}

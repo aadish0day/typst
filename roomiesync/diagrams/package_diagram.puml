@@ -1,0 +1,140 @@
+@startuml
+skinparam style strictuml
+skinparam monochrome true
+skinparam defaultFontName "Liberation Sans"
+skinparam defaultFontSize 20
+skinparam defaultFontStyle bold
+skinparam titleFontSize 28
+skinparam titleFontStyle bold
+
+skinparam backgroundColor white
+skinparam ArrowColor black
+skinparam ArrowThickness 2.5
+skinparam ArrowFontSize 17
+skinparam ArrowFontStyle bold
+
+skinparam PackageBorderColor black
+skinparam PackageBorderThickness 2.5
+skinparam PackageFontSize 21
+skinparam PackageFontStyle bold
+
+skinparam ClassBorderColor black
+skinparam ClassBorderThickness 2.0
+skinparam ClassBackgroundColor #F8F9FA
+skinparam ClassFontSize 18
+skinparam ClassFontStyle bold
+skinparam ClassAttributeFontSize 16
+skinparam ClassAttributeFontStyle plain
+
+skinparam ranksep 50
+skinparam nodesep 30
+
+title RoomieSync - Package Diagram
+
+package "frontend (React 19 SPA)" as FRONTEND {
+
+  package "pages" as PAGES {
+    class "Routed Views" as PAGESC {
+      Home
+      FindRoommate
+      PropertyDetail
+      AgreementSign
+      SharedExpenses
+      Chat
+      Profile
+      Admin
+    }
+  }
+
+  package "components" as COMPS {
+    class "UI Elements" as COMPSC {
+      Navbar / Footer
+      PropertyCard
+      ChatBox
+      ProfileCard
+      AgreementModal
+      ExpenseTable
+    }
+  }
+
+  package "services" as SERVICES {
+    class "Client Services" as SERVICESC {
+      api.js (REST client)
+      socket.js (WebSocket)
+      matchingEngine.js (match logic)
+      pdfService.js (PDF renderer)
+    }
+  }
+}
+
+package "backend (Node / Express Server)" as BACKEND {
+
+  package "routes" as ROUTES {
+    class "API Endpoints" as ROUTESC {
+      authRoutes
+      propertyRoutes
+      agreementRoutes
+      expenseRoutes
+      messageRoutes
+    }
+  }
+
+  package "controllers" as CTRLS {
+    class "Business Logic" as CTRLSC {
+      authController
+      propertyController
+      agreementController
+      expenseController
+    }
+  }
+
+  package "models" as MODELS {
+    class "Mongoose Schemas (12)" as MODELSC {
+      User / Profile
+      Property / MealPlan
+      Agreement / Expense
+      Conversation / Message
+      Notification / Report
+    }
+  }
+
+  package "socket" as SOCKET {
+    class "WebSocket Gateway" as SOCKETC {
+      socket.js
+      join_conversation
+      send_message
+      message_read
+    }
+  }
+}
+
+package "database" as DB {
+  class "MongoDB 7.0 Cluster\n(Persistent Volume)" as DBC {
+    12 Collections
+    Compound Indexes
+  }
+}
+
+' ---------- Dependencies ----------
+PAGES ..> COMPS : renders
+PAGES ..> SERVICES : invokes
+COMPS ..> SERVICES : triggers actions
+
+SERVICES ..> ROUTES : HTTPS REST / JSON
+SERVICES ..> SOCKET : WebSocket Duplex
+
+ROUTES ..> CTRLS : dispatches
+CTRLS ..> MODELS : queries & updates
+SOCKET ..> MODELS : message persistence
+MODELS ..> DB : Mongoose ODM
+
+' ---------- Balanced Vertical Spine ----------
+FRONTEND -[hidden]down- BACKEND
+PAGES -[hidden]right- COMPS
+COMPS -[hidden]right- SERVICES
+BACKEND -[hidden]down- DB
+ROUTES -[hidden]right- CTRLS
+CTRLS -[hidden]down- MODELS
+MODELS -[hidden]right- SOCKET
+
+@enduml

@@ -32,10 +32,8 @@
 // inside the SVG itself, so an automatic list would come back empty.
 //
 // The Table of Figures therefore has to be a hand-maintained list. The 16
-// diagrams currently embedded, in page order:
-//   Ch 3.3: PERT Chart
-//   Ch 3.6: Gantt Chart (placed before the Event Table)
-//   Ch 3.6: ER, Class, Object, Use Case, Activity, State, Sequence,
+//   Ch 3.3: PERT Chart, Gantt Chart
+//   Ch 3.6: Event Table, ER, Class, Object, Use Case, Activity, State, Sequence,
 //           Package, Component, Deployment, DFD Level 0 / 1 / 2
 //   Ch 5.1: Overall System Architecture
 // Still outstanding: UI wireframes (checklist item 16) and Ch 6.2 screenshots.
