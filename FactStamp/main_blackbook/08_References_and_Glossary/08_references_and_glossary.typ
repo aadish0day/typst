@@ -2,11 +2,6 @@
 
 #heading(numbering: none)[References]
 
-+ IEEE Computer Society, *"IEEE Recommended Practice for Software Requirements Specifications,"* IEEE Std 830-1998, 1998.
-+ Schwaber, K., & Sutherland, J., *"The Scrum Guide,"* Scrum.org, Nov. 2020.
-+ Vosoughi, S., Roy, D., & Aral, S., *"The spread of true and false news online,"* _Science_, vol. 359, no. 6380, pp. 1146-1151, 2018.
-+ Garimella, K., & Eckles, D., *"Images and misinformation in political groups: Evidence from WhatsApp in India,"* _Harvard Kennedy School (HKS) Misinformation Review_, vol. 1, Aug. 2020. doi: 10.37016/mr-2020-030.
-+ Jaccard, P., *"Étude comparative de la distribution florale dans une portion des Alpes et des Jura,"* _Bulletin de la Société Vaudoise des Sciences Naturelles_, vol. 37, pp. 547-579, 1901.
 + OWASP Foundation, *"OWASP Top Ten,"* 2021. [Online]. Available: `https://owasp.org/www-project-top-ten/`.
 + Meta Platforms, Inc., *"React Documentation,"* 2025. [Online]. Available: `https://react.dev/`.
 + Vite Contributors, *"Vite Documentation,"* 2025. [Online]. Available: `https://vite.dev/`.
@@ -17,6 +12,7 @@
 + Recharts Group, *"Recharts Documentation,"* 2025. [Online]. Available: `https://recharts.org/`.
 + Project Naptha and Tesseract.js Contributors, *"Tesseract.js Documentation,"* 2025. [Online]. Available: `https://tesseract.projectnaptha.com/`.
 + Bubkoo, *"html-to-image,"* 2024. [Online]. Available: `https://github.com/bubkoo/html-to-image`.
++ M. Haug and L. Kindermann, *"Typst Documentation,"* 2025. [Online]. Available: `https://typst.app/docs/`.
 
 #heading(numbering: none)[Glossary]
 
