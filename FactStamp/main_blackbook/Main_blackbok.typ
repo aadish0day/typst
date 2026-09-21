@@ -2,7 +2,7 @@
 // FACTSTAMP: MASTER BLACK BOOK DISSERTATION
 // Course: JUSIT-DSCPR503 (Project Dissertation and Implementation)
 // Jai Hind College (Empowered Autonomous), University of Mumbai
-// Candidate: Aadish Das (UID: 2023IT001 / Roll No.: 10)
+// Candidate: Aadish Das (UID: 24BIT010 / Roll No.: 10)
 // ==============================================================================
 
 // Shared helpers (styled-table, responsive-image). Chapter partials import

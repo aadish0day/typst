@@ -1,6 +1,6 @@
 #let project-title = "FactStamp: A Community-Powered WhatsApp Misinformation Fact-Checker"
 #let student-name = "Aadish Das"
-#let student-uid = "2023IT001 / 10"
+#let student-uid = "24BIT010 / 10"
 #let academic-year = "2026-27"
 #let semester = "Semester V"
 #let guide-1 = "Mr. Wilson Rao"
